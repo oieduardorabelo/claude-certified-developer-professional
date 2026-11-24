@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Domain 3: Observability and Production Monitoring — CCDV-P Study Guide</title>
+<style>
+:root {
+  --bg: #FAF8F5;
+  --surface: #FFFFFF;
+  --surface-alt: #F3EFE8;
+  --ink: #1A1915;
+  --ink-muted: #5C5850;
+  --border: #E5DFD5;
+  --accent: #C96442;
+  --accent-soft: #FDF3EC;
+  --accent-border: #E6A98F;
+  --sent-bg: rgba(201, 100, 66, 0.11);
+  --word-bg: #F7C97E;
+  --word-ink: #1A1915;
+  --word-past: #1A1915;
+  --word-future: #6D685F;
+  --code-bg: #1E1D1A;
+  --code-ink: #F4F0E8;
+  --ok: #2D7A4F;
+  --ok-bg: #EAF6EF;
+  --bad: #B83A3A;
+  --bad-bg: #FCEEEE;
+  --shadow: 0 2px 12px rgba(26, 25, 21, 0.06);
+  --radius: 12px;
+}
+[data-theme="dark"] {
+  --bg: #141311;
+  --surface: #1D1C19;
+  --surface-alt: #25231F;
+  --ink: #F2EEE6;
+  --ink-muted: #A9A295;
+  --border: #322F2A;
+  --accent: #E07A56;
+  --accent-soft: #2A1E18;
+  --accent-border: #8A452C;
+  --sent-bg: rgba(224, 122, 86, 0.16);
+  --word-bg: #C96442;
+  --word-ink: #FFFFFF;
+  --word-past: #F2EEE6;
+  --word-future: #9E978B;
+  --code-bg: #0E0D0C;
+  --code-ink: #EFEAE0;
+  --ok: #52B788;
+  --ok-bg: #172B21;
+  --bad: #E06C6C;
+  --bad-bg: #2E1919;
+  --shadow: 0 2px 16px rgba(0, 0, 0, 0.35);
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+  line-height: 1.68;
+  font-size: 16px;
+}
+/* Sticky Audio Bar */
+.audio-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  padding: 10px 20px;
+}
+.audio-bar-inner {
+  max-width: 1240px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.ab-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  background: var(--surface-alt);
+  color: var(--ink);
+  border-radius: 8px;
+  height: 36px;
+  padding: 0 11px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.ab-btn:hover { border-color: var(--accent); color: var(--accent); }
+.ab-btn.primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+  min-width: 96px;
+  gap: 6px;
+}
+.ab-btn.primary:hover { filter: brightness(1.06); color: #fff; }
+.ab-btn.active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.ab-scrubber {
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.ab-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+.ab-now {
+  font-weight: 600;
+  color: var(--accent);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 360px;
+}
+input[type="range"].scrub {
+  width: 100%;
+  accent-color: var(--accent);
+  cursor: pointer;
+  height: 5px;
+}
+/* Layout */
+.layout {
+  max-width: 1240px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 270px minmax(0, 1fr);
+  gap: 32px;
+  padding: 28px 20px 80px;
+}
+@media (max-width: 940px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { position: static !important; }
+}
+.sidebar {
+  position: sticky;
+  top: 76px;
+  align-self: start;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  box-shadow: var(--shadow);
+}
+.side-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.hub-link {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+}
+.hub-link:hover { text-decoration: underline; }
+.side-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-muted);
+  font-weight: 700;
+  margin: 14px 0 8px;
+}
+.toc-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.toc-list a {
+  display: block;
+  padding: 7px 10px;
+  border-radius: 7px;
+  font-size: 13.5px;
+  color: var(--ink-muted);
+  text-decoration: none;
+  border-left: 3px solid transparent;
+  transition: all 0.15s;
+}
+.toc-list a:hover { background: var(--surface-alt); color: var(--ink); }
+.toc-list a.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-left-color: var(--accent);
+  font-weight: 600;
+}
+.progress-track {
+  height: 6px;
+  background: var(--surface-alt);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-top: 6px;
+}
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--accent);
+  transition: width 0.2s linear;
+}
+.domain-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.domain-nav a {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-muted);
+  text-decoration: none;
+  padding: 5px 8px;
+  border-radius: 6px;
+  background: var(--surface-alt);
+}
+.domain-nav a:hover { color: var(--accent); }
+/* Main Content */
+.hero {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px 30px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow);
+  position: relative;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+.badge-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.pill {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 99px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid var(--accent-border);
+}
+.pill.neutral {
+  background: var(--surface-alt);
+  color: var(--ink-muted);
+  border-color: var(--border);
+}
+h1 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 30px;
+  line-height: 1.22;
+  margin: 0 0 10px;
+  letter-spacing: -0.015em;
+}
+.tagline {
+  font-size: 17px;
+  color: var(--ink-muted);
+  margin: 0 0 14px;
+}
+.mental-model {
+  background: var(--surface-alt);
+  border-left: 3px solid var(--accent);
+  padding: 12px 16px;
+  border-radius: 0 8px 8px 0;
+  font-size: 14.5px;
+}
+.section-block {
+  margin-bottom: 34px;
+  scroll-margin-top: 84px;
+}
+.section-header {
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--border);
+}
+.section-obj {
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  font-weight: 700;
+}
+.section-header h2 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 23px;
+  margin: 4px 0 0;
+}
+/* Narrated Segment Cards */
+.seg {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid transparent;
+  border-radius: var(--radius);
+  padding: 18px 22px;
+  margin-bottom: 16px;
+  transition: background 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+}
+.seg.kind-callout {
+  border-left-color: var(--ink-muted);
+}
+.seg.is-speaking, .hero.is-speaking {
+  border-color: var(--accent-border);
+  border-left: 5px solid var(--accent);
+  box-shadow: 0 4px 22px rgba(201, 100, 66, 0.14);
+}
+.seg-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.seg-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--accent);
+}
+.seg-play-btn {
+  font-size: 11.5px;
+  color: var(--ink-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 2px 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.seg-play-btn:hover {
+  border-color: var(--accent-border);
+  color: var(--accent);
+}
+.seg.is-speaking .seg-play-btn, .hero.is-speaking .seg-play-btn {
+  color: var(--accent);
+  font-weight: 700;
+}
+.pulse-dot {
+  display: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: pulse 1.2s infinite ease-in-out;
+}
+.is-speaking .pulse-dot { display: inline-block; }
+@keyframes pulse {
+  0%, 100% { transform: scale(0.85); opacity: 0.6; }
+  50% { transform: scale(1.25); opacity: 1; }
+}
+.seg h3 {
+  font-size: 18px;
+  margin: 0 0 10px;
+  color: var(--ink);
+}
+/* Live Read-Along Synchronized Transcript */
+.read-along {
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 13px 16px;
+  margin: 10px 0 14px;
+  font-size: 16px;
+  line-height: 1.78;
+}
+.is-speaking .read-along {
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+}
+.read-along-tag {
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--ink-muted);
+  margin-bottom: 5px;
+}
+.is-speaking .read-along-tag {
+  color: var(--accent);
+}
+.sent {
+  border-radius: 5px;
+  padding: 2px 3px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.sent:hover {
+  background: var(--sent-bg);
+}
+.sent.active-sent {
+  background: var(--sent-bg);
+}
+.w {
+  border-radius: 4px;
+  padding: 1px 1.5px;
+  transition: background 0.08s ease, color 0.08s ease;
+}
+.sent.active-sent .w.w-future {
+  color: var(--word-future);
+}
+.sent.active-sent .w.w-past {
+  color: var(--word-past);
+}
+.w.w-now {
+  background: var(--word-bg);
+  color: var(--word-ink) !important;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(201, 100, 66, 0.25);
+}
+/* Reference Notes / Code / Tables */
+.ref-notes {
+  font-size: 15px;
+  color: var(--ink);
+}
+.ref-notes p { margin: 0 0 10px; }
+.ref-notes p:last-child { margin-bottom: 0; }
+.ref-notes ul, .ref-notes ol { margin: 6px 0 8px; padding-left: 22px; }
+.ref-notes li { margin-bottom: 5px; }
+.ref-notes code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.88em;
+  background: var(--surface-alt);
+  padding: 2px 5px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+.ref-notes pre {
+  background: var(--code-bg);
+  color: var(--code-ink);
+  padding: 14px 16px;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-size: 13.5px;
+  line-height: 1.5;
+  margin: 10px 0 4px;
+}
+.ref-notes pre code {
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: inherit;
+}
+.ref-notes table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  margin: 8px 0 4px;
+}
+.ref-notes th, .ref-notes td {
+  border: 1px solid var(--border);
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+.ref-notes th {
+  background: var(--surface-alt);
+  font-weight: 700;
+}
+/* Scenarios Quiz */
+.quiz-section {
+  margin-top: 42px;
+  scroll-margin-top: 84px;
+}
+.scenario-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px 24px;
+  margin-bottom: 18px;
+  box-shadow: var(--shadow);
+}
+.scenario-card h3 {
+  margin: 0 0 10px;
+  font-size: 17.5px;
+  color: var(--accent);
+}
+.scenario-prompt {
+  margin: 0 0 16px;
+  font-size: 15.5px;
+}
+.opt-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.opt-btn {
+  text-align: left;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  color: var(--ink);
+  padding: 11px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14.5px;
+  line-height: 1.45;
+  transition: all 0.15s;
+}
+.opt-btn:hover { border-color: var(--accent); }
+.opt-btn.correct { background: var(--ok-bg); border-color: var(--ok); color: var(--ink); font-weight: 600; }
+.opt-btn.wrong { background: var(--bad-bg); border-color: var(--bad); color: var(--ink); }
+.rationale {
+  display: none;
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  background: var(--surface-alt);
+  border-left: 4px solid var(--ok);
+  font-size: 14.5px;
+}
+.rationale.show { display: block; }
+</style>
+</head>
+<body>
+  <audio id="voiceAudio" src="audio.m4a" preload="metadata"></audio>
+
+  <header class="audio-bar">
+    <div class="audio-bar-inner">
+      <button id="playBtn" class="ab-btn primary" title="Play / Pause (Space)">&#9654; Play</button>
+      <button id="prevBtn" class="ab-btn" title="Previous block (Left Arrow)">&lsaquo; Prev</button>
+      <button id="nextBtn" class="ab-btn" title="Next block (Right Arrow)">Next &rsaquo;</button>
+      <div class="ab-scrubber">
+        <div class="ab-meta">
+          <span id="nowLabel" class="ab-now">Ready &mdash; click Play or any sentence</span>
+          <span id="timeLabel">0:00 / 0:00</span>
+        </div>
+        <input id="scrub" class="scrub" type="range" min="0" max="100" step="0.05" value="0" />
+      </div>
+      <button id="speedBtn" class="ab-btn" title="Playback speed">1x</button>
+      <button id="autoScrollBtn" class="ab-btn active" title="Auto-scroll to active sentence">Auto-Scroll: ON</button>
+      <button id="themeBtn" class="ab-btn" title="Toggle theme">Dark</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="side-top">
+        <a class="hub-link" href="../index.html">&larr; All 8 Domains</a>
+        <span class="pill">Weight 12%</span>
+      </div>
+      <div class="side-title">Listening Progress</div>
+      <div class="progress-track"><div id="progressFill" class="progress-fill"></div></div>
+      <div class="side-title">Domain 3 Sections</div>
+      <ul class="toc-list">
+        <li><a href="#top" class="active">Overview &amp; Mental Model</a></li><li><a href="#sec-1">Distributed Tracing &amp; Token Instrumentation</a></li><li><a href="#sec-2">Cache Diagnostics &amp; Privacy-Constrained Content Capture</a></li><li><a href="#sec-3">SLIs, SLOs, Cost Analytics &amp; Drift Detection</a></li><li><a href="#sec-4">Sampling Strategies, Aggregation &amp; Failure-Cohort Analysis</a></li><li><a href="#scenarios">Exam Practice Scenarios</a></li>
+      </ul>
+      <div class="domain-nav">
+        <a href="../002-production-integration-grounding/index.html">&larr; Domain 2</a>
+        <a href="../004-debugging-incident-response/index.html">Domain 4 &rarr;</a>
+      </div>
+    </aside>
+
+    <main id="top">
+      <section class="hero" data-seg-id="intro">
+        <div class="seg-top">
+          <div class="badge-row">
+            <span class="pill">CCDV-P Domain 3 of 8</span>
+            <span class="pill neutral">Exam Weight: 12%</span>
+            <span class="pill neutral">Voice: Kokoro Neural (af_heart)</span>
+          </div>
+          <button class="seg-play-btn" data-jump-seg="intro"><span class="pulse-dot"></span>&#9654; Play intro</button>
+        </div>
+        <h1>Observability and Production Monitoring</h1>
+        <p class="tagline">Instrumenting Claude systems with OpenTelemetry, diagnosing cache and privacy constraints, defining LLM-native SLOs, and surfacing systemic failures at scale.</p>
+        <div class="mental-model">
+          <strong>Staff Engineer Mental Model:</strong> A staff engineer treats an LLM service as a distributed, non-deterministic system where HTTP 200s hide quality regressions, silent cache invalidations, and runaway agent loops. On the exam, connect the telemetry layer you choose—SDK spans, API spans, Agent SDK OTel, or Analytics APIs—directly to the operational question: debugging a single loop, reconciling billing under ZDR or HIPAA, or isolating a 1% failure cohort across millions of traces.
+        </div>
+        <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="intro-s0" data-start="0.0" title="Click to jump here"><span class="w">Domain</span> <span class="w">3:</span> <span class="w">Observability</span> <span class="w">and</span> <span class="w">Production</span> <span class="w">Monitoring.</span></span> <span class="sent" data-sent-id="intro-s1" data-start="3.319" title="Click to jump here"><span class="w">Exam</span> <span class="w">weight:</span> <span class="w">12%.</span></span> <span class="sent" data-sent-id="intro-s2" data-start="5.187" title="Click to jump here"><span class="w">Instrumenting</span> <span class="w">Claude</span> <span class="w">systems</span> <span class="w">with</span> <span class="w">OpenTelemetry,</span> <span class="w">diagnosing</span> <span class="w">cache</span> <span class="w">and</span> <span class="w">privacy</span> <span class="w">constraints,</span> <span class="w">defining</span> <span class="w">LLM-native</span> <span class="w">SLOs,</span> <span class="w">and</span> <span class="w">surfacing</span> <span class="w">systemic</span> <span class="w">failures</span> <span class="w">at</span> <span class="w">scale.</span></span> <span class="sent" data-sent-id="intro-s3" data-start="15.908" title="Click to jump here"><span class="w">A</span> <span class="w">staff</span> <span class="w">engineer</span> <span class="w">treats</span> <span class="w">an</span> <span class="w">LLM</span> <span class="w">service</span> <span class="w">as</span> <span class="w">a</span> <span class="w">distributed,</span> <span class="w">non-deterministic</span> <span class="w">system</span> <span class="w">where</span> <span class="w">HTTP</span> <span class="w">200s</span> <span class="w">hide</span> <span class="w">quality</span> <span class="w">regressions,</span> <span class="w">silent</span> <span class="w">cache</span> <span class="w">invalidations,</span> <span class="w">and</span> <span class="w">runaway</span> <span class="w">agent</span> <span class="w">loops.</span></span> <span class="sent" data-sent-id="intro-s4" data-start="28.848" title="Click to jump here"><span class="w">On</span> <span class="w">the</span> <span class="w">exam,</span> <span class="w">connect</span> <span class="w">the</span> <span class="w">telemetry</span> <span class="w">layer</span> <span class="w">you</span> <span class="w">choose—SDK</span> <span class="w">spans,</span> <span class="w">API</span> <span class="w">spans,</span> <span class="w">Agent</span> <span class="w">SDK</span> <span class="w">OTel,</span> <span class="w">or</span> <span class="w">Analytics</span> <span class="w">APIs—directly</span> <span class="w">to</span> <span class="w">the</span> <span class="w">operational</span> <span class="w">question:</span> <span class="w">debugging</span> <span class="w">a</span> <span class="w">single</span> <span class="w">loop,</span> <span class="w">reconciling</span> <span class="w">billing</span> <span class="w">under</span> <span class="w">ZDR</span> <span class="w">or</span> <span class="w">HIPAA,</span> <span class="w">or</span> <span class="w">isolating</span> <span class="w">a</span> <span class="w">1%</span> <span class="w">failure</span> <span class="w">cohort</span> <span class="w">across</span> <span class="w">millions</span> <span class="w">of</span> <span class="w">traces.</span></span></div></div>
+      </section>
+
+      
+        <section class="section-block" id="sec-1">
+          <div class="section-header">
+            <div class="section-obj">Telemetry and Instrumentation</div>
+            <h2>Distributed Tracing &amp; Token Instrumentation</h2>
+          </div>
+          
+            <article class="seg kind-prose" data-seg-id="s1-1">
+              <div class="seg-top">
+                <span class="seg-label">ARCHITECTURE PATTERN</span>
+                <button class="seg-play-btn" data-jump-seg="s1-1"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Combining SDK and API OpenTelemetry Spans</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s1-1-s0" data-start="49.964" title="Click to jump here"><span class="w">To</span> <span class="w">get</span> <span class="w">full</span> <span class="w">end-to-end</span> <span class="w">visibility,</span> <span class="w">combine</span> <span class="w">Anthropic</span> <span class="w">SDK</span> <span class="w">tracing</span> <span class="w">with</span> <span class="w">Claude</span> <span class="w">API</span> <span class="w">tracing.</span></span> <span class="sent" data-sent-id="s1-1-s1" data-start="56.675" title="Click to jump here"><span class="w">The</span> <span class="w">SDK</span> <span class="w">emits</span> <span class="w">client</span> <span class="w">spans</span> <span class="w">for</span> <span class="w">your</span> <span class="w">app</span> <span class="w">and</span> <span class="w">local</span> <span class="w">tool</span> <span class="w">runner,</span> <span class="w">while</span> <span class="w">the</span> <span class="w">API</span> <span class="w">emits</span> <span class="w">server</span> <span class="w">spans</span> <span class="w">for</span> <span class="w">each</span> <span class="w">internal</span> <span class="w">model</span> <span class="w">run</span> <span class="w">and</span> <span class="w">server</span> <span class="w">tool.</span></span> <span class="sent" data-sent-id="s1-1-s2" data-start="65.668" title="Click to jump here"><span class="w">Passing</span> <span class="w">the</span> <span class="w">W3C</span> <span class="w">traceparent</span> <span class="w">header</span> <span class="w">links</span> <span class="w">them</span> <span class="w">into</span> <span class="w">one</span> <span class="w">unified</span> <span class="w">trace,</span> <span class="w">and</span> <span class="w">even</span> <span class="w">propagates</span> <span class="w">context</span> <span class="w">into</span> <span class="w">your</span> <span class="w">downstream</span> <span class="w">MCP</span> <span class="w">servers.</span></span></div></div>
+              <div class="ref-notes"><p>Claude supports OpenTelemetry (OTel) tracing from both the <strong>Anthropic SDK</strong> (emitting <code>CLIENT</code> spans from your application) and the <strong>Claude API</strong> (emitting <code>SERVER</code> spans with <code>service.name</code> = <code>claude-platform</code> to an OTLP/HTTP protobuf destination on port 443). Running both together connects your app, client-side tools, and Anthropic's internal model runs into one unified trace via the W3C <code>traceparent</code> header.</p><p>When using the Messages API or Managed Agents MCP connectors, the Claude API forwards <code>traceparent</code> inside <code>params._meta</code> of <code>tools/call</code> requests so your downstream MCP server spans nest directly under <code>anthropic.mcp_tool_use</code>.</p></div>
+            </article>
+            <article class="seg kind-table" data-seg-id="s1-2">
+              <div class="seg-top">
+                <span class="seg-label">SPAN HIERARCHY</span>
+                <button class="seg-play-btn" data-jump-seg="s1-2"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Span Models Across Messages API, Managed Agents, and Agent SDK</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s1-2-s0" data-start="75.436" title="Click to jump here"><span class="w">Each</span> <span class="w">Claude</span> <span class="w">runtime</span> <span class="w">has</span> <span class="w">a</span> <span class="w">distinct</span> <span class="w">span</span> <span class="w">hierarchy.</span></span> <span class="sent" data-sent-id="s1-2-s1" data-start="78.584" title="Click to jump here"><span class="w">Messages</span> <span class="w">API</span> <span class="w">traces</span> <span class="w">nest</span> <span class="w">model</span> <span class="w">requests,</span> <span class="w">server</span> <span class="w">tools,</span> <span class="w">and</span> <span class="w">compactions</span> <span class="w">under</span> <span class="w">anthropic</span> <span class="w">dot</span> <span class="w">messages</span> <span class="w">dot</span> <span class="w">create.</span></span> <span class="sent" data-sent-id="s1-2-s2" data-start="86.703" title="Click to jump here"><span class="w">Managed</span> <span class="w">Agents</span> <span class="w">sessions</span> <span class="w">span</span> <span class="w">multiple</span> <span class="w">traces,</span> <span class="w">so</span> <span class="w">you</span> <span class="w">group</span> <span class="w">a</span> <span class="w">thread</span> <span class="w">by</span> <span class="w">gen</span> <span class="w">A</span> <span class="w">I</span> <span class="w">conversation</span> <span class="w">ID</span> <span class="w">and</span> <span class="w">the</span> <span class="w">whole</span> <span class="w">session</span> <span class="w">by</span> <span class="w">anthropic</span> <span class="w">session</span> <span class="w">ID.</span></span> <span class="sent" data-sent-id="s1-2-s3" data-start="96.379" title="Click to jump here"><span class="w">In</span> <span class="w">the</span> <span class="w">Agent</span> <span class="w">SDK,</span> <span class="w">the</span> <span class="w">underlying</span> <span class="w">Claude</span> <span class="w">Code</span> <span class="w">CLI</span> <span class="w">emits</span> <span class="w">interaction,</span> <span class="w">LLM</span> <span class="w">request,</span> <span class="w">and</span> <span class="w">tool</span> <span class="w">spans</span> <span class="w">when</span> <span class="w">enhanced</span> <span class="w">telemetry</span> <span class="w">is</span> <span class="w">enabled.</span></span></div></div>
+              <div class="ref-notes"><table><thead><tr><th>Platform / Runtime</th><th>Key Spans</th><th>Correlation &amp; Enablement</th></tr></thead><tbody><tr><td><strong>Messages API</strong></td><td><code>anthropic.messages.tool_runner</code> &rarr; <code>anthropic.messages.create</code> (CLIENT &amp; SERVER) &rarr; <code>anthropic.model_request</code>, <code>anthropic.tool_use &lt;tool&gt;</code>, <code>anthropic.compaction</code></td><td>SDK tracer provider + Console OTLP destination; linked via W3C <code>traceparent</code>.</td></tr><tr><td><strong>Managed Agents</strong></td><td><code>anthropic.sessions.events.send</code> &rarr; <code>anthropic.session.turn</code> (<code>invoke_agent</code>) &rarr; <code>anthropic.model_request</code>, tool spans, <code>anthropic.session.outcome_evaluation</code></td><td>Spans can span multiple traces; group a thread by <code>gen_ai.conversation.id</code> and a full multi-thread session by <code>anthropic.session.id</code>.</td></tr><tr><td><strong>Agent SDK / Claude Code</strong></td><td><code>claude_code.interaction</code> &rarr; <code>claude_code.llm_request</code>, <code>claude_code.tool</code> (with <code>blocked_on_user</code> and <code>execution</code> children), <code>claude_code.hook</code></td><td>Requires <code>CLAUDE_CODE_ENABLE_TELEMETRY=1</code>, <code>CLAUDE_CODE_ENHANCED_TELEMETRY_BETA=1</code>, and <code>OTEL_TRACES_EXPORTER=otlp</code>. Subagent spans nest under the parent tool span.</td></tr></tbody></table></div>
+            </article>
+            <article class="seg kind-bullets" data-seg-id="s1-3">
+              <div class="seg-top">
+                <span class="seg-label">TOKEN &amp; COST METRICS</span>
+                <button class="seg-play-btn" data-jump-seg="s1-3"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Counting Tokens Accurately Without Double-Counting</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s1-3-s0" data-start="106.317" title="Click to jump here"><span class="w">Token</span> <span class="w">accounting</span> <span class="w">in</span> <span class="w">traces</span> <span class="w">has</span> <span class="w">subtle</span> <span class="w">traps.</span></span> <span class="sent" data-sent-id="s1-3-s1" data-start="109.188" title="Click to jump here"><span class="w">Always</span> <span class="w">sum</span> <span class="w">a</span> <span class="w">single</span> <span class="w">span</span> <span class="w">source</span> <span class="w">per</span> <span class="w">request,</span> <span class="w">preferring</span> <span class="w">API</span> <span class="w">server</span> <span class="w">spans</span> <span class="w">because</span> <span class="w">they</span> <span class="w">capture</span> <span class="w">billed</span> <span class="w">tokens</span> <span class="w">even</span> <span class="w">on</span> <span class="w">canceled</span> <span class="w">calls.</span></span> <span class="sent" data-sent-id="s1-3-s2" data-start="117.691" title="Click to jump here"><span class="w">Remember</span> <span class="w">that</span> <span class="w">gen</span> <span class="w">A</span> <span class="w">I</span> <span class="w">usage</span> <span class="w">input</span> <span class="w">tokens</span> <span class="w">already</span> <span class="w">includes</span> <span class="w">cache</span> <span class="w">reads</span> <span class="w">and</span> <span class="w">writes,</span> <span class="w">whereas</span> <span class="w">compaction</span> <span class="w">tokens</span> <span class="w">are</span> <span class="w">tracked</span> <span class="w">separately.</span></span> <span class="sent" data-sent-id="s1-3-s3" data-start="125.724" title="Click to jump here"><span class="w">Finally,</span> <span class="w">deduplicate</span> <span class="w">retried</span> <span class="w">spans</span> <span class="w">using</span> <span class="w">trace</span> <span class="w">ID</span> <span class="w">and</span> <span class="w">span</span> <span class="w">ID.</span></span></div></div>
+              <div class="ref-notes"><ul><li><strong>Single source per request:</strong> When both SDK (<code>CLIENT</code>) and API (<code>SERVER</code>) spans exist for <code>anthropic.messages.create</code>, sum only the API spans—they reflect billed tokens even on failed or canceled requests, whereas SDK spans can undercount or omit tokens on aborts.</li><li><strong>Avoid parent-child duplication:</strong> For Messages API spans, sum either <code>anthropic.messages.create</code> or its child <code>anthropic.model_request</code> spans—never both. For Managed Agents, sum <code>anthropic.model_request</code> plus <code>anthropic.session.outcome_evaluation</code>.</li><li><strong>Cache &amp; compaction semantics:</strong> <code>gen_ai.usage.input_tokens</code> <em>already includes</em> cache reads and cache writes, so do not add cache attributes on top. Conversely, compaction tokens (<code>anthropic.usage.compaction.*</code> or <code>anthropic.compaction</code> spans) are separate and must be added.</li><li><strong>Deduplicate deliveries:</strong> API OTel export is at-least-once and best-effort; deduplicate spans by <code>trace_id</code> + <code>span_id</code>, and never sum <code>anthropic.messages.count_tokens</code> (not billed usage).</li><li><strong>Claude Code OTel metrics:</strong> Exported via <code>OTEL_METRICS_EXPORTER</code> as <code>claude_code.cost.usage</code> (USD) and <code>claude_code.token.usage</code> (split by <code>type</code>: <code>input</code>, <code>output</code>, <code>cacheRead</code>, <code>cacheCreation</code>—here <code>input</code> excludes cache tokens).</li></ul></div>
+            </article>
+            <article class="seg kind-prose" data-seg-id="s1-4">
+              <div class="seg-top">
+                <span class="seg-label">GROUNDING &amp; STRUCTURED LOGS</span>
+                <button class="seg-play-btn" data-jump-seg="s1-4"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Reasoning Traceability, Structured Log Events, and User Attribution</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s1-4-s0" data-start="130.543" title="Click to jump here"><span class="w">For</span> <span class="w">reasoning</span> <span class="w">and</span> <span class="w">grounding</span> <span class="w">traceability,</span> <span class="w">OpenTelemetry</span> <span class="w">maps</span> <span class="w">thinking</span> <span class="w">blocks</span> <span class="w">to</span> <span class="w">reasoning</span> <span class="w">parts</span> <span class="w">and</span> <span class="w">tracks</span> <span class="w">reasoning</span> <span class="w">output</span> <span class="w">tokens</span> <span class="w">separately,</span> <span class="w">while</span> <span class="w">structured</span> <span class="w">log</span> <span class="w">events</span> <span class="w">correlate</span> <span class="w">prompts,</span> <span class="w">tool</span> <span class="w">decisions,</span> <span class="w">and</span> <span class="w">subagent</span> <span class="w">runs</span> <span class="w">via</span> <span class="w">prompt</span> <span class="w">ID</span> <span class="w">and</span> <span class="w">agent</span> <span class="w">ID.</span></span> <span class="sent" data-sent-id="s1-4-s1" data-start="146.427" title="Click to jump here"><span class="w">To</span> <span class="w">attribute</span> <span class="w">activity</span> <span class="w">to</span> <span class="w">end</span> <span class="w">users</span> <span class="w">safely,</span> <span class="w">pass</span> <span class="w">an</span> <span class="w">opaque</span> <span class="w">ID</span> <span class="w">in</span> <span class="w">W3C</span> <span class="w">baggage,</span> <span class="w">because</span> <span class="w">the</span> <span class="w">Claude</span> <span class="w">API</span> <span class="w">automatically</span> <span class="w">drops</span> <span class="w">any</span> <span class="w">user</span> <span class="w">ID</span> <span class="w">that</span> <span class="w">looks</span> <span class="w">like</span> <span class="w">an</span> <span class="w">email</span> <span class="w">address.</span></span></div></div>
+              <div class="ref-notes"><p>Under OpenTelemetry GenAI semantic conventions, Anthropic content blocks map cleanly for reasoning and grounding audits: <code>thinking</code> blocks become <code>reasoning</code> message parts (with signatures stripped, and token counts in <code>gen_ai.usage.reasoning.output_tokens</code>), while <code>tool_use</code> and <code>tool_result</code> blocks map to <code>tool_call</code> and <code>tool_call_response</code>. Note that Managed Agents spans omit thinking text because <code>agent.thinking</code> events do not expose raw thinking content.</p><p>In Claude Code and the Agent SDK, structured log events (<code>OTEL_LOGS_EXPORTER=otlp</code>) emit <code>claude_code.user_prompt</code>, <code>claude_code.api_request</code>, <code>claude_code.tool_decision</code>, and <code>claude_code.tool_result</code> correlated by <code>prompt.id</code>, <code>workflow.run_id</code>, and subagent <code>agent_id</code> / <code>parent_agent_id</code>. To attribute actions to end users, pass an opaque ID via W3C <code>baggage: user.id=4f2a</code> on the Claude API (the API drops any <code>user.id</code> containing an email address for privacy) or percent-encoded <code>enduser.id</code> and <code>tenant.id</code> in <code>OTEL_RESOURCE_ATTRIBUTES</code> for the Agent SDK.</p></div>
+            </article>
+            <article class="seg kind-code" data-seg-id="s1-5">
+              <div class="seg-top">
+                <span class="seg-label">CODE PATTERN</span>
+                <button class="seg-play-btn" data-jump-seg="s1-5"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Propagating Trace Context &amp; Tuning Agent SDK Flush Intervals</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s1-5-s0" data-start="158.328" title="Click to jump here"><span class="w">Here</span> <span class="w">are</span> <span class="w">two</span> <span class="w">production</span> <span class="w">instrumentation</span> <span class="w">patterns.</span></span> <span class="sent" data-sent-id="s1-5-s1" data-start="160.9" title="Click to jump here"><span class="w">First,</span> <span class="w">wrap</span> <span class="w">Anthropic</span> <span class="w">SDK</span> <span class="w">calls</span> <span class="w">inside</span> <span class="w">your</span> <span class="w">application&#x27;s</span> <span class="w">active</span> <span class="w">span</span> <span class="w">so</span> <span class="w">the</span> <span class="w">SDK</span> <span class="w">automatically</span> <span class="w">injects</span> <span class="w">traceparent</span> <span class="w">and</span> <span class="w">nests</span> <span class="w">API</span> <span class="w">spans</span> <span class="w">underneath.</span></span> <span class="sent" data-sent-id="s1-5-s2" data-start="171.6" title="Click to jump here"><span class="w">Second,</span> <span class="w">in</span> <span class="w">the</span> <span class="w">Agent</span> <span class="w">SDK,</span> <span class="w">always</span> <span class="w">use</span> <span class="w">the</span> <span class="w">OTLP</span> <span class="w">exporter</span> <span class="w">rather</span> <span class="w">than</span> <span class="w">console,</span> <span class="w">and</span> <span class="w">lower</span> <span class="w">the</span> <span class="w">export</span> <span class="w">intervals</span> <span class="w">to</span> <span class="w">one</span> <span class="w">thousand</span> <span class="w">milliseconds</span> <span class="w">so</span> <span class="w">short-lived</span> <span class="w">tasks</span> <span class="w">flush</span> <span class="w">before</span> <span class="w">the</span> <span class="w">child</span> <span class="w">process</span> <span class="w">exits.</span></span></div></div>
+              <div class="ref-notes"><pre><code># 1. Anthropic SDK: nest API spans under your application span
+from opentelemetry import trace
+from anthropic import Anthropic
+
+tracer = trace.get_tracer("checkout-service")
+client = Anthropic()
+
+with tracer.start_as_current_span("handle_support_ticket"):
+    # SDK emits CLIENT span and injects W3C traceparent -&gt; API emits SERVER child span
+    msg = client.messages.create(
+        model="claude-sonnet-5", max_tokens=1024,
+        messages=[{"role": "user", "content": "Check order #4821"}]
+    )
+
+# 2. Agent SDK: configure OTLP export + fast flush for short-lived queries
+OTEL_ENV = {
+    "CLAUDE_CODE_ENABLE_TELEMETRY": "1",
+    "CLAUDE_CODE_ENHANCED_TELEMETRY_BETA": "1",
+    "OTEL_TRACES_EXPORTER": "otlp",   # NEVER 'console' (corrupts SDK stdout pipe!)
+    "OTEL_METRICS_EXPORTER": "otlp",
+    "OTEL_LOGS_EXPORTER": "otlp",
+    "OTEL_EXPORTER_OTLP_ENDPOINT": "http://collector.internal:4318",
+    "OTEL_TRACES_EXPORT_INTERVAL": "1000",
+    "OTEL_METRIC_EXPORT_INTERVAL": "1000",
+    "OTEL_RESOURCE_ATTRIBUTES": "enduser.id=usr_92f1,tenant.id=acme"
+}</code></pre></div>
+            </article>
+            <article class="seg kind-callout" data-seg-id="s1-6">
+              <div class="seg-top">
+                <span class="seg-label">EXAM TRAP</span>
+                <button class="seg-play-btn" data-jump-seg="s1-6"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Three Classic Instrumentation Pitfalls</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s1-6-s0" data-start="184.419" title="Click to jump here"><span class="w">Watch</span> <span class="w">out</span> <span class="w">for</span> <span class="w">three</span> <span class="w">exam</span> <span class="w">traps</span> <span class="w">here.</span></span> <span class="sent" data-sent-id="s1-6-s1" data-start="186.543" title="Click to jump here"><span class="w">Never</span> <span class="w">configure</span> <span class="w">the</span> <span class="w">console</span> <span class="w">exporter</span> <span class="w">in</span> <span class="w">the</span> <span class="w">Agent</span> <span class="w">SDK</span> <span class="w">because</span> <span class="w">it</span> <span class="w">writes</span> <span class="w">to</span> <span class="w">standard</span> <span class="w">out</span> <span class="w">and</span> <span class="w">breaks</span> <span class="w">the</span> <span class="w">CLI</span> <span class="w">message</span> <span class="w">pipe.</span></span> <span class="sent" data-sent-id="s1-6-s2" data-start="194.171" title="Click to jump here"><span class="w">In</span> <span class="w">TypeScript,</span> <span class="w">remember</span> <span class="w">to</span> <span class="w">spread</span> <span class="w">process</span> <span class="w">dot</span> <span class="w">env</span> <span class="w">when</span> <span class="w">passing</span> <span class="w">options</span> <span class="w">dot</span> <span class="w">env.</span></span> <span class="sent" data-sent-id="s1-6-s3" data-start="199.153" title="Click to jump here"><span class="w">And</span> <span class="w">never</span> <span class="w">rely</span> <span class="w">on</span> <span class="w">best-effort</span> <span class="w">OpenTelemetry</span> <span class="w">spans</span> <span class="w">for</span> <span class="w">billing</span> <span class="w">reconciliation</span> <span class="w">or</span> <span class="w">leaked-key</span> <span class="w">audits—use</span> <span class="w">the</span> <span class="w">Usage</span> <span class="w">and</span> <span class="w">Cost</span> <span class="w">Analytics</span> <span class="w">API</span> <span class="w">instead.</span></span></div></div>
+              <div class="ref-notes"><p><strong>1. Never use <code>console</code> exporter in the Agent SDK:</strong> The Agent SDK communicates with the Claude Code CLI over <code>stdout</code>; setting <code>console</code> as an exporter corrupts the message channel. Point OTLP at a local collector instead, and use <code>CLAUDE_CODE_OTEL_DIAG_STDERR=1</code> to surface silent export errors.</p><p><strong>2. TypeScript <code>options.env</code> replaces <code>process.env</code>:</strong> Unlike Python (which merges), TypeScript Agent SDK <code>env</code> overwrites inherited variables—always spread <code>...process.env</code> or you will drop <code>PATH</code> and <code>ANTHROPIC_API_KEY</code>.</p><p><strong>3. OTel spans are best-effort, not billing-complete:</strong> Lost spans or callers disabling the <code>traceparent</code> sampled flag will omit requests. For authoritative spend or leaked-key detection, use the <strong>Usage and Cost Analytics API</strong>.</p></div>
+            </article>
+        </section>
+        <section class="section-block" id="sec-2">
+          <div class="section-header">
+            <div class="section-obj">Telemetry and Instrumentation</div>
+            <h2>Cache Diagnostics &amp; Privacy-Constrained Content Capture</h2>
+          </div>
+          
+            <article class="seg kind-prose" data-seg-id="s2-1">
+              <div class="seg-top">
+                <span class="seg-label">CACHE DIAGNOSTICS</span>
+                <button class="seg-play-btn" data-jump-seg="s2-1"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Pinpointing Prompt Prefix Divergence with Cache Diagnostics</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s2-1-s0" data-start="209.816" title="Click to jump here"><span class="w">When</span> <span class="w">prompt</span> <span class="w">cache</span> <span class="w">hit</span> <span class="w">rates</span> <span class="w">suddenly</span> <span class="w">collapse,</span> <span class="w">Cache</span> <span class="w">Diagnostics</span> <span class="w">eliminates</span> <span class="w">guesswork.</span></span> <span class="sent" data-sent-id="s2-1-s1" data-start="214.841" title="Click to jump here"><span class="w">You</span> <span class="w">opt</span> <span class="w">in</span> <span class="w">on</span> <span class="w">turn</span> <span class="w">one</span> <span class="w">by</span> <span class="w">passing</span> <span class="w">a</span> <span class="w">diagnostics</span> <span class="w">object</span> <span class="w">with</span> <span class="w">previous</span> <span class="w">message</span> <span class="w">ID</span> <span class="w">set</span> <span class="w">to</span> <span class="w">null,</span> <span class="w">then</span> <span class="w">thread</span> <span class="w">each</span> <span class="w">response</span> <span class="w">ID</span> <span class="w">into</span> <span class="w">the</span> <span class="w">next</span> <span class="w">turn.</span></span> <span class="sent" data-sent-id="s2-1-s2" data-start="224.517" title="Click to jump here"><span class="w">Anthropic</span> <span class="w">compares</span> <span class="w">lightweight</span> <span class="w">cryptographic</span> <span class="w">hash</span> <span class="w">fingerprints</span> <span class="w">without</span> <span class="w">storing</span> <span class="w">raw</span> <span class="w">prompts,</span> <span class="w">keeping</span> <span class="w">the</span> <span class="w">feature</span> <span class="w">ZDR-qualified</span> <span class="w">while</span> <span class="w">pinpointing</span> <span class="w">the</span> <span class="w">exact</span> <span class="w">first</span> <span class="w">point</span> <span class="w">of</span> <span class="w">prefix</span> <span class="w">divergence.</span></span></div></div>
+              <div class="ref-notes"><p>Prompt caching requires a byte-for-byte identical prefix. Without diagnostics, a reordered tool, interpolated timestamp, or edited message only shows up as <code>usage.cache_read_input_tokens</code> dropping to zero. The Messages API <strong>Cache Diagnostics</strong> feature solves this by accepting a <code>diagnostics</code> object on every turn: pass <code>{"previous_message_id": null}</code> on turn 1 to opt in, and pass the previous response's <code>id</code> on every subsequent turn.</p><p>The API stores a short-lived, workspace-scoped fingerprint made strictly of cryptographic hashes and token-count estimates—never raw prompt text—making Cache Diagnostics <strong>ZDR-eligible (qualified)</strong>. It is best-effort and never blocks or fails a request.</p></div>
+            </article>
+            <article class="seg kind-table" data-seg-id="s2-2">
+              <div class="seg-top">
+                <span class="seg-label">DIAGNOSTIC MATRIX</span>
+                <button class="seg-play-btn" data-jump-seg="s2-2"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Interpreting cache_miss_reason Alongside Usage Tokens</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s2-2-s0" data-start="236.12" title="Click to jump here"><span class="w">Cache</span> <span class="w">miss</span> <span class="w">reason</span> <span class="w">reports</span> <span class="w">only</span> <span class="w">the</span> <span class="w">earliest</span> <span class="w">divergence:</span> <span class="w">model</span> <span class="w">changed,</span> <span class="w">system</span> <span class="w">changed,</span> <span class="w">tools</span> <span class="w">changed,</span> <span class="w">or</span> <span class="w">messages</span> <span class="w">changed,</span> <span class="w">along</span> <span class="w">with</span> <span class="w">an</span> <span class="w">estimated</span> <span class="w">count</span> <span class="w">of</span> <span class="w">missed</span> <span class="w">input</span> <span class="w">tokens.</span></span> <span class="sent" data-sent-id="s2-2-s1" data-start="247.844" title="Click to jump here"><span class="w">Always</span> <span class="w">read</span> <span class="w">it</span> <span class="w">alongside</span> <span class="w">cache</span> <span class="w">read</span> <span class="w">input</span> <span class="w">tokens.</span></span> <span class="sent" data-sent-id="s2-2-s2" data-start="250.843" title="Click to jump here"><span class="w">If</span> <span class="w">diagnostics</span> <span class="w">is</span> <span class="w">null</span> <span class="w">but</span> <span class="w">cache</span> <span class="w">reads</span> <span class="w">are</span> <span class="w">zero,</span> <span class="w">your</span> <span class="w">prompt</span> <span class="w">didn&#x27;t</span> <span class="w">diverge—the</span> <span class="w">cache</span> <span class="w">entry</span> <span class="w">simply</span> <span class="w">expired</span> <span class="w">or</span> <span class="w">fell</span> <span class="w">below</span> <span class="w">the</span> <span class="w">minimum</span> <span class="w">cacheable</span> <span class="w">length.</span></span></div></div>
+              <div class="ref-notes"><table><thead><tr><th><code>diagnostics.cache_miss_reason.type</code></th><th>Root Cause &amp; Fix</th></tr></thead><tbody><tr><td><code>model_changed</code></td><td>Router, A/B test, or fallback switched models; caches are per-model. Hold the model constant per conversation.</td></tr><tr><td><code>system_changed</code></td><td>Dynamic value (timestamp, request ID) interpolated into <code>system</code>. Keep <code>system</code> byte-stable; move dynamic data to the latest <code>user</code> message.</td></tr><tr><td><code>tools_changed</code></td><td>Tools added, removed, reordered, or JSON schema keys serialized non-deterministically. Send a fixed tool list with sorted keys.</td></tr><tr><td><code>messages_changed</code></td><td>History truncated, edited, or assistant/<code>tool_result</code> blocks re-serialized differently. Keep history append-only and echo blocks verbatim.</td></tr><tr><td><code>previous_message_not_found</code> / <code>unavailable</code></td><td>No comparison produced (previous turn omitted <code>diagnostics</code>, different workspace, expired fingerprint, or prompt-affecting params like <code>thinking</code>/<code>tool_choice</code>/beta headers changed).</td></tr></tbody></table><p><strong>Reading with usage:</strong> If <code>diagnostics</code> is <code>null</code> (no divergence) <em>and</em> <code>cache_read_input_tokens</code> is zero, the prefix matched but the cache entry either expired (5m/1h TTL) or fell below the minimum cacheable token length. If <code>cache_miss_reason</code> is <code>null</code> inside a non-null <code>diagnostics</code> object, the comparison was still pending—check the next turn.</p></div>
+            </article>
+            <article class="seg kind-bullets" data-seg-id="s2-3">
+              <div class="seg-top">
+                <span class="seg-label">CONTENT CAPTURE</span>
+                <button class="seg-play-btn" data-jump-seg="s2-3"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Configuring Content Modes, Truncation, and Opt-In Flags</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s2-3-s0" data-start="260.547" title="Click to jump here"><span class="w">Telemetry</span> <span class="w">is</span> <span class="w">metadata-only</span> <span class="w">by</span> <span class="w">default</span> <span class="w">across</span> <span class="w">both</span> <span class="w">the</span> <span class="w">Claude</span> <span class="w">API</span> <span class="w">and</span> <span class="w">the</span> <span class="w">Agent</span> <span class="w">SDK.</span></span> <span class="sent" data-sent-id="s2-3-s1" data-start="267.001" title="Click to jump here"><span class="w">Turning</span> <span class="w">on</span> <span class="w">full</span> <span class="w">content</span> <span class="w">gives</span> <span class="w">you</span> <span class="w">prompts,</span> <span class="w">responses,</span> <span class="w">and</span> <span class="w">tool</span> <span class="w">arguments</span> <span class="w">for</span> <span class="w">debugging</span> <span class="w">and</span> <span class="w">eval</span> <span class="w">pipelines,</span> <span class="w">capped</span> <span class="w">at</span> <span class="w">zero</span> <span class="w">point</span> <span class="w">seven</span> <span class="w">five</span> <span class="w">megabytes</span> <span class="w">per</span> <span class="w">span</span> <span class="w">unless</span> <span class="w">you</span> <span class="w">raise</span> <span class="w">max</span> <span class="w">content</span> <span class="w">bytes.</span></span> <span class="sent" data-sent-id="s2-3-s2" data-start="279.579" title="Click to jump here"><span class="w">In</span> <span class="w">Claude</span> <span class="w">Code</span> <span class="w">and</span> <span class="w">the</span> <span class="w">Agent</span> <span class="w">SDK,</span> <span class="w">you</span> <span class="w">control</span> <span class="w">sensitivity</span> <span class="w">granularly</span> <span class="w">using</span> <span class="w">opt-in</span> <span class="w">flags</span> <span class="w">for</span> <span class="w">prompts,</span> <span class="w">tool</span> <span class="w">details,</span> <span class="w">tool</span> <span class="w">content,</span> <span class="w">or</span> <span class="w">raw</span> <span class="w">API</span> <span class="w">bodies.</span></span></div></div>
+              <div class="ref-notes"><ul><li><strong>API &amp; SDK Content Modes:</strong> Default is <code>metadata_only</code> (IDs, timing, status, token counts, agent/tool names). Opt into <code>content</code> (<strong>Full content</strong>) to capture <code>gen_ai.system_instructions</code>, <code>gen_ai.input.messages</code>, <code>gen_ai.output.messages</code>, and tool arguments/results for debugging and evals.</li><li><strong>Payload size limits:</strong> Full content defaults to <strong>0.75 MB per span</strong> (fits a 200k-token context under common 1 MB collector limits; a 1M-token context needs ~4 MB via <code>traces.max_content_bytes</code>). Over-limit spans set <code>anthropic.content.truncated=true</code>, dropping system prompt and earliest messages first on requests, and trailing blocks on tool results.</li><li><strong>Claude Code / Agent SDK privacy gates:</strong> Structural by default; content requires explicit opt-in via <code>OTEL_LOG_USER_PROMPTS=1</code>, <code>OTEL_LOG_TOOL_DETAILS=1</code> (un-redacts custom agent, skill, plugin, and MCP names), <code>OTEL_LOG_TOOL_CONTENT=1</code> (tool outputs, 60 KB default cap), or <code>OTEL_LOG_RAW_API_BODIES=1</code> / <code>file:&lt;dir&gt;</code> (full request/response JSON with thinking redacted).</li></ul></div>
+            </article>
+            <article class="seg kind-table" data-seg-id="s2-4">
+              <div class="seg-top">
+                <span class="seg-label">PRIVACY &amp; COMPLIANCE</span>
+                <button class="seg-play-btn" data-jump-seg="s2-4"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Zero Data Retention (ZDR), HIPAA, and CMEK Constraints</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s2-4-s0" data-start="290.456" title="Click to jump here"><span class="w">Privacy</span> <span class="w">arrangements</span> <span class="w">directly</span> <span class="w">shape</span> <span class="w">what</span> <span class="w">you</span> <span class="w">can</span> <span class="w">instrument.</span></span> <span class="sent" data-sent-id="s2-4-s1" data-start="293.753" title="Click to jump here"><span class="w">Under</span> <span class="w">ZDR,</span> <span class="w">Messages</span> <span class="w">API</span> <span class="w">full-content</span> <span class="w">OpenTelemetry</span> <span class="w">export</span> <span class="w">still</span> <span class="w">works</span> <span class="w">because</span> <span class="w">spans</span> <span class="w">are</span> <span class="w">buffered</span> <span class="w">only</span> <span class="w">in</span> <span class="w">memory</span> <span class="w">before</span> <span class="w">delivery,</span> <span class="w">whereas</span> <span class="w">HIPAA,</span> <span class="w">FERPA,</span> <span class="w">or</span> <span class="w">K-12</span> <span class="w">restrictions</span> <span class="w">force</span> <span class="w">API</span> <span class="w">destinations</span> <span class="w">to</span> <span class="w">metadata-only.</span></span> <span class="sent" data-sent-id="s2-4-s2" data-start="309.424" title="Click to jump here"><span class="w">Remember</span> <span class="w">that</span> <span class="w">customer-managed</span> <span class="w">encryption</span> <span class="w">keys</span> <span class="w">and</span> <span class="w">ZDR</span> <span class="w">cannot</span> <span class="w">share</span> <span class="w">a</span> <span class="w">workspace—CMEK</span> <span class="w">requires</span> <span class="w">standard</span> <span class="w">thirty-day</span> <span class="w">retention</span> <span class="w">on</span> <span class="w">a</span> <span class="w">non-default</span> <span class="w">workspace,</span> <span class="w">and</span> <span class="w">hosted</span> <span class="w">Managed</span> <span class="w">Agents</span> <span class="w">is</span> <span class="w">never</span> <span class="w">ZDR</span> <span class="w">or</span> <span class="w">HIPAA</span> <span class="w">eligible.</span></span></div></div>
+              <div class="ref-notes"><table><thead><tr><th>Constraint</th><th>Telemetry &amp; Retention Behavior</th></tr></thead><tbody><tr><td><strong>ZDR (Messages API)</strong></td><td>Prompts/outputs are not stored at rest. Full-content OTel export <em>is</em> permitted—the API holds exported content only in memory until delivery. Once delivered, your observability vendor's retention policy governs it.</td></tr><tr><td><strong>HIPAA / FERPA / K-12</strong></td><td>API telemetry destinations export <strong>metadata only</strong> regardless of content mode setting (SDK spans in your own VPC are unaffected). Non-HIPAA features return <code>400 invalid_request_error</code>. Never put PHI in <code>strict: true</code> JSON schemas (schemas are cached up to 24h without PHI protections).</td></tr><tr><td><strong>CMEK + ZDR</strong></td><td><strong>Cannot share a workspace</strong> on Claude Platform. CMEK encrypts stored data and requires <strong>Standard data retention (30 days)</strong>. A ZDR org can enable 30-day retention and attach a CMEK key to a <em>non-default</em> workspace while keeping other workspaces on ZDR.</td></tr><tr><td><strong>Managed Agents &amp; Covered Models</strong></td><td>Hosted Managed Agents is <strong>not ZDR or HIPAA eligible</strong> (stateful transcripts persist until deleted; self-hosted Managed Agents is ZDR-eligible). Covered Models (e.g., Fable 5, Mythos 5) require 30-day retention and reject ZDR workspaces with HTTP <code>400</code>.</td></tr></tbody></table></div>
+            </article>
+            <article class="seg kind-callout" data-seg-id="s2-5">
+              <div class="seg-top">
+                <span class="seg-label">EXAM TRAP</span>
+                <button class="seg-play-btn" data-jump-seg="s2-5"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>ZDR Does Not Block Stateful Features—HIPAA Does</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s2-5-s0" data-start="324.483" title="Click to jump here"><span class="w">Here</span> <span class="w">is</span> <span class="w">a</span> <span class="w">critical</span> <span class="w">compliance</span> <span class="w">distinction</span> <span class="w">for</span> <span class="w">the</span> <span class="w">exam.</span></span> <span class="sent" data-sent-id="s2-5-s1" data-start="327.737" title="Click to jump here"><span class="w">Under</span> <span class="w">HIPAA</span> <span class="w">readiness,</span> <span class="w">Anthropic</span> <span class="w">actively</span> <span class="w">blocks</span> <span class="w">non-eligible</span> <span class="w">features</span> <span class="w">with</span> <span class="w">a</span> <span class="w">400</span> <span class="w">error.</span></span> <span class="sent" data-sent-id="s2-5-s2" data-start="333.616" title="Click to jump here"><span class="w">Under</span> <span class="w">ZDR,</span> <span class="w">calling</span> <span class="w">stateful</span> <span class="w">features</span> <span class="w">like</span> <span class="w">Batch</span> <span class="w">processing,</span> <span class="w">the</span> <span class="w">Files</span> <span class="w">API,</span> <span class="w">or</span> <span class="w">Code</span> <span class="w">Execution</span> <span class="w">is</span> <span class="w">not</span> <span class="w">blocked—you</span> <span class="w">silently</span> <span class="w">step</span> <span class="w">outside</span> <span class="w">ZDR</span> <span class="w">for</span> <span class="w">that</span> <span class="w">data.</span></span> <span class="sent" data-sent-id="s2-5-s3" data-start="344.721" title="Click to jump here"><span class="w">Always</span> <span class="w">enforce</span> <span class="w">feature</span> <span class="w">allowlists</span> <span class="w">in</span> <span class="w">your</span> <span class="w">gateway</span> <span class="w">if</span> <span class="w">strict</span> <span class="w">ZDR</span> <span class="w">is</span> <span class="w">required.</span></span></div></div>
+              <div class="ref-notes"><p>Under <strong>HIPAA readiness</strong>, calling a non-eligible feature (like <code>code_execution</code> or Managed Agents) is automatically rejected with HTTP <code>400 invalid_request_error</code>. Under <strong>ZDR</strong>, however, the API does <em>not</em> block stateful non-ZDR features such as the Batch API (29-day retention), Files API, or Code Execution (30-day container retention)—calling them silently steps outside your ZDR arrangement for that data! Also note that ZDR is enabled <strong>per organization</strong> and does not automatically inherit into newly created organizations.</p></div>
+            </article>
+        </section>
+        <section class="section-block" id="sec-3">
+          <div class="section-header">
+            <div class="section-obj">Production Monitoring and Alerting</div>
+            <h2>SLIs, SLOs, Cost Analytics &amp; Drift Detection</h2>
+          </div>
+          
+            <article class="seg kind-bullets" data-seg-id="s3-1">
+              <div class="seg-top">
+                <span class="seg-label">LLM SLIs &amp; SLOs</span>
+                <button class="seg-play-btn" data-jump-seg="s3-1"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Defining Meaningful SLIs Beyond HTTP Availability</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s3-1-s0" data-start="350.264" title="Click to jump here"><span class="w">Traditional</span> <span class="w">HTTP</span> <span class="w">200</span> <span class="w">uptime</span> <span class="w">is</span> <span class="w">dangerously</span> <span class="w">blind</span> <span class="w">for</span> <span class="w">LLM</span> <span class="w">services.</span></span> <span class="sent" data-sent-id="s3-1-s1" data-start="356.143" title="Click to jump here"><span class="w">Staff</span> <span class="w">engineers</span> <span class="w">define</span> <span class="w">multi-dimensional</span> <span class="w">SLIs:</span> <span class="w">time-to-first-chunk</span> <span class="w">separate</span> <span class="w">from</span> <span class="w">total</span> <span class="w">agent-turn</span> <span class="w">latency,</span> <span class="w">stop-reason</span> <span class="w">ratios</span> <span class="w">that</span> <span class="w">catch</span> <span class="w">max-tokens</span> <span class="w">truncations</span> <span class="w">and</span> <span class="w">safety</span> <span class="w">refusals,</span> <span class="w">prompt</span> <span class="w">cache</span> <span class="w">hit</span> <span class="w">rates</span> <span class="w">that</span> <span class="w">guard</span> <span class="w">unit</span> <span class="w">economics,</span> <span class="w">and</span> <span class="w">task-level</span> <span class="w">quality</span> <span class="w">signals</span> <span class="w">like</span> <span class="w">tool</span> <span class="w">success</span> <span class="w">rate</span> <span class="w">and</span> <span class="w">groundedness.</span></span></div></div>
+              <div class="ref-notes"><ul><li><strong>Latency SLIs (split interactive vs. total):</strong> Track streaming time-to-first-chunk (<code>gen_ai.response.time_to_first_chunk</code>) separately from end-to-end turn completion and tool-execution latency (<code>claude_code.tool.execution</code> vs. human wait in <code>blocked_on_user</code>).</li><li><strong>Completion &amp; Stop-Reason SLIs:</strong> Monitor the proportion of responses ending in <code>end_turn</code> versus pathological stops: <code>max_tokens</code> (silent truncation), <code>refusal</code> (safety over-triggering), or <code>requires_action</code> timeouts in Managed Agents.</li><li><strong>Efficiency &amp; Cost SLIs:</strong> Track prompt cache hit ratio (<code>cache_read_input_tokens / total_input_tokens</code>), tokens per successful task, and cost per resolved ticket—a 15% cache-hit drop can double spend without triggering any error alert.</li><li><strong>Quality &amp; Grounding SLIs:</strong> Combine deterministic checks (JSON schema validity, tool-call success rate, citation presence) with sampled online LLM-as-judge groundedness and user-acceptance metrics (such as edit acceptance rate).</li></ul></div>
+            </article>
+            <article class="seg kind-prose" data-seg-id="s3-2">
+              <div class="seg-top">
+                <span class="seg-label">COST TELEMETRY</span>
+                <button class="seg-play-btn" data-jump-seg="s3-2"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Usage and Cost Analytics API for Authoritative Spend &amp; Attribution</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s3-2-s0" data-start="376.023" title="Click to jump here"><span class="w">When</span> <span class="w">you</span> <span class="w">need</span> <span class="w">authoritative</span> <span class="w">spend</span> <span class="w">tracking</span> <span class="w">and</span> <span class="w">chargeback,</span> <span class="w">query</span> <span class="w">the</span> <span class="w">Usage</span> <span class="w">and</span> <span class="w">Cost</span> <span class="w">Analytics</span> <span class="w">API</span> <span class="w">rather</span> <span class="w">than</span> <span class="w">summing</span> <span class="w">best-effort</span> <span class="w">trace</span> <span class="w">spans.</span></span> <span class="sent" data-sent-id="s3-2-s1" data-start="384.803" title="Click to jump here"><span class="w">It</span> <span class="w">exposes</span> <span class="w">both</span> <span class="w">token</span> <span class="w">usage</span> <span class="w">and</span> <span class="w">USD</span> <span class="w">cost</span> <span class="w">endpoints</span> <span class="w">with</span> <span class="w">one-minute,</span> <span class="w">hourly,</span> <span class="w">or</span> <span class="w">daily</span> <span class="w">buckets,</span> <span class="w">grouping</span> <span class="w">by</span> <span class="w">up</span> <span class="w">to</span> <span class="w">five</span> <span class="w">dimensions</span> <span class="w">like</span> <span class="w">model,</span> <span class="w">workspace,</span> <span class="w">API</span> <span class="w">key,</span> <span class="w">actor,</span> <span class="w">or</span> <span class="w">Managed</span> <span class="w">Agents</span> <span class="w">session</span> <span class="w">ID,</span> <span class="w">with</span> <span class="w">typical</span> <span class="w">data</span> <span class="w">freshness</span> <span class="w">within</span> <span class="w">four</span> <span class="w">hours.</span></span></div></div>
+              <div class="ref-notes"><p>For executive dashboards, chargeback, and anomaly detection, use the <strong>Usage and Cost Analytics API</strong> (<code>GET /v1/organizations/analytics/usage</code> and <code>/cost</code>, beta header <code>analytics-usage-cost-2026-08-24</code>, authenticated with an Admin API key, OAuth <code>org:admin</code> / Workload Identity Federation token, or Enterprise <code>read:analytics</code> key). Unlike best-effort OTel spans, it captures 100% of billable usage—including requests with tracing disabled—typically appearing within <strong>4 hours</strong>.</p><p>You can bucket time series by <code>1m</code>, <code>1h</code>, or <code>1d</code> (with <code>order_by=time</code>) and group by up to <strong>5 dimensions</strong> simultaneously, including <code>model</code>, <code>workspace_id</code>, <code>api_key_id</code>, <code>actor</code>, <code>service_tier</code>, <code>agent_id</code>, and <code>session_id</code>. Use <code>api_key_ids[]</code> to audit every request authenticated by a key (ideal for spotting a leaked key), and <code>actor_ids[]</code> to attribute spend to a user or service account.</p></div>
+            </article>
+            <article class="seg kind-table" data-seg-id="s3-3">
+              <div class="seg-top">
+                <span class="seg-label">PLATFORM OBSERVABILITY</span>
+                <button class="seg-play-btn" data-jump-seg="s3-3"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Monitoring Claude Code Fleets and Managed Agents Sessions</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s3-3-s0" data-start="402.144" title="Click to jump here"><span class="w">Beyond</span> <span class="w">raw</span> <span class="w">Messages</span> <span class="w">API</span> <span class="w">calls,</span> <span class="w">Anthropic</span> <span class="w">provides</span> <span class="w">specialized</span> <span class="w">observability</span> <span class="w">for</span> <span class="w">coding</span> <span class="w">fleets</span> <span class="w">and</span> <span class="w">Managed</span> <span class="w">Agents.</span></span> <span class="sent" data-sent-id="s3-3-s1" data-start="410.049" title="Click to jump here"><span class="w">The</span> <span class="w">Claude</span> <span class="w">Code</span> <span class="w">Analytics</span> <span class="w">API</span> <span class="w">gives</span> <span class="w">daily</span> <span class="w">productivity</span> <span class="w">and</span> <span class="w">tool</span> <span class="w">acceptance</span> <span class="w">metrics</span> <span class="w">with</span> <span class="w">a</span> <span class="w">one-hour</span> <span class="w">lag,</span> <span class="w">while</span> <span class="w">real-time</span> <span class="w">monitoring</span> <span class="w">uses</span> <span class="w">OpenTelemetry.</span></span> <span class="sent" data-sent-id="s3-3-s2" data-start="420.109" title="Click to jump here"><span class="w">For</span> <span class="w">Managed</span> <span class="w">Agents,</span> <span class="w">combine</span> <span class="w">session</span> <span class="w">usage</span> <span class="w">stream</span> <span class="w">events,</span> <span class="w">lifecycle</span> <span class="w">webhooks</span> <span class="w">like</span> <span class="w">session</span> <span class="w">budget</span> <span class="w">reached</span> <span class="w">or</span> <span class="w">vault</span> <span class="w">credential</span> <span class="w">refresh</span> <span class="w">failed,</span> <span class="w">and</span> <span class="w">an</span> <span class="w">offline</span> <span class="w">reviewer</span> <span class="w">job</span> <span class="w">that</span> <span class="w">audits</span> <span class="w">long</span> <span class="w">transcripts.</span></span></div></div>
+              <div class="ref-notes"><table><thead><tr><th>System</th><th>Observability Surface</th><th>Key Signals &amp; Operational Use</th></tr></thead><tbody><tr><td><strong>Claude Code Fleet</strong></td><td><strong>Claude Code Analytics API</strong> (<code>/v1/organizations/usage_report/claude_code</code>) + OTel</td><td>Daily aggregated metrics (1-hour delay, UTC <code>starting_at</code>): sessions, lines of code added/removed, commits, PRs, per-model tokens/cost, and <strong>tool acceptance rate</strong> = <code>accepted / (accepted + rejected)</code> for Edit/MultiEdit/Write/NotebookEdit. Use OTel for real-time alerts.</td></tr><tr><td><strong>Managed Agents</strong></td><td><strong>Console Session Viewer</strong>, <code>session.usage</code> stream events, &amp; <strong>Webhooks</strong></td><td><code>session.usage</code> emits on idle/budget transitions with authoritative <code>list_cost</code> (cents) and <code>active_seconds</code> (concurrent threads counted once). Subscribe to <code>session.status_idled</code>, <code>session.budget_reached</code>, <code>session.status_terminated</code>, <code>deployment_run.failed</code>, and <code>vault_credential.refresh_failed</code>.</td></tr><tr><td><strong>Post-hoc Audit</strong></td><td><strong>Offline Reviewer Job</strong></td><td>Separate asynchronous job using Claude to review full session transcripts for behavior exceeding granted permissions, paired with scheduled polling so missed webhooks never leave sessions stranded.</td></tr></tbody></table></div>
+            </article>
+            <article class="seg kind-bullets" data-seg-id="s3-4">
+              <div class="seg-top">
+                <span class="seg-label">ALERTING &amp; HEALTH</span>
+                <button class="seg-play-btn" data-jump-seg="s3-4"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Designing Actionable Alerts and Protecting Telemetry Pipelines</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s3-4-s0" data-start="432.565" title="Click to jump here"><span class="w">Good</span> <span class="w">alerting</span> <span class="w">separates</span> <span class="w">urgent</span> <span class="w">burn-rate</span> <span class="w">pages</span> <span class="w">from</span> <span class="w">slow-burn</span> <span class="w">tickets,</span> <span class="w">and</span> <span class="w">monitors</span> <span class="w">the</span> <span class="w">observability</span> <span class="w">pipeline</span> <span class="w">itself.</span></span> <span class="sent" data-sent-id="s3-4-s1" data-start="439.873" title="Click to jump here"><span class="w">Remember</span> <span class="w">that</span> <span class="w">Claude</span> <span class="w">API</span> <span class="w">OpenTelemetry</span> <span class="w">destinations</span> <span class="w">auto-disable</span> <span class="w">after</span> <span class="w">any</span> <span class="w">3xx</span> <span class="w">redirect</span> <span class="w">or</span> <span class="w">twenty-four</span> <span class="w">hours</span> <span class="w">of</span> <span class="w">delivery</span> <span class="w">failures,</span> <span class="w">silently</span> <span class="w">dropping</span> <span class="w">spans</span> <span class="w">until</span> <span class="w">re-enabled.</span></span> <span class="sent" data-sent-id="s3-4-s2" data-start="452.6" title="Click to jump here"><span class="w">To</span> <span class="w">stop</span> <span class="w">runaway</span> <span class="w">agent</span> <span class="w">spend,</span> <span class="w">pair</span> <span class="w">anomaly</span> <span class="w">alerts</span> <span class="w">with</span> <span class="w">platform-enforced</span> <span class="w">session</span> <span class="w">budgets</span> <span class="w">instead</span> <span class="w">of</span> <span class="w">fragile</span> <span class="w">client</span> <span class="w">polling.</span></span></div></div>
+              <div class="ref-notes"><ul><li><strong>Multi-window burn-rate alerts:</strong> Page on fast error-budget burn (e.g., 2% of monthly SLO burned in 1 hour) for error spikes, refusal surges, or TTFT regressions; route slow drift (gradual cache-hit decay or rising tokens-per-turn) to tickets rather than pages.</li><li><strong>Watch OTel destination health:</strong> In Claude Console, API destinations report <code>Healthy</code>, <code>Failing</code>, <code>No data</code>, or <code>Disabled</code>. The API automatically <strong>disables</strong> a destination if it returns a <code>3xx</code> redirect or fails all deliveries for <strong>24 hours</strong>—and drops spans while disabled. Alert on ingestion silence!</li><li><strong>Detecting anomalous usage:</strong> Combine real-time OTel rate alerts (runaway agent loop multiplying turns per session) with Analytics API <code>api_key_id</code> / <code>actor</code> anomaly detection (leaked key or unexpected <code>service_tier</code> shift) and hard Managed Agents <strong>session budgets</strong> rather than client-side polling.</li></ul></div>
+            </article>
+            <article class="seg kind-prose" data-seg-id="s3-5">
+              <div class="seg-top">
+                <span class="seg-label">DRIFT &amp; REGRESSIONS</span>
+                <button class="seg-play-btn" data-jump-seg="s3-5"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Detecting Quality Drift and Behavioral Regressions After Model Updates</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s3-5-s0" data-start="460.512" title="Click to jump here"><span class="w">Model</span> <span class="w">updates</span> <span class="w">and</span> <span class="w">fallbacks</span> <span class="w">can</span> <span class="w">degrade</span> <span class="w">quality</span> <span class="w">without</span> <span class="w">raising</span> <span class="w">a</span> <span class="w">single</span> <span class="w">HTTP</span> <span class="w">error.</span></span> <span class="sent" data-sent-id="s3-5-s1" data-start="466.22" title="Click to jump here"><span class="w">Always</span> <span class="w">compare</span> <span class="w">gen</span> <span class="w">A</span> <span class="w">I</span> <span class="w">request</span> <span class="w">model</span> <span class="w">against</span> <span class="w">gen</span> <span class="w">A</span> <span class="w">I</span> <span class="w">response</span> <span class="w">model</span> <span class="w">on</span> <span class="w">your</span> <span class="w">dashboards</span> <span class="w">so</span> <span class="w">alias</span> <span class="w">rollovers</span> <span class="w">and</span> <span class="w">fallbacks</span> <span class="w">are</span> <span class="w">immediately</span> <span class="w">visible.</span></span> <span class="sent" data-sent-id="s3-5-s2" data-start="475.512" title="Click to jump here"><span class="w">Track</span> <span class="w">behavioral</span> <span class="w">proxies—like</span> <span class="w">output</span> <span class="w">length</span> <span class="w">shifts,</span> <span class="w">reasoning</span> <span class="w">token</span> <span class="w">ratios,</span> <span class="w">tool</span> <span class="w">retry</span> <span class="w">spikes,</span> <span class="w">refusal</span> <span class="w">rates,</span> <span class="w">and</span> <span class="w">user</span> <span class="w">edit</span> <span class="w">acceptance—to</span> <span class="w">catch</span> <span class="w">drift</span> <span class="w">days</span> <span class="w">before</span> <span class="w">customers</span> <span class="w">complain.</span></span></div></div>
+              <div class="ref-notes"><p>Silent behavioral drift frequently follows a model alias rollover, a fallback activation, or an upstream prompt/tool edit. Always log and dashboard <strong>both</strong> <code>gen_ai.request.model</code> and <code>gen_ai.response.model</code>—any divergence reveals an alias resolution or fallback model serving live traffic.</p><p>To catch regressions before users churn, monitor leading behavioral proxies stratified by <code>gen_ai.response.model</code>: output-token distribution shifts (verbosity inflation or sudden truncation), reasoning-token ratio (<code>gen_ai.usage.reasoning.output_tokens / output_tokens</code>), tool-call frequency and retry rates, refusal rates, and user-side feedback (such as Claude Code Edit/Write acceptance rate dropping from 90% to 72%). Pair proxy alerts with continuous online evaluation on a stratified live-traffic sample.</p></div>
+            </article>
+            <article class="seg kind-code" data-seg-id="s3-6">
+              <div class="seg-top">
+                <span class="seg-label">CODE PATTERN</span>
+                <button class="seg-play-btn" data-jump-seg="s3-6"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Querying Hourly Spend Anomalies by API Key and Model</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s3-6-s0" data-start="487.989" title="Click to jump here"><span class="w">This</span> <span class="w">Python</span> <span class="w">snippet</span> <span class="w">queries</span> <span class="w">the</span> <span class="w">Usage</span> <span class="w">and</span> <span class="w">Cost</span> <span class="w">Analytics</span> <span class="w">API</span> <span class="w">for</span> <span class="w">hourly</span> <span class="w">cost</span> <span class="w">buckets</span> <span class="w">grouped</span> <span class="w">by</span> <span class="w">API</span> <span class="w">key,</span> <span class="w">model,</span> <span class="w">and</span> <span class="w">service</span> <span class="w">tier.</span></span> <span class="sent" data-sent-id="s3-6-s1" data-start="497.004" title="Click to jump here"><span class="w">Running</span> <span class="w">a</span> <span class="w">scheduled</span> <span class="w">check</span> <span class="w">like</span> <span class="w">this</span> <span class="w">against</span> <span class="w">rolling</span> <span class="w">baselines</span> <span class="w">quickly</span> <span class="w">surfaces</span> <span class="w">leaked</span> <span class="w">keys,</span> <span class="w">unexpected</span> <span class="w">fallback</span> <span class="w">model</span> <span class="w">traffic,</span> <span class="w">or</span> <span class="w">sudden</span> <span class="w">service-tier</span> <span class="w">cost</span> <span class="w">jumps.</span></span></div></div>
+              <div class="ref-notes"><pre><code>import anthropic
+
+# Uses Admin API key or OAuth bearer token (org:admin)
+client = anthropic.Anthropic()
+
+rows = client.beta.organization.analytics.cost.list(
+    starting_at="2026-10-20T00:00:00Z",
+    ending_at="2026-10-21T00:00:00Z",
+    time_bucket_width="1h",
+    group_by=["api_key_id", "model", "service_tier"],
+    order_by="time",
+    limit=100,
+)
+
+for row in rows:
+    # Spot leaked keys, unexpected fallback models, or tier shifts
+    print(
+        f"{row.starting_at} | key={row.group.api_key_id} "
+        f"model={row.group.model} tier={row.group.service_tier} "
+        f"usd={row.cost.amount}"
+    )</code></pre></div>
+            </article>
+        </section>
+        <section class="section-block" id="sec-4">
+          <div class="section-header">
+            <div class="section-obj">Trace Analysis at Scale</div>
+            <h2>Sampling Strategies, Aggregation &amp; Failure-Cohort Analysis</h2>
+          </div>
+          
+            <article class="seg kind-prose" data-seg-id="s4-1">
+              <div class="seg-top">
+                <span class="seg-label">SCALE CHALLENGE</span>
+                <button class="seg-play-btn" data-jump-seg="s4-1"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Why Individual Trace Inspection Breaks Down at Production Volume</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s4-1-s0" data-start="507.709" title="Click to jump here"><span class="w">At</span> <span class="w">production</span> <span class="w">volume,</span> <span class="w">inspecting</span> <span class="w">individual</span> <span class="w">traces</span> <span class="w">cannot</span> <span class="w">uncover</span> <span class="w">a</span> <span class="w">one-percent</span> <span class="w">systemic</span> <span class="w">bug</span> <span class="w">buried</span> <span class="w">in</span> <span class="w">millions</span> <span class="w">of</span> <span class="w">requests,</span> <span class="w">and</span> <span class="w">storing</span> <span class="w">full-content</span> <span class="w">traces</span> <span class="w">for</span> <span class="w">every</span> <span class="w">call</span> <span class="w">explodes</span> <span class="w">observability</span> <span class="w">bills.</span></span> <span class="sent" data-sent-id="s4-1-s1" data-start="520.927" title="Click to jump here"><span class="w">Scaling</span> <span class="w">trace</span> <span class="w">analysis</span> <span class="w">requires</span> <span class="w">combining</span> <span class="w">smart</span> <span class="w">sampling</span> <span class="w">with</span> <span class="w">low-cardinality</span> <span class="w">aggregation</span> <span class="w">and</span> <span class="w">structured</span> <span class="w">failure-cohort</span> <span class="w">slicing—while</span> <span class="w">remembering</span> <span class="w">that</span> <span class="w">turning</span> <span class="w">off</span> <span class="w">the</span> <span class="w">W3C</span> <span class="w">traceparent</span> <span class="w">sampled</span> <span class="w">flag</span> <span class="w">suppresses</span> <span class="w">Claude</span> <span class="w">API</span> <span class="w">and</span> <span class="w">MCP</span> <span class="w">spans</span> <span class="w">altogether.</span></span></div></div>
+              <div class="ref-notes"><p>Inspecting one trace at a time works in staging, but at thousands of agent loops per minute, full-content traces generate gigabytes of telemetry per hour and hide 0.5%–2% systemic failure modes inside sea-of-green averages. Effective trace analysis at scale requires three coordinated layers: <strong>intelligent sampling</strong> so rare failures are never dropped, <strong>low-cardinality metric aggregation</strong> for fast alerting, and <strong>failure-cohort analysis</strong> to quantify root causes across populations of traces.</p><p>Note how W3C <code>traceparent</code> interacts with Claude API sampling: if your client or gateway clears the <code>sampled</code> flag in <code>traceparent</code>, the Claude API emits <strong>no spans</strong> for that request and withholds <code>traceparent</code> from downstream MCP connector calls.</p></div>
+            </article>
+            <article class="seg kind-table" data-seg-id="s4-2">
+              <div class="seg-top">
+                <span class="seg-label">SAMPLING STRATEGIES</span>
+                <button class="seg-play-btn" data-jump-seg="s4-2"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Head-Based vs. Tail-Based Sampling for Agent Workloads</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s4-2-s0" data-start="538.801" title="Click to jump here"><span class="w">Choosing</span> <span class="w">between</span> <span class="w">head-based</span> <span class="w">and</span> <span class="w">tail-based</span> <span class="w">sampling</span> <span class="w">is</span> <span class="w">a</span> <span class="w">classic</span> <span class="w">architectural</span> <span class="w">tradeoff.</span></span> <span class="sent" data-sent-id="s4-2-s1" data-start="543.848" title="Click to jump here"><span class="w">Head-based</span> <span class="w">sampling</span> <span class="w">decides</span> <span class="w">up</span> <span class="w">front</span> <span class="w">at</span> <span class="w">the</span> <span class="w">root</span> <span class="w">span,</span> <span class="w">which</span> <span class="w">is</span> <span class="w">cheap</span> <span class="w">but</span> <span class="w">randomly</span> <span class="w">discards</span> <span class="w">most</span> <span class="w">rare</span> <span class="w">failures.</span></span> <span class="sent" data-sent-id="s4-2-s2" data-start="550.729" title="Click to jump here"><span class="w">Tail-based</span> <span class="w">sampling</span> <span class="w">buffers</span> <span class="w">completed</span> <span class="w">traces</span> <span class="w">in</span> <span class="w">an</span> <span class="w">OpenTelemetry</span> <span class="w">Collector</span> <span class="w">so</span> <span class="w">you</span> <span class="w">can</span> <span class="w">keep</span> <span class="w">one</span> <span class="w">hundred</span> <span class="w">percent</span> <span class="w">of</span> <span class="w">errors,</span> <span class="w">latency</span> <span class="w">outliers,</span> <span class="w">refusals,</span> <span class="w">and</span> <span class="w">cache</span> <span class="w">misses</span> <span class="w">alongside</span> <span class="w">a</span> <span class="w">small</span> <span class="w">baseline</span> <span class="w">sample</span> <span class="w">of</span> <span class="w">healthy</span> <span class="w">traffic.</span></span></div></div>
+              <div class="ref-notes"><table><thead><tr><th>Dimension</th><th>Head-Based Sampling</th><th>Tail-Based Sampling (OTel Collector)</th></tr></thead><tbody><tr><td><strong>Decision point</strong></td><td>At trace root (before the agent loop runs), e.g., 5% random via <code>traceparent</code> sampled flag.</td><td>After the entire trace completes and buffers in a trace-ID-aware OTel Collector tier.</td></tr><tr><td><strong>Strengths</strong></td><td>Minimal compute/memory overhead; cuts Claude API and MCP span volume at the source.</td><td>Retains <strong>100% of interesting traces</strong>: any <code>ERROR</code> status, high latency (e.g., p99), <code>refusal</code> / <code>max_tokens</code> stops, cache misses, or multi-turn loops exceeding turn thresholds—plus a 1–5% baseline of healthy traces.</td></tr><tr><td><strong>Failure mode</strong></td><td>Randomly drops 95% of rare 1% failures, making intermittent tool or edge-case bugs nearly impossible to diagnose.</td><td>Requires trace-ID-consistent load balancing (so all spans of a trace hit the same collector) and sufficient memory/timeout windows for long-running agent sessions.</td></tr></tbody></table></div>
+            </article>
+            <article class="seg kind-bullets" data-seg-id="s4-3">
+              <div class="seg-top">
+                <span class="seg-label">AGGREGATION AT SCALE</span>
+                <button class="seg-play-btn" data-jump-seg="s4-3"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Cardinality Discipline and Multi-Trace Session Reconstruction</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s4-3-s0" data-start="564.785" title="Click to jump here"><span class="w">When</span> <span class="w">aggregating</span> <span class="w">telemetry</span> <span class="w">at</span> <span class="w">scale,</span> <span class="w">enforce</span> <span class="w">strict</span> <span class="w">cardinality</span> <span class="w">discipline.</span></span> <span class="sent" data-sent-id="s4-3-s1" data-start="569.171" title="Click to jump here"><span class="w">Keep</span> <span class="w">unbounded</span> <span class="w">identifiers</span> <span class="w">like</span> <span class="w">prompt</span> <span class="w">ID,</span> <span class="w">session</span> <span class="w">ID,</span> <span class="w">and</span> <span class="w">workflow</span> <span class="w">run</span> <span class="w">ID</span> <span class="w">on</span> <span class="w">traces</span> <span class="w">and</span> <span class="w">log</span> <span class="w">events,</span> <span class="w">while</span> <span class="w">restricting</span> <span class="w">metric</span> <span class="w">labels</span> <span class="w">to</span> <span class="w">low-cardinality</span> <span class="w">dimensions</span> <span class="w">like</span> <span class="w">model,</span> <span class="w">stop</span> <span class="w">reason,</span> <span class="w">and</span> <span class="w">error</span> <span class="w">type.</span></span> <span class="sent" data-sent-id="s4-3-s2" data-start="583.476" title="Click to jump here"><span class="w">For</span> <span class="w">multi-turn</span> <span class="w">Managed</span> <span class="w">Agents</span> <span class="w">sessions</span> <span class="w">that</span> <span class="w">span</span> <span class="w">several</span> <span class="w">traces,</span> <span class="w">roll</span> <span class="w">up</span> <span class="w">metrics</span> <span class="w">by</span> <span class="w">anthropic</span> <span class="w">session</span> <span class="w">ID</span> <span class="w">and</span> <span class="w">reconstruct</span> <span class="w">thread</span> <span class="w">timelines</span> <span class="w">using</span> <span class="w">gen</span> <span class="w">A</span> <span class="w">I</span> <span class="w">conversation</span> <span class="w">ID.</span></span></div></div>
+              <div class="ref-notes"><ul><li><strong>Separate metrics from trace/event attributes:</strong> Never attach unbounded identifiers—such as <code>prompt.id</code>, <code>session.id</code>, <code>workflow.run_id</code>, <code>agent_id</code>, or raw <code>user.id</code>—as Prometheus metric labels, or you will trigger cardinality explosions. Keep those on trace spans and structured log events, and use low-cardinality dimensions (<code>model</code>, <code>service_tier</code>, <code>stop_reason</code>, <code>tool_name</code>, <code>error.type</code>) on metrics.</li><li><strong>Reconstruct multi-trace sessions:</strong> Long-running Managed Agents sessions often span multiple independent traces (each user reply or webhook resume starts a new root trace). Aggregate by <code>anthropic.session.id</code> for full-session cost/outcome analysis and by <code>gen_ai.conversation.id</code> sorted by start time for per-thread transcripts.</li><li><strong>Normalize across SDK versions &amp; redaction changes:</strong> Pin beta SDK versions and annotate dashboards when upgrading Claude Code or agent harnesses so schema or attribution changes (e.g., <code>query_source</code> or <code>mcp_server.name</code> behavior) are not misread as production regressions.</li></ul></div>
+            </article>
+            <article class="seg kind-prose" data-seg-id="s4-4">
+              <div class="seg-top">
+                <span class="seg-label">COHORT ANALYSIS</span>
+                <button class="seg-play-btn" data-jump-seg="s4-4"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Failure-Cohort Analysis to Surface Systemic Issues</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s4-4-s0" data-start="595.42" title="Click to jump here"><span class="w">Failure-cohort</span> <span class="w">analysis</span> <span class="w">turns</span> <span class="w">raw</span> <span class="w">traces</span> <span class="w">into</span> <span class="w">prioritized</span> <span class="w">engineering</span> <span class="w">work.</span></span> <span class="sent" data-sent-id="s4-4-s1" data-start="600.659" title="Click to jump here"><span class="w">Instead</span> <span class="w">of</span> <span class="w">reading</span> <span class="w">random</span> <span class="w">error</span> <span class="w">traces,</span> <span class="w">you</span> <span class="w">slice</span> <span class="w">degraded</span> <span class="w">runs</span> <span class="w">by</span> <span class="w">response</span> <span class="w">model,</span> <span class="w">stop</span> <span class="w">reason,</span> <span class="w">tool</span> <span class="w">name,</span> <span class="w">cache</span> <span class="w">miss</span> <span class="w">reason,</span> <span class="w">prompt</span> <span class="w">version,</span> <span class="w">and</span> <span class="w">tenant.</span></span> <span class="sent" data-sent-id="s4-4-s2" data-start="610.356" title="Click to jump here"><span class="w">A</span> <span class="w">tiny</span> <span class="w">overall</span> <span class="w">error</span> <span class="w">rate</span> <span class="w">often</span> <span class="w">conceals</span> <span class="w">a</span> <span class="w">forty-percent</span> <span class="w">failure</span> <span class="w">cohort</span> <span class="w">isolated</span> <span class="w">to</span> <span class="w">one</span> <span class="w">MCP</span> <span class="w">server</span> <span class="w">or</span> <span class="w">one</span> <span class="w">prompt</span> <span class="w">revision—giving</span> <span class="w">you</span> <span class="w">both</span> <span class="w">the</span> <span class="w">root</span> <span class="w">cause</span> <span class="w">and</span> <span class="w">a</span> <span class="w">ready-made</span> <span class="w">regression</span> <span class="w">test</span> <span class="w">set.</span></span></div></div>
+              <div class="ref-notes"><p><strong>Failure-cohort analysis</strong> groups failed or degraded traces by shared structural attributes to quantify whether an issue is random noise or a systemic fault tied to one slice of traffic. Start from an anomaly (e.g., task success dropped 3% or p95 latency jumped 2x), then pivot and compute failure rates across cohorts: <code>gen_ai.response.model</code>, <code>anthropic.message.stop_reason</code>, <code>error.type</code>, <code>cache_miss_reason.type</code>, tool name (<code>anthropic.mcp_tool_use &lt;tool&gt;</code>), prompt/skill version, <code>deployment.environment</code>, and tenant.</p><p>For example, an overall 1.2% tool-failure rate looks benign until cohort slicing reveals a 42% timeout rate confined to one MCP server on requests carrying &gt;100k input tokens, or a 60% <code>max_tokens</code> truncation rate isolated to a newly deployed skill version. Quantifying cohort size and blast radius lets you prioritize fixes and feed exact failing cohorts into Domain 5 regression eval suites.</p></div>
+            </article>
+            <article class="seg kind-callout" data-seg-id="s4-5">
+              <div class="seg-top">
+                <span class="seg-label">EXAM TRAP</span>
+                <button class="seg-play-btn" data-jump-seg="s4-5"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Averages Hide Localized Cohorts; Head Sampling Blinds Tail-Event Diagnosis</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s4-5-s0" data-start="623.665" title="Click to jump here"><span class="w">On</span> <span class="w">the</span> <span class="w">exam,</span> <span class="w">watch</span> <span class="w">for</span> <span class="w">two</span> <span class="w">classic</span> <span class="w">mistakes</span> <span class="w">in</span> <span class="w">trace</span> <span class="w">analysis.</span></span> <span class="sent" data-sent-id="s4-5-s1" data-start="627.581" title="Click to jump here"><span class="w">Never</span> <span class="w">trust</span> <span class="w">fleet-wide</span> <span class="w">averages</span> <span class="w">that</span> <span class="w">blend</span> <span class="w">models,</span> <span class="w">tools,</span> <span class="w">and</span> <span class="w">tenants</span> <span class="w">together—always</span> <span class="w">slice</span> <span class="w">into</span> <span class="w">failure</span> <span class="w">cohorts.</span></span> <span class="sent" data-sent-id="s4-5-s2" data-start="634.74" title="Click to jump here"><span class="w">And</span> <span class="w">never</span> <span class="w">fix</span> <span class="w">missing</span> <span class="w">rare-error</span> <span class="w">traces</span> <span class="w">by</span> <span class="w">cranking</span> <span class="w">head-based</span> <span class="w">sampling</span> <span class="w">to</span> <span class="w">one</span> <span class="w">hundred</span> <span class="w">percent</span> <span class="w">when</span> <span class="w">tail-based</span> <span class="w">sampling</span> <span class="w">can</span> <span class="w">keep</span> <span class="w">every</span> <span class="w">error</span> <span class="w">and</span> <span class="w">latency</span> <span class="w">outlier</span> <span class="w">at</span> <span class="w">a</span> <span class="w">fraction</span> <span class="w">of</span> <span class="w">the</span> <span class="w">ingestion</span> <span class="w">cost.</span></span></div></div>
+              <div class="ref-notes"><p>Two recurring CCDV-P exam traps in Trace Analysis at Scale: <strong>(1)</strong> Concluding a service is healthy because fleet-wide p50 latency or aggregate error rate looks flat—always stratify by model, tool, stop reason, and tenant cohort. <strong>(2)</strong> Attempting to debug a rare 0.5% multi-turn failure by raising global head-based sampling to 100% (which blows up collector costs) instead of deploying <strong>tail-based sampling</strong> that captures 100% of error, high-latency, and anomalous stop-reason traces while sampling healthy traffic at 1–5%.</p></div>
+            </article>
+        </section>
+
+      <section class="quiz-section" id="scenarios">
+        <div class="section-header">
+          <div class="section-obj">CCDV-P Scenario Practice</div>
+          <h2>Production Scenario Questions</h2>
+        </div>
+        
+        <div class="scenario-card" data-correct="B">
+          <h3>Scenario 1: HIPAA Telemetry &amp; Token Double-Counting</h3>
+          <p class="scenario-prompt">A healthcare SaaS team running on a HIPAA-enabled Claude API organization configures both Anthropic SDK OpenTelemetry tracing and a Claude Console API telemetry destination set to Full content so they can debug tool-runner loops and reconcile daily token spend. After rollout, two issues appear: (1) their observability dashboard reports roughly double the actual token usage on successful Messages API calls, and (2) API server spans contain no prompt or response text despite Full content being enabled on the destination. What is the root cause and best fix for both issues?</p>
+          <div class="opt-list"><button class="opt-btn" data-key="A"><strong>A.</strong> Disable SDK tracing so only API spans exist, and contact Anthropic support to raise the 0.75 MB span truncation limit on the destination.</button><button class="opt-btn" data-key="B"><strong>B.</strong> Sum only the API SERVER anthropic.messages.create spans (deduplicated by trace_id and span_id) for trace-level token metrics—or use the Usage and Cost Analytics API for billing—and recognize that HIPAA-enabled organizations force API destinations to export metadata only regardless of content mode, so any approved PHI content capture must happen via SDK spans within their own HIPAA-compliant observability boundary.</button><button class="opt-btn" data-key="C"><strong>C.</strong> Enable Zero Data Retention (ZDR) on the organization so the API destination can buffer full-content spans in memory, and subtract cache_read_input_tokens from gen_ai.usage.input_tokens.</button><button class="opt-btn" data-key="D"><strong>D.</strong> Switch the API destination to Managed Agents session observability so transcripts are persisted, and sum both anthropic.messages.create and anthropic.model_request spans to normalize counts.</button></div>
+          <div class="rationale">
+            <strong>Answer: B</strong> &mdash; When both SDK (CLIENT) and API (SERVER) tracing are enabled, both emit an anthropic.messages.create span with token counts; summing both doubles totals. You must sum only one source (API SERVER spans capture billed tokens even on aborts, deduplicated by trace_id + span_id, and the Usage &amp; Cost Analytics API is authoritative for billing). Second, for organizations with HIPAA, FERPA, or K-12 restrictions, Claude API telemetry destinations automatically export metadata only regardless of the Full content setting, whereas SDK spans inside the customer&#x27;s own environment are unaffected. Option A misattributes missing content to the 0.75 MB limit (which sets anthropic.content.truncated=true rather than omitting all content) and loses client-side tool visibility. Option C is wrong because HIPAA readiness does not require ZDR and ZDR does not override HIPAA destination metadata-only enforcement; also subtracting cache reads from gen_ai.usage.input_tokens undercounts total input tokens. Option D is wrong because Managed Agents is not HIPAA-eligible and summing both create and model_request spans double-counts tokens.
+          </div>
+        </div>
+        <div class="scenario-card" data-correct="B">
+          <h3>Scenario 2: Silent Cost Surge and Cache-Hit Collapse</h3>
+          <p class="scenario-prompt">A multi-turn document-analysis agent uses the Messages API with prompt caching. After a routine deployment, HTTP 200 availability remains at 99.98%, yet hourly spend in the Usage and Cost Analytics API jumps 3.5x and p95 time-to-first-chunk doubles. Telemetry shows usage.cache_read_input_tokens has dropped near zero on turns 2 through 8, while usage.cache_creation_input_tokens spiked. The team enables Cache Diagnostics by threading previous_message_id across turns and sees diagnostics.cache_miss_reason.type returning &#x27;system_changed&#x27; on turn 2. What most likely caused the incident and what is the right remediation?</p>
+          <div class="opt-list"><button class="opt-btn" data-key="A"><strong>A.</strong> The prompt cache TTL expired between turns; increase the cache lifetime from 5 minutes to 1 hour and raise max_tokens.</button><button class="opt-btn" data-key="B"><strong>B.</strong> The deployment began interpolating a per-request value (such as a timestamp, trace ID, or dynamic metadata) into the system prompt; move the dynamic value into the latest user message so the system prompt remains byte-for-byte constant across turns.</button><button class="opt-btn" data-key="C"><strong>C.</strong> The deployment reordered the tools array on each request; sort tool definitions deterministically before serialization.</button><button class="opt-btn" data-key="D"><strong>D.</strong> The organization&#x27;s model alias rolled over to a newer snapshot; pin an explicit model version so gen_ai.response.model matches gen_ai.request.model.</button></div>
+          <div class="rationale">
+            <strong>Answer: B</strong> &mdash; Cache Diagnostics identifies the earliest point of prefix divergence. Returning &#x27;system_changed&#x27; specifically proves the system parameter differs byte-for-byte from the previous turn—most commonly caused by interpolating a dynamic timestamp, request ID, or session variable into the system prompt. Keeping the system prompt constant and placing per-turn dynamic data in the appended user message restores cache hits. Option A would show diagnostics: null with zero cache reads (matching prefix, expired entry). Option C would report &#x27;tools_changed&#x27;, and Option D would report &#x27;model_changed&#x27;.
+          </div>
+        </div>
+        <div class="scenario-card" data-correct="C">
+          <h3>Scenario 3: Isolating a Rare Multi-Agent Failure Cohort at Scale</h3>
+          <p class="scenario-prompt">A production support platform runs 40,000 multi-turn Agent SDK sessions per hour across 12 tenants and 8 MCP servers. To control observability costs, the platform uses 2% head-based OpenTelemetry sampling. Over the past week, customer complaints indicate roughly 0.9% of billing-dispute tickets silently end with incomplete answers, yet fleet-wide HTTP error rates and p50 latency look normal, and engineers rarely find a failing trace in their backend. Which observability architecture change will most effectively surface and quantify the root cause without blowing up telemetry costs?</p>
+          <div class="opt-list"><button class="opt-btn" data-key="A"><strong>A.</strong> Increase head-based sampling from 2% to 100% with OTEL_LOG_RAW_API_BODIES=1 across all production workers until the bug is found.</button><button class="opt-btn" data-key="B"><strong>B.</strong> Attach prompt.id, session.id, and enduser.id as Prometheus metric labels on claude_code.token.usage so dashboards can alert on every failing user session.</button><button class="opt-btn" data-key="C"><strong>C.</strong> Deploy trace-ID-aware tail-based sampling in the OpenTelemetry Collector to retain 100% of traces with ERROR status, high latency, max_tokens/refusal stop reasons, or tool retries (plus a 2% healthy baseline), and run failure-cohort analysis slicing by gen_ai.response.model, stop_reason, mcp_server.name, and tenant.</button><button class="opt-btn" data-key="D"><strong>D.</strong> Switch the Agent SDK exporters to console so every worker logs full spans to stdout, then grep container logs for error strings.</button></div>
+          <div class="rationale">
+            <strong>Answer: C</strong> &mdash; With 2% head-based sampling, 98% of a 0.9% failure mode is discarded before the trace even finishes. Trace-ID-aware tail-based sampling in the OTel Collector keeps 100% of anomalous traces (errors, latency outliers, max_tokens/refusal stops, tool failures) while sampling healthy traffic at 2%, keeping costs bounded. Slicing those captured traces into failure cohorts by response model, stop reason, MCP server, and tenant quantifies whether the 0.9% issue is a concentrated systemic fault (e.g., one MCP server or tenant). Option A explodes storage/egress costs and risks capturing sensitive raw bodies unnecessarily. Option B causes catastrophic Prometheus cardinality explosions (unbounded IDs belong on traces/events, not metric labels). Option D breaks the Agent SDK because the console exporter writes to stdout, corrupting the CLI-to-SDK pipe.
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+<script>
+const TIMELINE = {"duration":646.815,"segments":[{"id":"intro","section":"Overview","start":0.0,"end":49.264,"sentences":[{"id":"intro-s0","start":0.0,"end":3.179,"words":[{"t":"Domain","s":0.0,"e":0.404},{"t":"3:","s":0.404,"e":0.653},{"t":"Observability","s":0.653,"e":1.529},{"t":"and","s":1.529,"e":1.731},{"t":"Production","s":1.731,"e":2.404},{"t":"Monitoring.","s":2.404,"e":3.179}]},{"id":"intro-s1","start":3.319,"end":5.047,"words":[{"t":"Exam","s":3.319,"e":3.759},{"t":"weight:","s":3.759,"e":4.662},{"t":"12%.","s":4.662,"e":5.047}]},{"id":"intro-s2","start":5.187,"end":15.768,"words":[{"t":"Instrumenting","s":5.187,"e":6.148},{"t":"Claude","s":6.148,"e":6.592},{"t":"systems","s":6.592,"e":7.109},{"t":"with","s":7.109,"e":7.405},{"t":"OpenTelemetry,","s":7.405,"e":8.529},{"t":"diagnosing","s":8.529,"e":9.269},{"t":"cache","s":9.269,"e":9.638},{"t":"and","s":9.638,"e":9.86},{"t":"privacy","s":9.86,"e":10.378},{"t":"constraints,","s":10.378,"e":11.354},{"t":"defining","s":11.354,"e":11.945},{"t":"LLM-native","s":11.945,"e":12.611},{"t":"SLOs,","s":12.611,"e":13.069},{"t":"and","s":13.069,"e":13.291},{"t":"surfacing","s":13.291,"e":13.956},{"t":"systemic","s":13.956,"e":14.548},{"t":"failures","s":14.548,"e":15.139},{"t":"at","s":15.139,"e":15.287},{"t":"scale.","s":15.287,"e":15.768}]},{"id":"intro-s3","start":15.908,"end":28.708,"words":[{"t":"A","s":15.908,"e":16.031},{"t":"staff","s":16.031,"e":16.441},{"t":"engineer","s":16.441,"e":17.097},{"t":"treats","s":17.097,"e":17.589},{"t":"an","s":17.589,"e":17.753},{"t":"LLM","s":17.753,"e":17.999},{"t":"service","s":17.999,"e":18.573},{"t":"as","s":18.573,"e":18.737},{"t":"a","s":18.737,"e":18.86},{"t":"distributed,","s":18.86,"e":19.942},{"t":"non-deterministic","s":19.942,"e":21.254},{"t":"system","s":21.254,"e":21.746},{"t":"where","s":21.746,"e":22.156},{"t":"HTTP","s":22.156,"e":22.484},{"t":"200s","s":22.484,"e":22.812},{"t":"hide","s":22.812,"e":23.14},{"t":"quality","s":23.14,"e":23.714},{"t":"regressions,","s":23.714,"e":24.797},{"t":"silent","s":24.797,"e":25.289},{"t":"cache","s":25.289,"e":25.699},{"t":"invalidations,","s":25.699,"e":26.945},{"t":"and","s":26.945,"e":27.191},{"t":"runaway","s":27.191,"e":27.765},{"t":"agent","s":27.765,"e":28.175},{"t":"loops.","s":28.175,"e":28.708}]},{"id":"intro-s4","start":28.848,"end":49.264,"words":[{"t":"On","s":28.848,"e":29.021},{"t":"the","s":29.021,"e":29.28},{"t":"exam,","s":29.28,"e":29.815},{"t":"connect","s":29.815,"e":30.42},{"t":"the","s":30.42,"e":30.679},{"t":"telemetry","s":30.679,"e":31.456},{"t":"layer","s":31.456,"e":31.888},{"t":"you","s":31.888,"e":32.147},{"t":"choose\u2014SDK","s":32.147,"e":32.924},{"t":"spans,","s":32.924,"e":33.546},{"t":"API","s":33.546,"e":33.805},{"t":"spans,","s":33.805,"e":34.427},{"t":"Agent","s":34.427,"e":34.859},{"t":"SDK","s":34.859,"e":35.118},{"t":"OTel,","s":35.118,"e":35.653},{"t":"or","s":35.653,"e":35.826},{"t":"Analytics","s":35.826,"e":36.603},{"t":"APIs\u2014directly","s":36.603,"e":37.64},{"t":"to","s":37.64,"e":37.812},{"t":"the","s":37.812,"e":38.071},{"t":"operational","s":38.071,"e":39.021},{"t":"question:","s":39.021,"e":39.902},{"t":"debugging","s":39.902,"e":40.68},{"t":"a","s":40.68,"e":40.809},{"t":"single","s":40.809,"e":41.327},{"t":"loop,","s":41.327,"e":41.863},{"t":"reconciling","s":41.863,"e":42.813},{"t":"billing","s":42.813,"e":43.417},{"t":"under","s":43.417,"e":43.849},{"t":"ZDR","s":43.849,"e":44.108},{"t":"or","s":44.108,"e":44.281},{"t":"HIPAA,","s":44.281,"e":44.903},{"t":"or","s":44.903,"e":45.075},{"t":"isolating","s":45.075,"e":45.853},{"t":"a","s":45.853,"e":45.982},{"t":"1%","s":45.982,"e":46.112},{"t":"failure","s":46.112,"e":46.716},{"t":"cohort","s":46.716,"e":47.234},{"t":"across","s":47.234,"e":47.753},{"t":"millions","s":47.753,"e":48.444},{"t":"of","s":48.444,"e":48.616},{"t":"traces.","s":48.616,"e":49.264}]}]},{"id":"s1-1","section":"Distributed Tracing & Token Instrumentation","start":49.964,"end":75.076,"sentences":[{"id":"s1-1-s0","start":49.964,"end":56.535,"words":[{"t":"To","s":49.964,"e":50.135},{"t":"get","s":50.135,"e":50.392},{"t":"full","s":50.392,"e":50.735},{"t":"end-to-end","s":50.735,"e":51.42},{"t":"visibility,","s":51.42,"e":52.466},{"t":"combine","s":52.466,"e":53.065},{"t":"Anthropic","s":53.065,"e":53.836},{"t":"SDK","s":53.836,"e":54.093},{"t":"tracing","s":54.093,"e":54.693},{"t":"with","s":54.693,"e":55.036},{"t":"Claude","s":55.036,"e":55.55},{"t":"API","s":55.55,"e":55.807},{"t":"tracing.","s":55.807,"e":56.535}]},{"id":"s1-1-s1","start":56.675,"end":65.528,"words":[{"t":"The","s":56.675,"e":56.903},{"t":"SDK","s":56.903,"e":57.13},{"t":"emits","s":57.13,"e":57.509},{"t":"client","s":57.509,"e":57.965},{"t":"spans","s":57.965,"e":58.344},{"t":"for","s":58.344,"e":58.572},{"t":"your","s":58.572,"e":58.875},{"t":"app","s":58.875,"e":59.103},{"t":"and","s":59.103,"e":59.33},{"t":"local","s":59.33,"e":59.709},{"t":"tool","s":59.709,"e":60.013},{"t":"runner,","s":60.013,"e":60.635},{"t":"while","s":60.635,"e":61.014},{"t":"the","s":61.014,"e":61.242},{"t":"API","s":61.242,"e":61.469},{"t":"emits","s":61.469,"e":61.849},{"t":"server","s":61.849,"e":62.304},{"t":"spans","s":62.304,"e":62.683},{"t":"for","s":62.683,"e":62.911},{"t":"each","s":62.911,"e":63.214},{"t":"internal","s":63.214,"e":63.821},{"t":"model","s":63.821,"e":64.2},{"t":"run","s":64.2,"e":64.428},{"t":"and","s":64.428,"e":64.656},{"t":"server","s":64.656,"e":65.111},{"t":"tool.","s":65.111,"e":65.528}]},{"id":"s1-1-s2","start":65.668,"end":75.076,"words":[{"t":"Passing","s":65.668,"e":66.247},{"t":"the","s":66.247,"e":66.495},{"t":"W3C","s":66.495,"e":66.744},{"t":"traceparent","s":66.744,"e":67.654},{"t":"header","s":67.654,"e":68.15},{"t":"links","s":68.15,"e":68.564},{"t":"them","s":68.564,"e":68.895},{"t":"into","s":68.895,"e":69.226},{"t":"one","s":69.226,"e":69.474},{"t":"unified","s":69.474,"e":70.053},{"t":"trace,","s":70.053,"e":70.649},{"t":"and","s":70.649,"e":70.897},{"t":"even","s":70.897,"e":71.228},{"t":"propagates","s":71.228,"e":72.056},{"t":"context","s":72.056,"e":72.635},{"t":"into","s":72.635,"e":72.966},{"t":"your","s":72.966,"e":73.297},{"t":"downstream","s":73.297,"e":74.124},{"t":"MCP","s":74.124,"e":74.373},{"t":"servers.","s":74.373,"e":75.076}]}]},{"id":"s1-2","section":"Distributed Tracing & Token Instrumentation","start":75.436,"end":105.957,"sentences":[{"id":"s1-2-s0","start":75.436,"end":78.444,"words":[{"t":"Each","s":75.436,"e":75.709},{"t":"Claude","s":75.709,"e":76.12},{"t":"runtime","s":76.12,"e":76.598},{"t":"has","s":76.598,"e":76.803},{"t":"a","s":76.803,"e":76.906},{"t":"distinct","s":76.906,"e":77.453},{"t":"span","s":77.453,"e":77.726},{"t":"hierarchy.","s":77.726,"e":78.444}]},{"id":"s1-2-s1","start":78.584,"end":86.563,"words":[{"t":"Messages","s":78.584,"e":79.229},{"t":"API","s":79.229,"e":79.471},{"t":"traces","s":79.471,"e":79.956},{"t":"nest","s":79.956,"e":80.278},{"t":"model","s":80.278,"e":80.682},{"t":"requests,","s":80.682,"e":81.505},{"t":"server","s":81.505,"e":81.989},{"t":"tools,","s":81.989,"e":82.569},{"t":"and","s":82.569,"e":82.811},{"t":"compactions","s":82.811,"e":83.699},{"t":"under","s":83.699,"e":84.102},{"t":"anthropic","s":84.102,"e":84.828},{"t":"dot","s":84.828,"e":85.07},{"t":"messages","s":85.07,"e":85.716},{"t":"dot","s":85.716,"e":85.958},{"t":"create.","s":85.958,"e":86.563}]},{"id":"s1-2-s2","start":86.703,"end":96.239,"words":[{"t":"Managed","s":86.703,"e":87.258},{"t":"Agents","s":87.258,"e":87.734},{"t":"sessions","s":87.734,"e":88.369},{"t":"span","s":88.369,"e":88.686},{"t":"multiple","s":88.686,"e":89.321},{"t":"traces,","s":89.321,"e":89.972},{"t":"so","s":89.972,"e":90.13},{"t":"you","s":90.13,"e":90.368},{"t":"group","s":90.368,"e":90.765},{"t":"a","s":90.765,"e":90.884},{"t":"thread","s":90.884,"e":91.36},{"t":"by","s":91.36,"e":91.519},{"t":"gen","s":91.519,"e":91.757},{"t":"A","s":91.757,"e":91.876},{"t":"I","s":91.876,"e":91.995},{"t":"conversation","s":91.995,"e":92.947},{"t":"ID","s":92.947,"e":93.105},{"t":"and","s":93.105,"e":93.343},{"t":"the","s":93.343,"e":93.581},{"t":"whole","s":93.581,"e":93.978},{"t":"session","s":93.978,"e":94.533},{"t":"by","s":94.533,"e":94.692},{"t":"anthropic","s":94.692,"e":95.406},{"t":"session","s":95.406,"e":95.961},{"t":"ID.","s":95.961,"e":96.239}]},{"id":"s1-2-s3","start":96.379,"end":105.957,"words":[{"t":"In","s":96.379,"e":96.545},{"t":"the","s":96.545,"e":96.795},{"t":"Agent","s":96.795,"e":97.211},{"t":"SDK,","s":97.211,"e":97.644},{"t":"the","s":97.644,"e":97.894},{"t":"underlying","s":97.894,"e":98.726},{"t":"Claude","s":98.726,"e":99.225},{"t":"Code","s":99.225,"e":99.558},{"t":"CLI","s":99.558,"e":99.807},{"t":"emits","s":99.807,"e":100.224},{"t":"interaction,","s":100.224,"e":101.322},{"t":"LLM","s":101.322,"e":101.572},{"t":"request,","s":101.572,"e":102.337},{"t":"and","s":102.337,"e":102.587},{"t":"tool","s":102.587,"e":102.92},{"t":"spans","s":102.92,"e":103.336},{"t":"when","s":103.336,"e":103.669},{"t":"enhanced","s":103.669,"e":104.334},{"t":"telemetry","s":104.334,"e":105.083},{"t":"is","s":105.083,"e":105.25},{"t":"enabled.","s":105.25,"e":105.957}]}]},{"id":"s1-3","section":"Distributed Tracing & Token Instrumentation","start":106.317,"end":130.183,"sentences":[{"id":"s1-3-s0","start":106.317,"end":109.048,"words":[{"t":"Token","s":106.317,"e":106.672},{"t":"accounting","s":106.672,"e":107.381},{"t":"in","s":107.381,"e":107.523},{"t":"traces","s":107.523,"e":107.949},{"t":"has","s":107.949,"e":108.161},{"t":"subtle","s":108.161,"e":108.587},{"t":"traps.","s":108.587,"e":109.048}]},{"id":"s1-3-s1","start":109.188,"end":117.551,"words":[{"t":"Always","s":109.188,"e":109.631},{"t":"sum","s":109.631,"e":109.853},{"t":"a","s":109.853,"e":109.964},{"t":"single","s":109.964,"e":110.407},{"t":"span","s":110.407,"e":110.703},{"t":"source","s":110.703,"e":111.146},{"t":"per","s":111.146,"e":111.367},{"t":"request,","s":111.367,"e":112.047},{"t":"preferring","s":112.047,"e":112.786},{"t":"API","s":112.786,"e":113.007},{"t":"server","s":113.007,"e":113.451},{"t":"spans","s":113.451,"e":113.82},{"t":"because","s":113.82,"e":114.337},{"t":"they","s":114.337,"e":114.633},{"t":"capture","s":114.633,"e":115.15},{"t":"billed","s":115.15,"e":115.593},{"t":"tokens","s":115.593,"e":116.036},{"t":"even","s":116.036,"e":116.332},{"t":"on","s":116.332,"e":116.48},{"t":"canceled","s":116.48,"e":117.071},{"t":"calls.","s":117.071,"e":117.551}]},{"id":"s1-3-s2","start":117.691,"end":125.584,"words":[{"t":"Remember","s":117.691,"e":118.242},{"t":"that","s":118.242,"e":118.517},{"t":"gen","s":118.517,"e":118.723},{"t":"A","s":118.723,"e":118.826},{"t":"I","s":118.826,"e":118.93},{"t":"usage","s":118.93,"e":119.274},{"t":"input","s":119.274,"e":119.618},{"t":"tokens","s":119.618,"e":120.031},{"t":"already","s":120.031,"e":120.512},{"t":"includes","s":120.512,"e":121.063},{"t":"cache","s":121.063,"e":121.407},{"t":"reads","s":121.407,"e":121.751},{"t":"and","s":121.751,"e":121.957},{"t":"writes,","s":121.957,"e":122.522},{"t":"whereas","s":122.522,"e":123.003},{"t":"compaction","s":123.003,"e":123.692},{"t":"tokens","s":123.692,"e":124.104},{"t":"are","s":124.104,"e":124.311},{"t":"tracked","s":124.311,"e":124.793},{"t":"separately.","s":124.793,"e":125.584}]},{"id":"s1-3-s3","start":125.724,"end":130.183,"words":[{"t":"Finally,","s":125.724,"e":126.474},{"t":"deduplicate","s":126.474,"e":127.371},{"t":"retried","s":127.371,"e":127.941},{"t":"spans","s":127.941,"e":128.349},{"t":"using","s":128.349,"e":128.756},{"t":"trace","s":128.756,"e":129.164},{"t":"ID","s":129.164,"e":129.327},{"t":"and","s":129.327,"e":129.572},{"t":"span","s":129.572,"e":129.898},{"t":"ID.","s":129.898,"e":130.183}]}]},{"id":"s1-4","section":"Distributed Tracing & Token Instrumentation","start":130.543,"end":157.968,"sentences":[{"id":"s1-4-s0","start":130.543,"end":146.287,"words":[{"t":"For","s":130.543,"e":130.755},{"t":"reasoning","s":130.755,"e":131.393},{"t":"and","s":131.393,"e":131.605},{"t":"grounding","s":131.605,"e":132.243},{"t":"traceability,","s":132.243,"e":133.248},{"t":"OpenTelemetry","s":133.248,"e":134.169},{"t":"maps","s":134.169,"e":134.452},{"t":"thinking","s":134.452,"e":135.019},{"t":"blocks","s":135.019,"e":135.444},{"t":"to","s":135.444,"e":135.586},{"t":"reasoning","s":135.586,"e":136.223},{"t":"parts","s":136.223,"e":136.577},{"t":"and","s":136.577,"e":136.79},{"t":"tracks","s":136.79,"e":137.215},{"t":"reasoning","s":137.215,"e":137.852},{"t":"output","s":137.852,"e":138.277},{"t":"tokens","s":138.277,"e":138.702},{"t":"separately,","s":138.702,"e":139.566},{"t":"while","s":139.566,"e":139.92},{"t":"structured","s":139.92,"e":140.628},{"t":"log","s":140.628,"e":140.841},{"t":"events","s":140.841,"e":141.266},{"t":"correlate","s":141.266,"e":141.903},{"t":"prompts,","s":141.903,"e":142.555},{"t":"tool","s":142.555,"e":142.838},{"t":"decisions,","s":142.838,"e":143.631},{"t":"and","s":143.631,"e":143.844},{"t":"subagent","s":143.844,"e":144.41},{"t":"runs","s":144.41,"e":144.693},{"t":"via","s":144.693,"e":144.906},{"t":"prompt","s":144.906,"e":145.331},{"t":"ID","s":145.331,"e":145.473},{"t":"and","s":145.473,"e":145.685},{"t":"agent","s":145.685,"e":146.039},{"t":"ID.","s":146.039,"e":146.287}]},{"id":"s1-4-s1","start":146.427,"end":157.968,"words":[{"t":"To","s":146.427,"e":146.592},{"t":"attribute","s":146.592,"e":147.334},{"t":"activity","s":147.334,"e":147.994},{"t":"to","s":147.994,"e":148.159},{"t":"end","s":148.159,"e":148.407},{"t":"users","s":148.407,"e":148.819},{"t":"safely,","s":148.819,"e":149.496},{"t":"pass","s":149.496,"e":149.826},{"t":"an","s":149.826,"e":149.991},{"t":"opaque","s":149.991,"e":150.486},{"t":"ID","s":150.486,"e":150.651},{"t":"in","s":150.651,"e":150.816},{"t":"W3C","s":150.816,"e":151.063},{"t":"baggage,","s":151.063,"e":151.822},{"t":"because","s":151.822,"e":152.4},{"t":"the","s":152.4,"e":152.647},{"t":"Claude","s":152.647,"e":153.142},{"t":"API","s":153.142,"e":153.39},{"t":"automatically","s":153.39,"e":154.462},{"t":"drops","s":154.462,"e":154.874},{"t":"any","s":154.874,"e":155.122},{"t":"user","s":155.122,"e":155.452},{"t":"ID","s":155.452,"e":155.617},{"t":"that","s":155.617,"e":155.947},{"t":"looks","s":155.947,"e":156.359},{"t":"like","s":156.359,"e":156.689},{"t":"an","s":156.689,"e":156.854},{"t":"email","s":156.854,"e":157.267},{"t":"address.","s":157.267,"e":157.968}]}]},{"id":"s1-5","section":"Distributed Tracing & Token Instrumentation","start":158.328,"end":184.059,"sentences":[{"id":"s1-5-s0","start":158.328,"end":160.76,"words":[{"t":"Here","s":158.328,"e":158.547},{"t":"are","s":158.547,"e":158.711},{"t":"two","s":158.711,"e":158.875},{"t":"production","s":158.875,"e":159.421},{"t":"instrumentation","s":159.421,"e":160.241},{"t":"patterns.","s":160.241,"e":160.76}]},{"id":"s1-5-s1","start":160.9,"end":171.46,"words":[{"t":"First,","s":160.9,"e":161.5},{"t":"wrap","s":161.5,"e":161.833},{"t":"Anthropic","s":161.833,"e":162.584},{"t":"SDK","s":162.584,"e":162.834},{"t":"calls","s":162.834,"e":163.25},{"t":"inside","s":163.25,"e":163.75},{"t":"your","s":163.75,"e":164.084},{"t":"application's","s":164.084,"e":165.084},{"t":"active","s":165.084,"e":165.584},{"t":"span","s":165.584,"e":165.917},{"t":"so","s":165.917,"e":166.084},{"t":"the","s":166.084,"e":166.334},{"t":"SDK","s":166.334,"e":166.584},{"t":"automatically","s":166.584,"e":167.668},{"t":"injects","s":167.668,"e":168.251},{"t":"traceparent","s":168.251,"e":169.168},{"t":"and","s":169.168,"e":169.418},{"t":"nests","s":169.418,"e":169.835},{"t":"API","s":169.835,"e":170.085},{"t":"spans","s":170.085,"e":170.502},{"t":"underneath.","s":170.502,"e":171.46}]},{"id":"s1-5-s2","start":171.6,"end":184.059,"words":[{"t":"Second,","s":171.6,"e":172.211},{"t":"in","s":172.211,"e":172.361},{"t":"the","s":172.361,"e":172.584},{"t":"Agent","s":172.584,"e":172.957},{"t":"SDK,","s":172.957,"e":173.345},{"t":"always","s":173.345,"e":173.792},{"t":"use","s":173.792,"e":174.016},{"t":"the","s":174.016,"e":174.239},{"t":"OTLP","s":174.239,"e":174.538},{"t":"exporter","s":174.538,"e":175.134},{"t":"rather","s":175.134,"e":175.582},{"t":"than","s":175.582,"e":175.88},{"t":"console,","s":175.88,"e":176.566},{"t":"and","s":176.566,"e":176.789},{"t":"lower","s":176.789,"e":177.162},{"t":"the","s":177.162,"e":177.386},{"t":"export","s":177.386,"e":177.833},{"t":"intervals","s":177.833,"e":178.504},{"t":"to","s":178.504,"e":178.653},{"t":"one","s":178.653,"e":178.877},{"t":"thousand","s":178.877,"e":179.474},{"t":"milliseconds","s":179.474,"e":180.368},{"t":"so","s":180.368,"e":180.517},{"t":"short-lived","s":180.517,"e":181.263},{"t":"tasks","s":181.263,"e":181.636},{"t":"flush","s":181.636,"e":182.009},{"t":"before","s":182.009,"e":182.456},{"t":"the","s":182.456,"e":182.68},{"t":"child","s":182.68,"e":183.052},{"t":"process","s":183.052,"e":183.574},{"t":"exits.","s":183.574,"e":184.059}]}]},{"id":"s1-6","section":"Distributed Tracing & Token Instrumentation","start":184.419,"end":209.116,"sentences":[{"id":"s1-6-s0","start":184.419,"end":186.403,"words":[{"t":"Watch","s":184.419,"e":184.744},{"t":"out","s":184.744,"e":184.939},{"t":"for","s":184.939,"e":185.135},{"t":"three","s":185.135,"e":185.46},{"t":"exam","s":185.46,"e":185.72},{"t":"traps","s":185.72,"e":186.045},{"t":"here.","s":186.045,"e":186.403}]},{"id":"s1-6-s1","start":186.543,"end":194.031,"words":[{"t":"Never","s":186.543,"e":186.916},{"t":"configure","s":186.916,"e":187.586},{"t":"the","s":187.586,"e":187.81},{"t":"console","s":187.81,"e":188.331},{"t":"exporter","s":188.331,"e":188.927},{"t":"in","s":188.927,"e":189.076},{"t":"the","s":189.076,"e":189.3},{"t":"Agent","s":189.3,"e":189.672},{"t":"SDK","s":189.672,"e":189.896},{"t":"because","s":189.896,"e":190.417},{"t":"it","s":190.417,"e":190.566},{"t":"writes","s":190.566,"e":191.013},{"t":"to","s":191.013,"e":191.162},{"t":"standard","s":191.162,"e":191.759},{"t":"out","s":191.759,"e":191.982},{"t":"and","s":191.982,"e":192.206},{"t":"breaks","s":192.206,"e":192.653},{"t":"the","s":192.653,"e":192.876},{"t":"CLI","s":192.876,"e":193.1},{"t":"message","s":193.1,"e":193.621},{"t":"pipe.","s":193.621,"e":194.031}]},{"id":"s1-6-s2","start":194.171,"end":199.013,"words":[{"t":"In","s":194.171,"e":194.312},{"t":"TypeScript,","s":194.312,"e":195.172},{"t":"remember","s":195.172,"e":195.736},{"t":"to","s":195.736,"e":195.877},{"t":"spread","s":195.877,"e":196.3},{"t":"process","s":196.3,"e":196.793},{"t":"dot","s":196.793,"e":197.004},{"t":"env","s":197.004,"e":197.216},{"t":"when","s":197.216,"e":197.498},{"t":"passing","s":197.498,"e":197.991},{"t":"options","s":197.991,"e":198.484},{"t":"dot","s":198.484,"e":198.696},{"t":"env.","s":198.696,"e":199.013}]},{"id":"s1-6-s3","start":199.153,"end":209.116,"words":[{"t":"And","s":199.153,"e":199.399},{"t":"never","s":199.399,"e":199.809},{"t":"rely","s":199.809,"e":200.137},{"t":"on","s":200.137,"e":200.301},{"t":"best-effort","s":200.301,"e":201.121},{"t":"OpenTelemetry","s":201.121,"e":202.187},{"t":"spans","s":202.187,"e":202.597},{"t":"for","s":202.597,"e":202.843},{"t":"billing","s":202.843,"e":203.417},{"t":"reconciliation","s":203.417,"e":204.565},{"t":"or","s":204.565,"e":204.729},{"t":"leaked-key","s":204.729,"e":205.467},{"t":"audits\u2014use","s":205.467,"e":206.205},{"t":"the","s":206.205,"e":206.451},{"t":"Usage","s":206.451,"e":206.861},{"t":"and","s":206.861,"e":207.107},{"t":"Cost","s":207.107,"e":207.435},{"t":"Analytics","s":207.435,"e":208.173},{"t":"API","s":208.173,"e":208.419},{"t":"instead.","s":208.419,"e":209.116}]}]},{"id":"s2-1","section":"Cache Diagnostics & Privacy-Constrained Content Capture","start":209.816,"end":235.76,"sentences":[{"id":"s2-1-s0","start":209.816,"end":214.701,"words":[{"t":"When","s":209.816,"e":210.067},{"t":"prompt","s":210.067,"e":210.445},{"t":"cache","s":210.445,"e":210.759},{"t":"hit","s":210.759,"e":210.948},{"t":"rates","s":210.948,"e":211.262},{"t":"suddenly","s":211.262,"e":211.765},{"t":"collapse,","s":211.765,"e":212.406},{"t":"Cache","s":212.406,"e":212.721},{"t":"Diagnostics","s":212.721,"e":213.412},{"t":"eliminates","s":213.412,"e":214.041},{"t":"guesswork.","s":214.041,"e":214.701}]},{"id":"s2-1-s1","start":214.841,"end":224.377,"words":[{"t":"You","s":214.841,"e":215.085},{"t":"opt","s":215.085,"e":215.329},{"t":"in","s":215.329,"e":215.492},{"t":"on","s":215.492,"e":215.655},{"t":"turn","s":215.655,"e":215.98},{"t":"one","s":215.98,"e":216.224},{"t":"by","s":216.224,"e":216.387},{"t":"passing","s":216.387,"e":216.956},{"t":"a","s":216.956,"e":217.079},{"t":"diagnostics","s":217.079,"e":217.974},{"t":"object","s":217.974,"e":218.462},{"t":"with","s":218.462,"e":218.787},{"t":"previous","s":218.787,"e":219.438},{"t":"message","s":219.438,"e":220.008},{"t":"ID","s":220.008,"e":220.17},{"t":"set","s":220.17,"e":220.415},{"t":"to","s":220.415,"e":220.577},{"t":"null,","s":220.577,"e":221.082},{"t":"then","s":221.082,"e":221.407},{"t":"thread","s":221.407,"e":221.895},{"t":"each","s":221.895,"e":222.221},{"t":"response","s":222.221,"e":222.872},{"t":"ID","s":222.872,"e":223.034},{"t":"into","s":223.034,"e":223.36},{"t":"the","s":223.36,"e":223.604},{"t":"next","s":223.604,"e":223.929},{"t":"turn.","s":223.929,"e":224.377}]},{"id":"s2-1-s2","start":224.517,"end":235.76,"words":[{"t":"Anthropic","s":224.517,"e":225.128},{"t":"compares","s":225.128,"e":225.67},{"t":"lightweight","s":225.67,"e":226.417},{"t":"cryptographic","s":226.417,"e":227.299},{"t":"hash","s":227.299,"e":227.57},{"t":"fingerprints","s":227.57,"e":228.385},{"t":"without","s":228.385,"e":228.859},{"t":"storing","s":228.859,"e":229.334},{"t":"raw","s":229.334,"e":229.538},{"t":"prompts,","s":229.538,"e":230.162},{"t":"keeping","s":230.162,"e":230.637},{"t":"the","s":230.637,"e":230.841},{"t":"feature","s":230.841,"e":231.316},{"t":"ZDR-qualified","s":231.316,"e":232.13},{"t":"while","s":232.13,"e":232.469},{"t":"pinpointing","s":232.469,"e":233.216},{"t":"the","s":233.216,"e":233.419},{"t":"exact","s":233.419,"e":233.758},{"t":"first","s":233.758,"e":234.098},{"t":"point","s":234.098,"e":234.437},{"t":"of","s":234.437,"e":234.573},{"t":"prefix","s":234.573,"e":234.98},{"t":"divergence.","s":234.98,"e":235.76}]}]},{"id":"s2-2","section":"Cache Diagnostics & Privacy-Constrained Content Capture","start":236.12,"end":260.187,"sentences":[{"id":"s2-2-s0","start":236.12,"end":247.704,"words":[{"t":"Cache","s":236.12,"e":236.488},{"t":"miss","s":236.488,"e":236.782},{"t":"reason","s":236.782,"e":237.223},{"t":"reports","s":237.223,"e":237.738},{"t":"only","s":237.738,"e":238.032},{"t":"the","s":238.032,"e":238.253},{"t":"earliest","s":238.253,"e":238.841},{"t":"divergence:","s":238.841,"e":239.739},{"t":"model","s":239.739,"e":240.106},{"t":"changed,","s":240.106,"e":240.783},{"t":"system","s":240.783,"e":241.224},{"t":"changed,","s":241.224,"e":241.901},{"t":"tools","s":241.901,"e":242.269},{"t":"changed,","s":242.269,"e":242.945},{"t":"or","s":242.945,"e":243.092},{"t":"messages","s":243.092,"e":243.681},{"t":"changed,","s":243.681,"e":244.358},{"t":"along","s":244.358,"e":244.725},{"t":"with","s":244.725,"e":245.019},{"t":"an","s":245.019,"e":245.167},{"t":"estimated","s":245.167,"e":245.828},{"t":"count","s":245.828,"e":246.196},{"t":"of","s":246.196,"e":246.343},{"t":"missed","s":246.343,"e":246.785},{"t":"input","s":246.785,"e":247.152},{"t":"tokens.","s":247.152,"e":247.704}]},{"id":"s2-2-s1","start":247.844,"end":250.703,"words":[{"t":"Always","s":247.844,"e":248.248},{"t":"read","s":248.248,"e":248.517},{"t":"it","s":248.517,"e":248.651},{"t":"alongside","s":248.651,"e":249.257},{"t":"cache","s":249.257,"e":249.593},{"t":"read","s":249.593,"e":249.862},{"t":"input","s":249.862,"e":250.198},{"t":"tokens.","s":250.198,"e":250.703}]},{"id":"s2-2-s2","start":250.843,"end":260.187,"words":[{"t":"If","s":250.843,"e":250.99},{"t":"diagnostics","s":250.99,"e":251.802},{"t":"is","s":251.802,"e":251.949},{"t":"null","s":251.949,"e":252.244},{"t":"but","s":252.244,"e":252.465},{"t":"cache","s":252.465,"e":252.834},{"t":"reads","s":252.834,"e":253.203},{"t":"are","s":253.203,"e":253.424},{"t":"zero,","s":253.424,"e":253.881},{"t":"your","s":253.881,"e":254.176},{"t":"prompt","s":254.176,"e":254.619},{"t":"didn't","s":254.619,"e":254.988},{"t":"diverge\u2014the","s":254.988,"e":255.725},{"t":"cache","s":255.725,"e":256.094},{"t":"entry","s":256.094,"e":256.463},{"t":"simply","s":256.463,"e":256.905},{"t":"expired","s":256.905,"e":257.421},{"t":"or","s":257.421,"e":257.569},{"t":"fell","s":257.569,"e":257.864},{"t":"below","s":257.864,"e":258.233},{"t":"the","s":258.233,"e":258.454},{"t":"minimum","s":258.454,"e":258.97},{"t":"cacheable","s":258.97,"e":259.634},{"t":"length.","s":259.634,"e":260.187}]}]},{"id":"s2-3","section":"Cache Diagnostics & Privacy-Constrained Content Capture","start":260.547,"end":290.096,"sentences":[{"id":"s2-3-s0","start":260.547,"end":266.861,"words":[{"t":"Telemetry","s":260.547,"e":261.365},{"t":"is","s":261.365,"e":261.546},{"t":"metadata-only","s":261.546,"e":262.637},{"t":"by","s":262.637,"e":262.818},{"t":"default","s":262.818,"e":263.454},{"t":"across","s":263.454,"e":263.999},{"t":"both","s":263.999,"e":264.363},{"t":"the","s":264.363,"e":264.635},{"t":"Claude","s":264.635,"e":265.18},{"t":"API","s":265.18,"e":265.453},{"t":"and","s":265.453,"e":265.725},{"t":"the","s":265.725,"e":265.998},{"t":"Agent","s":265.998,"e":266.452},{"t":"SDK.","s":266.452,"e":266.861}]},{"id":"s2-3-s1","start":267.001,"end":279.439,"words":[{"t":"Turning","s":267.001,"e":267.522},{"t":"on","s":267.522,"e":267.671},{"t":"full","s":267.671,"e":267.969},{"t":"content","s":267.969,"e":268.49},{"t":"gives","s":268.49,"e":268.862},{"t":"you","s":268.862,"e":269.085},{"t":"prompts,","s":269.085,"e":269.77},{"t":"responses,","s":269.77,"e":270.604},{"t":"and","s":270.604,"e":270.827},{"t":"tool","s":270.827,"e":271.125},{"t":"arguments","s":271.125,"e":271.795},{"t":"for","s":271.795,"e":272.018},{"t":"debugging","s":272.018,"e":272.688},{"t":"and","s":272.688,"e":272.911},{"t":"eval","s":272.911,"e":273.209},{"t":"pipelines,","s":273.209,"e":274.043},{"t":"capped","s":274.043,"e":274.489},{"t":"at","s":274.489,"e":274.638},{"t":"zero","s":274.638,"e":274.936},{"t":"point","s":274.936,"e":275.308},{"t":"seven","s":275.308,"e":275.68},{"t":"five","s":275.68,"e":275.978},{"t":"megabytes","s":275.978,"e":276.648},{"t":"per","s":276.648,"e":276.871},{"t":"span","s":276.871,"e":277.169},{"t":"unless","s":277.169,"e":277.615},{"t":"you","s":277.615,"e":277.839},{"t":"raise","s":277.839,"e":278.211},{"t":"max","s":278.211,"e":278.434},{"t":"content","s":278.434,"e":278.955},{"t":"bytes.","s":278.955,"e":279.439}]},{"id":"s2-3-s2","start":279.579,"end":290.096,"words":[{"t":"In","s":279.579,"e":279.743},{"t":"Claude","s":279.743,"e":280.235},{"t":"Code","s":280.235,"e":280.563},{"t":"and","s":280.563,"e":280.809},{"t":"the","s":280.809,"e":281.054},{"t":"Agent","s":281.054,"e":281.464},{"t":"SDK,","s":281.464,"e":281.891},{"t":"you","s":281.891,"e":282.137},{"t":"control","s":282.137,"e":282.71},{"t":"sensitivity","s":282.71,"e":283.612},{"t":"granularly","s":283.612,"e":284.432},{"t":"using","s":284.432,"e":284.842},{"t":"opt-in","s":284.842,"e":285.251},{"t":"flags","s":285.251,"e":285.661},{"t":"for","s":285.661,"e":285.907},{"t":"prompts,","s":285.907,"e":286.661},{"t":"tool","s":286.661,"e":286.989},{"t":"details,","s":286.989,"e":287.743},{"t":"tool","s":287.743,"e":288.071},{"t":"content,","s":288.071,"e":288.825},{"t":"or","s":288.825,"e":288.989},{"t":"raw","s":288.989,"e":289.235},{"t":"API","s":289.235,"e":289.481},{"t":"bodies.","s":289.481,"e":290.096}]}]},{"id":"s2-4","section":"Cache Diagnostics & Privacy-Constrained Content Capture","start":290.456,"end":324.123,"sentences":[{"id":"s2-4-s0","start":290.456,"end":293.613,"words":[{"t":"Privacy","s":290.456,"e":290.869},{"t":"arrangements","s":290.869,"e":291.577},{"t":"directly","s":291.577,"e":292.049},{"t":"shape","s":292.049,"e":292.344},{"t":"what","s":292.344,"e":292.58},{"t":"you","s":292.58,"e":292.757},{"t":"can","s":292.757,"e":292.934},{"t":"instrument.","s":292.934,"e":293.613}]},{"id":"s2-4-s1","start":293.753,"end":309.284,"words":[{"t":"Under","s":293.753,"e":294.17},{"t":"ZDR,","s":294.17,"e":294.603},{"t":"Messages","s":294.603,"e":295.27},{"t":"API","s":295.27,"e":295.52},{"t":"full-content","s":295.52,"e":296.437},{"t":"OpenTelemetry","s":296.437,"e":297.521},{"t":"export","s":297.521,"e":298.021},{"t":"still","s":298.021,"e":298.438},{"t":"works","s":298.438,"e":298.855},{"t":"because","s":298.855,"e":299.439},{"t":"spans","s":299.439,"e":299.855},{"t":"are","s":299.855,"e":300.105},{"t":"buffered","s":300.105,"e":300.772},{"t":"only","s":300.772,"e":301.106},{"t":"in","s":301.106,"e":301.273},{"t":"memory","s":301.273,"e":301.773},{"t":"before","s":301.773,"e":302.273},{"t":"delivery,","s":302.273,"e":303.123},{"t":"whereas","s":303.123,"e":303.707},{"t":"HIPAA,","s":303.707,"e":304.307},{"t":"FERPA,","s":304.307,"e":304.907},{"t":"or","s":304.907,"e":305.074},{"t":"K-12","s":305.074,"e":305.324},{"t":"restrictions","s":305.324,"e":306.325},{"t":"force","s":306.325,"e":306.741},{"t":"API","s":306.741,"e":306.991},{"t":"destinations","s":306.991,"e":307.992},{"t":"to","s":307.992,"e":308.159},{"t":"metadata-only.","s":308.159,"e":309.284}]},{"id":"s2-4-s2","start":309.424,"end":324.123,"words":[{"t":"Remember","s":309.424,"e":310.078},{"t":"that","s":310.078,"e":310.406},{"t":"customer-managed","s":310.406,"e":311.633},{"t":"encryption","s":311.633,"e":312.451},{"t":"keys","s":312.451,"e":312.778},{"t":"and","s":312.778,"e":313.023},{"t":"ZDR","s":313.023,"e":313.268},{"t":"cannot","s":313.268,"e":313.759},{"t":"share","s":313.759,"e":314.168},{"t":"a","s":314.168,"e":314.291},{"t":"workspace\u2014CMEK","s":314.291,"e":315.354},{"t":"requires","s":315.354,"e":316.009},{"t":"standard","s":316.009,"e":316.663},{"t":"thirty-day","s":316.663,"e":317.399},{"t":"retention","s":317.399,"e":318.135},{"t":"on","s":318.135,"e":318.299},{"t":"a","s":318.299,"e":318.422},{"t":"non-default","s":318.422,"e":319.24},{"t":"workspace,","s":319.24,"e":320.156},{"t":"and","s":320.156,"e":320.401},{"t":"hosted","s":320.401,"e":320.892},{"t":"Managed","s":320.892,"e":321.465},{"t":"Agents","s":321.465,"e":321.955},{"t":"is","s":321.955,"e":322.119},{"t":"never","s":322.119,"e":322.528},{"t":"ZDR","s":322.528,"e":322.773},{"t":"or","s":322.773,"e":322.937},{"t":"HIPAA","s":322.937,"e":323.346},{"t":"eligible.","s":323.346,"e":324.123}]}]},{"id":"s2-5","section":"Cache Diagnostics & Privacy-Constrained Content Capture","start":324.483,"end":349.564,"sentences":[{"id":"s2-5-s0","start":324.483,"end":327.597,"words":[{"t":"Here","s":324.483,"e":324.743},{"t":"is","s":324.743,"e":324.872},{"t":"a","s":324.872,"e":324.97},{"t":"critical","s":324.97,"e":325.489},{"t":"compliance","s":325.489,"e":326.137},{"t":"distinction","s":326.137,"e":326.851},{"t":"for","s":326.851,"e":327.046},{"t":"the","s":327.046,"e":327.24},{"t":"exam.","s":327.24,"e":327.597}]},{"id":"s2-5-s1","start":327.737,"end":333.476,"words":[{"t":"Under","s":327.737,"e":328.104},{"t":"HIPAA","s":328.104,"e":328.471},{"t":"readiness,","s":328.471,"e":329.293},{"t":"Anthropic","s":329.293,"e":329.953},{"t":"actively","s":329.953,"e":330.54},{"t":"blocks","s":330.54,"e":330.981},{"t":"non-eligible","s":330.981,"e":331.788},{"t":"features","s":331.788,"e":332.375},{"t":"with","s":332.375,"e":332.669},{"t":"a","s":332.669,"e":332.779},{"t":"400","s":332.779,"e":332.999},{"t":"error.","s":332.999,"e":333.476}]},{"id":"s2-5-s2","start":333.616,"end":344.581,"words":[{"t":"Under","s":333.616,"e":334.031},{"t":"ZDR,","s":334.031,"e":334.463},{"t":"calling","s":334.463,"e":335.044},{"t":"stateful","s":335.044,"e":335.708},{"t":"features","s":335.708,"e":336.372},{"t":"like","s":336.372,"e":336.704},{"t":"Batch","s":336.704,"e":337.119},{"t":"processing,","s":337.119,"e":338.131},{"t":"the","s":338.131,"e":338.381},{"t":"Files","s":338.381,"e":338.796},{"t":"API,","s":338.796,"e":339.227},{"t":"or","s":339.227,"e":339.393},{"t":"Code","s":339.393,"e":339.725},{"t":"Execution","s":339.725,"e":340.472},{"t":"is","s":340.472,"e":340.638},{"t":"not","s":340.638,"e":340.887},{"t":"blocked\u2014you","s":340.887,"e":341.717},{"t":"silently","s":341.717,"e":342.381},{"t":"step","s":342.381,"e":342.713},{"t":"outside","s":342.713,"e":343.294},{"t":"ZDR","s":343.294,"e":343.543},{"t":"for","s":343.543,"e":343.792},{"t":"that","s":343.792,"e":344.124},{"t":"data.","s":344.124,"e":344.581}]},{"id":"s2-5-s3","start":344.721,"end":349.564,"words":[{"t":"Always","s":344.721,"e":345.165},{"t":"enforce","s":345.165,"e":345.682},{"t":"feature","s":345.682,"e":346.2},{"t":"allowlists","s":346.2,"e":346.939},{"t":"in","s":346.939,"e":347.087},{"t":"your","s":347.087,"e":347.383},{"t":"gateway","s":347.383,"e":347.9},{"t":"if","s":347.9,"e":348.048},{"t":"strict","s":348.048,"e":348.492},{"t":"ZDR","s":348.492,"e":348.714},{"t":"is","s":348.714,"e":348.862},{"t":"required.","s":348.862,"e":349.564}]}]},{"id":"s3-1","section":"SLIs, SLOs, Cost Analytics & Drift Detection","start":350.264,"end":375.663,"sentences":[{"id":"s3-1-s0","start":350.264,"end":356.003,"words":[{"t":"Traditional","s":350.264,"e":351.362},{"t":"HTTP","s":351.362,"e":351.761},{"t":"200","s":351.761,"e":352.061},{"t":"uptime","s":352.061,"e":352.659},{"t":"is","s":352.659,"e":352.859},{"t":"dangerously","s":352.859,"e":353.957},{"t":"blind","s":353.957,"e":354.456},{"t":"for","s":354.456,"e":354.755},{"t":"LLM","s":354.755,"e":355.055},{"t":"services.","s":355.055,"e":356.003}]},{"id":"s3-1-s1","start":356.143,"end":375.663,"words":[{"t":"Staff","s":356.143,"e":356.515},{"t":"engineers","s":356.515,"e":357.185},{"t":"define","s":357.185,"e":357.631},{"t":"multi-dimensional","s":357.631,"e":358.822},{"t":"SLIs:","s":358.822,"e":359.283},{"t":"time-to-first-chunk","s":359.283,"e":360.474},{"t":"separate","s":360.474,"e":361.07},{"t":"from","s":361.07,"e":361.367},{"t":"total","s":361.367,"e":361.739},{"t":"agent-turn","s":361.739,"e":362.409},{"t":"latency,","s":362.409,"e":363.094},{"t":"stop-reason","s":363.094,"e":363.838},{"t":"ratios","s":363.838,"e":364.284},{"t":"that","s":364.284,"e":364.582},{"t":"catch","s":364.582,"e":364.954},{"t":"max-tokens","s":364.954,"e":365.624},{"t":"truncations","s":365.624,"e":366.443},{"t":"and","s":366.443,"e":366.666},{"t":"safety","s":366.666,"e":367.112},{"t":"refusals,","s":367.112,"e":367.871},{"t":"prompt","s":367.871,"e":368.318},{"t":"cache","s":368.318,"e":368.69},{"t":"hit","s":368.69,"e":368.913},{"t":"rates","s":368.913,"e":369.285},{"t":"that","s":369.285,"e":369.583},{"t":"guard","s":369.583,"e":369.955},{"t":"unit","s":369.955,"e":370.253},{"t":"economics,","s":370.253,"e":371.086},{"t":"and","s":371.086,"e":371.31},{"t":"task-level","s":371.31,"e":371.979},{"t":"quality","s":371.979,"e":372.5},{"t":"signals","s":372.5,"e":373.021},{"t":"like","s":373.021,"e":373.319},{"t":"tool","s":373.319,"e":373.616},{"t":"success","s":373.616,"e":374.137},{"t":"rate","s":374.137,"e":374.435},{"t":"and","s":374.435,"e":374.658},{"t":"groundedness.","s":374.658,"e":375.663}]}]},{"id":"s3-2","section":"SLIs, SLOs, Cost Analytics & Drift Detection","start":376.023,"end":401.784,"sentences":[{"id":"s3-2-s0","start":376.023,"end":384.663,"words":[{"t":"When","s":376.023,"e":376.305},{"t":"you","s":376.305,"e":376.516},{"t":"need","s":376.516,"e":376.798},{"t":"authoritative","s":376.798,"e":377.713},{"t":"spend","s":377.713,"e":378.065},{"t":"tracking","s":378.065,"e":378.628},{"t":"and","s":378.628,"e":378.84},{"t":"chargeback,","s":378.84,"e":379.699},{"t":"query","s":379.699,"e":380.051},{"t":"the","s":380.051,"e":380.262},{"t":"Usage","s":380.262,"e":380.614},{"t":"and","s":380.614,"e":380.825},{"t":"Cost","s":380.825,"e":381.107},{"t":"Analytics","s":381.107,"e":381.741},{"t":"API","s":381.741,"e":381.952},{"t":"rather","s":381.952,"e":382.374},{"t":"than","s":382.374,"e":382.656},{"t":"summing","s":382.656,"e":383.149},{"t":"best-effort","s":383.149,"e":383.853},{"t":"trace","s":383.853,"e":384.205},{"t":"spans.","s":384.205,"e":384.663}]},{"id":"s3-2-s1","start":384.803,"end":401.784,"words":[{"t":"It","s":384.803,"e":384.962},{"t":"exposes","s":384.962,"e":385.517},{"t":"both","s":385.517,"e":385.834},{"t":"token","s":385.834,"e":386.231},{"t":"usage","s":386.231,"e":386.627},{"t":"and","s":386.627,"e":386.865},{"t":"USD","s":386.865,"e":387.103},{"t":"cost","s":387.103,"e":387.42},{"t":"endpoints","s":387.42,"e":388.134},{"t":"with","s":388.134,"e":388.451},{"t":"one-minute,","s":388.451,"e":389.34},{"t":"hourly,","s":389.34,"e":389.99},{"t":"or","s":389.99,"e":390.149},{"t":"daily","s":390.149,"e":390.545},{"t":"buckets,","s":390.545,"e":391.275},{"t":"grouping","s":391.275,"e":391.909},{"t":"by","s":391.909,"e":392.068},{"t":"up","s":392.068,"e":392.227},{"t":"to","s":392.227,"e":392.385},{"t":"five","s":392.385,"e":392.703},{"t":"dimensions","s":392.703,"e":393.496},{"t":"like","s":393.496,"e":393.813},{"t":"model,","s":393.813,"e":394.384},{"t":"workspace,","s":394.384,"e":395.272},{"t":"API","s":395.272,"e":395.51},{"t":"key,","s":395.51,"e":395.923},{"t":"actor,","s":395.923,"e":396.494},{"t":"or","s":396.494,"e":396.652},{"t":"Managed","s":396.652,"e":397.208},{"t":"Agents","s":397.208,"e":397.683},{"t":"session","s":397.683,"e":398.239},{"t":"ID,","s":398.239,"e":398.572},{"t":"with","s":398.572,"e":398.889},{"t":"typical","s":398.889,"e":399.444},{"t":"data","s":399.444,"e":399.762},{"t":"freshness","s":399.762,"e":400.475},{"t":"within","s":400.475,"e":400.951},{"t":"four","s":400.951,"e":401.268},{"t":"hours.","s":401.268,"e":401.784}]}]},{"id":"s3-3","section":"SLIs, SLOs, Cost Analytics & Drift Detection","start":402.144,"end":432.205,"sentences":[{"id":"s3-3-s0","start":402.144,"end":409.909,"words":[{"t":"Beyond","s":402.144,"e":402.607},{"t":"raw","s":402.607,"e":402.838},{"t":"Messages","s":402.838,"e":403.455},{"t":"API","s":403.455,"e":403.686},{"t":"calls,","s":403.686,"e":404.241},{"t":"Anthropic","s":404.241,"e":404.935},{"t":"provides","s":404.935,"e":405.552},{"t":"specialized","s":405.552,"e":406.4},{"t":"observability","s":406.4,"e":407.403},{"t":"for","s":407.403,"e":407.634},{"t":"coding","s":407.634,"e":408.097},{"t":"fleets","s":408.097,"e":408.56},{"t":"and","s":408.56,"e":408.791},{"t":"Managed","s":408.791,"e":409.331},{"t":"Agents.","s":409.331,"e":409.909}]},{"id":"s3-3-s1","start":410.049,"end":419.969,"words":[{"t":"The","s":410.049,"e":410.278},{"t":"Claude","s":410.278,"e":410.735},{"t":"Code","s":410.735,"e":411.039},{"t":"Analytics","s":411.039,"e":411.725},{"t":"API","s":411.725,"e":411.954},{"t":"gives","s":411.954,"e":412.335},{"t":"daily","s":412.335,"e":412.716},{"t":"productivity","s":412.716,"e":413.63},{"t":"and","s":413.63,"e":413.859},{"t":"tool","s":413.859,"e":414.163},{"t":"acceptance","s":414.163,"e":414.925},{"t":"metrics","s":414.925,"e":415.459},{"t":"with","s":415.459,"e":415.763},{"t":"a","s":415.763,"e":415.878},{"t":"one-hour","s":415.878,"e":416.411},{"t":"lag,","s":416.411,"e":416.807},{"t":"while","s":416.807,"e":417.188},{"t":"real-time","s":417.188,"e":417.798},{"t":"monitoring","s":417.798,"e":418.559},{"t":"uses","s":418.559,"e":418.864},{"t":"OpenTelemetry.","s":418.864,"e":419.969}]},{"id":"s3-3-s2","start":420.109,"end":432.205,"words":[{"t":"For","s":420.109,"e":420.317},{"t":"Managed","s":420.317,"e":420.804},{"t":"Agents,","s":420.804,"e":421.373},{"t":"combine","s":421.373,"e":421.86},{"t":"session","s":421.86,"e":422.346},{"t":"usage","s":422.346,"e":422.694},{"t":"stream","s":422.694,"e":423.11},{"t":"events,","s":423.11,"e":423.68},{"t":"lifecycle","s":423.68,"e":424.305},{"t":"webhooks","s":424.305,"e":424.861},{"t":"like","s":424.861,"e":425.139},{"t":"session","s":425.139,"e":425.625},{"t":"budget","s":425.625,"e":426.042},{"t":"reached","s":426.042,"e":426.529},{"t":"or","s":426.529,"e":426.668},{"t":"vault","s":426.668,"e":427.015},{"t":"credential","s":427.015,"e":427.71},{"t":"refresh","s":427.71,"e":428.196},{"t":"failed,","s":428.196,"e":428.766},{"t":"and","s":428.766,"e":428.974},{"t":"an","s":428.974,"e":429.113},{"t":"offline","s":429.113,"e":429.6},{"t":"reviewer","s":429.6,"e":430.155},{"t":"job","s":430.155,"e":430.364},{"t":"that","s":430.364,"e":430.642},{"t":"audits","s":430.642,"e":431.059},{"t":"long","s":431.059,"e":431.337},{"t":"transcripts.","s":431.337,"e":432.205}]}]},{"id":"s3-4","section":"SLIs, SLOs, Cost Analytics & Drift Detection","start":432.565,"end":460.152,"sentences":[{"id":"s3-4-s0","start":432.565,"end":439.733,"words":[{"t":"Good","s":432.565,"e":432.841},{"t":"alerting","s":432.841,"e":433.394},{"t":"separates","s":433.394,"e":434.017},{"t":"urgent","s":434.017,"e":434.431},{"t":"burn-rate","s":434.431,"e":434.984},{"t":"pages","s":434.984,"e":435.33},{"t":"from","s":435.33,"e":435.606},{"t":"slow-burn","s":435.606,"e":436.159},{"t":"tickets,","s":436.159,"e":436.795},{"t":"and","s":436.795,"e":437.003},{"t":"monitors","s":437.003,"e":437.556},{"t":"the","s":437.556,"e":437.763},{"t":"observability","s":437.763,"e":438.662},{"t":"pipeline","s":438.662,"e":439.215},{"t":"itself.","s":439.215,"e":439.733}]},{"id":"s3-4-s1","start":439.873,"end":452.46,"words":[{"t":"Remember","s":439.873,"e":440.546},{"t":"that","s":440.546,"e":440.882},{"t":"Claude","s":440.882,"e":441.386},{"t":"API","s":441.386,"e":441.639},{"t":"OpenTelemetry","s":441.639,"e":442.732},{"t":"destinations","s":442.732,"e":443.741},{"t":"auto-disable","s":443.741,"e":444.666},{"t":"after","s":444.666,"e":445.086},{"t":"any","s":445.086,"e":445.338},{"t":"3xx","s":445.338,"e":445.591},{"t":"redirect","s":445.591,"e":446.263},{"t":"or","s":446.263,"e":446.431},{"t":"twenty-four","s":446.431,"e":447.272},{"t":"hours","s":447.272,"e":447.693},{"t":"of","s":447.693,"e":447.861},{"t":"delivery","s":447.861,"e":448.533},{"t":"failures,","s":448.533,"e":449.391},{"t":"silently","s":449.391,"e":450.064},{"t":"dropping","s":450.064,"e":450.736},{"t":"spans","s":450.736,"e":451.157},{"t":"until","s":451.157,"e":451.577},{"t":"re-enabled.","s":451.577,"e":452.46}]},{"id":"s3-4-s2","start":452.6,"end":460.152,"words":[{"t":"To","s":452.6,"e":452.742},{"t":"stop","s":452.742,"e":453.025},{"t":"runaway","s":453.025,"e":453.52},{"t":"agent","s":453.52,"e":453.874},{"t":"spend,","s":453.874,"e":454.384},{"t":"pair","s":454.384,"e":454.667},{"t":"anomaly","s":454.667,"e":455.162},{"t":"alerts","s":455.162,"e":455.587},{"t":"with","s":455.587,"e":455.87},{"t":"platform-enforced","s":455.87,"e":457.002},{"t":"session","s":457.002,"e":457.498},{"t":"budgets","s":457.498,"e":457.993},{"t":"instead","s":457.993,"e":458.489},{"t":"of","s":458.489,"e":458.63},{"t":"fragile","s":458.63,"e":459.126},{"t":"client","s":459.126,"e":459.55},{"t":"polling.","s":459.55,"e":460.152}]}]},{"id":"s3-5","section":"SLIs, SLOs, Cost Analytics & Drift Detection","start":460.512,"end":487.629,"sentences":[{"id":"s3-5-s0","start":460.512,"end":466.08,"words":[{"t":"Model","s":460.512,"e":460.893},{"t":"updates","s":460.893,"e":461.427},{"t":"and","s":461.427,"e":461.656},{"t":"fallbacks","s":461.656,"e":462.343},{"t":"can","s":462.343,"e":462.571},{"t":"degrade","s":462.571,"e":463.105},{"t":"quality","s":463.105,"e":463.639},{"t":"without","s":463.639,"e":464.173},{"t":"raising","s":464.173,"e":464.707},{"t":"a","s":464.707,"e":464.821},{"t":"single","s":464.821,"e":465.279},{"t":"HTTP","s":465.279,"e":465.584},{"t":"error.","s":465.584,"e":466.08}]},{"id":"s3-5-s1","start":466.22,"end":475.372,"words":[{"t":"Always","s":466.22,"e":466.665},{"t":"compare","s":466.665,"e":467.183},{"t":"gen","s":467.183,"e":467.406},{"t":"A","s":467.406,"e":467.517},{"t":"I","s":467.517,"e":467.628},{"t":"request","s":467.628,"e":468.147},{"t":"model","s":468.147,"e":468.517},{"t":"against","s":468.517,"e":469.036},{"t":"gen","s":469.036,"e":469.258},{"t":"A","s":469.258,"e":469.369},{"t":"I","s":469.369,"e":469.481},{"t":"response","s":469.481,"e":470.073},{"t":"model","s":470.073,"e":470.444},{"t":"on","s":470.444,"e":470.592},{"t":"your","s":470.592,"e":470.889},{"t":"dashboards","s":470.889,"e":471.63},{"t":"so","s":471.63,"e":471.778},{"t":"alias","s":471.778,"e":472.148},{"t":"rollovers","s":472.148,"e":472.815},{"t":"and","s":472.815,"e":473.038},{"t":"fallbacks","s":473.038,"e":473.705},{"t":"are","s":473.705,"e":473.927},{"t":"immediately","s":473.927,"e":474.742},{"t":"visible.","s":474.742,"e":475.372}]},{"id":"s3-5-s2","start":475.512,"end":487.629,"words":[{"t":"Track","s":475.512,"e":475.888},{"t":"behavioral","s":475.888,"e":476.639},{"t":"proxies\u2014like","s":476.639,"e":477.465},{"t":"output","s":477.465,"e":477.916},{"t":"length","s":477.916,"e":478.367},{"t":"shifts,","s":478.367,"e":478.983},{"t":"reasoning","s":478.983,"e":479.659},{"t":"token","s":479.659,"e":480.034},{"t":"ratios,","s":480.034,"e":480.65},{"t":"tool","s":480.65,"e":480.951},{"t":"retry","s":480.951,"e":481.326},{"t":"spikes,","s":481.326,"e":481.942},{"t":"refusal","s":481.942,"e":482.468},{"t":"rates,","s":482.468,"e":483.009},{"t":"and","s":483.009,"e":483.234},{"t":"user","s":483.234,"e":483.535},{"t":"edit","s":483.535,"e":483.835},{"t":"acceptance\u2014to","s":483.835,"e":484.737},{"t":"catch","s":484.737,"e":485.112},{"t":"drift","s":485.112,"e":485.488},{"t":"days","s":485.488,"e":485.789},{"t":"before","s":485.789,"e":486.239},{"t":"customers","s":486.239,"e":486.915},{"t":"complain.","s":486.915,"e":487.629}]}]},{"id":"s3-6","section":"SLIs, SLOs, Cost Analytics & Drift Detection","start":487.989,"end":507.009,"sentences":[{"id":"s3-6-s0","start":487.989,"end":496.864,"words":[{"t":"This","s":487.989,"e":488.309},{"t":"Python","s":488.309,"e":488.789},{"t":"snippet","s":488.789,"e":489.349},{"t":"queries","s":489.349,"e":489.91},{"t":"the","s":489.91,"e":490.15},{"t":"Usage","s":490.15,"e":490.55},{"t":"and","s":490.55,"e":490.79},{"t":"Cost","s":490.79,"e":491.11},{"t":"Analytics","s":491.11,"e":491.83},{"t":"API","s":491.83,"e":492.07},{"t":"for","s":492.07,"e":492.31},{"t":"hourly","s":492.31,"e":492.791},{"t":"cost","s":492.791,"e":493.111},{"t":"buckets","s":493.111,"e":493.671},{"t":"grouped","s":493.671,"e":494.231},{"t":"by","s":494.231,"e":494.391},{"t":"API","s":494.391,"e":494.631},{"t":"key,","s":494.631,"e":495.047},{"t":"model,","s":495.047,"e":495.624},{"t":"and","s":495.624,"e":495.864},{"t":"service","s":495.864,"e":496.424},{"t":"tier.","s":496.424,"e":496.864}]},{"id":"s3-6-s1","start":497.004,"end":507.009,"words":[{"t":"Running","s":497.004,"e":497.496},{"t":"a","s":497.496,"e":497.601},{"t":"scheduled","s":497.601,"e":498.234},{"t":"check","s":498.234,"e":498.585},{"t":"like","s":498.585,"e":498.866},{"t":"this","s":498.866,"e":499.147},{"t":"against","s":499.147,"e":499.639},{"t":"rolling","s":499.639,"e":500.131},{"t":"baselines","s":500.131,"e":500.763},{"t":"quickly","s":500.763,"e":501.255},{"t":"surfaces","s":501.255,"e":501.817},{"t":"leaked","s":501.817,"e":502.238},{"t":"keys,","s":502.238,"e":502.674},{"t":"unexpected","s":502.674,"e":503.377},{"t":"fallback","s":503.377,"e":503.939},{"t":"model","s":503.939,"e":504.29},{"t":"traffic,","s":504.29,"e":504.936},{"t":"or","s":504.936,"e":505.077},{"t":"sudden","s":505.077,"e":505.498},{"t":"service-tier","s":505.498,"e":506.271},{"t":"cost","s":506.271,"e":506.552},{"t":"jumps.","s":506.552,"e":507.009}]}]},{"id":"s4-1","section":"Sampling Strategies, Aggregation & Failure-Cohort Analysis","start":507.709,"end":538.441,"sentences":[{"id":"s4-1-s0","start":507.709,"end":520.787,"words":[{"t":"At","s":507.709,"e":507.857},{"t":"production","s":507.857,"e":508.599},{"t":"volume,","s":508.599,"e":509.207},{"t":"inspecting","s":509.207,"e":509.948},{"t":"individual","s":509.948,"e":510.689},{"t":"traces","s":510.689,"e":511.134},{"t":"cannot","s":511.134,"e":511.579},{"t":"uncover","s":511.579,"e":512.098},{"t":"a","s":512.098,"e":512.209},{"t":"one-percent","s":512.209,"e":512.951},{"t":"systemic","s":512.951,"e":513.544},{"t":"bug","s":513.544,"e":513.766},{"t":"buried","s":513.766,"e":514.211},{"t":"in","s":514.211,"e":514.359},{"t":"millions","s":514.359,"e":514.952},{"t":"of","s":514.952,"e":515.101},{"t":"requests,","s":515.101,"e":515.857},{"t":"and","s":515.857,"e":516.079},{"t":"storing","s":516.079,"e":516.598},{"t":"full-content","s":516.598,"e":517.414},{"t":"traces","s":517.414,"e":517.859},{"t":"for","s":517.859,"e":518.081},{"t":"every","s":518.081,"e":518.452},{"t":"call","s":518.452,"e":518.748},{"t":"explodes","s":518.748,"e":519.341},{"t":"observability","s":519.341,"e":520.305},{"t":"bills.","s":520.305,"e":520.787}]},{"id":"s4-1-s1","start":520.927,"end":538.441,"words":[{"t":"Scaling","s":520.927,"e":521.507},{"t":"trace","s":521.507,"e":521.921},{"t":"analysis","s":521.921,"e":522.583},{"t":"requires","s":522.583,"e":523.246},{"t":"combining","s":523.246,"e":523.991},{"t":"smart","s":523.991,"e":524.405},{"t":"sampling","s":524.405,"e":525.067},{"t":"with","s":525.067,"e":525.399},{"t":"low-cardinality","s":525.399,"e":526.558},{"t":"aggregation","s":526.558,"e":527.469},{"t":"and","s":527.469,"e":527.717},{"t":"structured","s":527.717,"e":528.545},{"t":"failure-cohort","s":528.545,"e":529.622},{"t":"slicing\u2014while","s":529.622,"e":530.616},{"t":"remembering","s":530.616,"e":531.526},{"t":"that","s":531.526,"e":531.858},{"t":"turning","s":531.858,"e":532.437},{"t":"off","s":532.437,"e":532.686},{"t":"the","s":532.686,"e":532.934},{"t":"W3C","s":532.934,"e":533.183},{"t":"traceparent","s":533.183,"e":534.094},{"t":"sampled","s":534.094,"e":534.673},{"t":"flag","s":534.673,"e":535.004},{"t":"suppresses","s":535.004,"e":535.833},{"t":"Claude","s":535.833,"e":536.329},{"t":"API","s":536.329,"e":536.578},{"t":"and","s":536.578,"e":536.826},{"t":"MCP","s":536.826,"e":537.075},{"t":"spans","s":537.075,"e":537.489},{"t":"altogether.","s":537.489,"e":538.441}]}]},{"id":"s4-2","section":"Sampling Strategies, Aggregation & Failure-Cohort Analysis","start":538.801,"end":564.425,"sentences":[{"id":"s4-2-s0","start":538.801,"end":543.708,"words":[{"t":"Choosing","s":538.801,"e":539.311},{"t":"between","s":539.311,"e":539.757},{"t":"head-based","s":539.757,"e":540.33},{"t":"and","s":540.33,"e":540.522},{"t":"tail-based","s":540.522,"e":541.095},{"t":"sampling","s":541.095,"e":541.605},{"t":"is","s":541.605,"e":541.732},{"t":"a","s":541.732,"e":541.828},{"t":"classic","s":541.828,"e":542.274},{"t":"architectural","s":542.274,"e":543.103},{"t":"tradeoff.","s":543.103,"e":543.708}]},{"id":"s4-2-s1","start":543.848,"end":550.589,"words":[{"t":"Head-based","s":543.848,"e":544.489},{"t":"sampling","s":544.489,"e":545.058},{"t":"decides","s":545.058,"e":545.556},{"t":"up","s":545.556,"e":545.699},{"t":"front","s":545.699,"e":546.055},{"t":"at","s":546.055,"e":546.197},{"t":"the","s":546.197,"e":546.411},{"t":"root","s":546.411,"e":546.695},{"t":"span,","s":546.695,"e":547.137},{"t":"which","s":547.137,"e":547.493},{"t":"is","s":547.493,"e":547.635},{"t":"cheap","s":547.635,"e":547.991},{"t":"but","s":547.991,"e":548.204},{"t":"randomly","s":548.204,"e":548.774},{"t":"discards","s":548.774,"e":549.343},{"t":"most","s":549.343,"e":549.628},{"t":"rare","s":549.628,"e":549.913},{"t":"failures.","s":549.913,"e":550.589}]},{"id":"s4-2-s2","start":550.729,"end":564.425,"words":[{"t":"Tail-based","s":550.729,"e":551.369},{"t":"sampling","s":551.369,"e":551.938},{"t":"buffers","s":551.938,"e":552.436},{"t":"completed","s":552.436,"e":553.076},{"t":"traces","s":553.076,"e":553.502},{"t":"in","s":553.502,"e":553.645},{"t":"an","s":553.645,"e":553.787},{"t":"OpenTelemetry","s":553.787,"e":554.711},{"t":"Collector","s":554.711,"e":555.351},{"t":"so","s":555.351,"e":555.493},{"t":"you","s":555.493,"e":555.707},{"t":"can","s":555.707,"e":555.92},{"t":"keep","s":555.92,"e":556.205},{"t":"one","s":556.205,"e":556.418},{"t":"hundred","s":556.418,"e":556.916},{"t":"percent","s":556.916,"e":557.413},{"t":"of","s":557.413,"e":557.556},{"t":"errors,","s":557.556,"e":558.139},{"t":"latency","s":558.139,"e":558.637},{"t":"outliers,","s":558.637,"e":559.362},{"t":"refusals,","s":559.362,"e":560.087},{"t":"and","s":560.087,"e":560.301},{"t":"cache","s":560.301,"e":560.656},{"t":"misses","s":560.656,"e":561.083},{"t":"alongside","s":561.083,"e":561.723},{"t":"a","s":561.723,"e":561.829},{"t":"small","s":561.829,"e":562.185},{"t":"baseline","s":562.185,"e":562.754},{"t":"sample","s":562.754,"e":563.181},{"t":"of","s":563.181,"e":563.323},{"t":"healthy","s":563.323,"e":563.821},{"t":"traffic.","s":563.821,"e":564.425}]}]},{"id":"s4-3","section":"Sampling Strategies, Aggregation & Failure-Cohort Analysis","start":564.785,"end":595.06,"sentences":[{"id":"s4-3-s0","start":564.785,"end":569.031,"words":[{"t":"When","s":564.785,"e":565.032},{"t":"aggregating","s":565.032,"e":565.712},{"t":"telemetry","s":565.712,"e":566.268},{"t":"at","s":566.268,"e":566.392},{"t":"scale,","s":566.392,"e":566.837},{"t":"enforce","s":566.837,"e":567.27},{"t":"strict","s":567.27,"e":567.64},{"t":"cardinality","s":567.64,"e":568.32},{"t":"discipline.","s":568.32,"e":569.031}]},{"id":"s4-3-s1","start":569.171,"end":583.336,"words":[{"t":"Keep","s":569.171,"e":569.488},{"t":"unbounded","s":569.488,"e":570.203},{"t":"identifiers","s":570.203,"e":571.076},{"t":"like","s":571.076,"e":571.393},{"t":"prompt","s":571.393,"e":571.869},{"t":"ID,","s":571.869,"e":572.202},{"t":"session","s":572.202,"e":572.758},{"t":"ID,","s":572.758,"e":573.091},{"t":"and","s":573.091,"e":573.329},{"t":"workflow","s":573.329,"e":573.964},{"t":"run","s":573.964,"e":574.202},{"t":"ID","s":574.202,"e":574.361},{"t":"on","s":574.361,"e":574.52},{"t":"traces","s":574.52,"e":574.996},{"t":"and","s":574.996,"e":575.234},{"t":"log","s":575.234,"e":575.472},{"t":"events,","s":575.472,"e":576.123},{"t":"while","s":576.123,"e":576.519},{"t":"restricting","s":576.519,"e":577.392},{"t":"metric","s":577.392,"e":577.868},{"t":"labels","s":577.868,"e":578.345},{"t":"to","s":578.345,"e":578.503},{"t":"low-cardinality","s":578.503,"e":579.614},{"t":"dimensions","s":579.614,"e":580.408},{"t":"like","s":580.408,"e":580.725},{"t":"model,","s":580.725,"e":581.297},{"t":"stop","s":581.297,"e":581.614},{"t":"reason,","s":581.614,"e":582.265},{"t":"and","s":582.265,"e":582.503},{"t":"error","s":582.503,"e":582.9},{"t":"type.","s":582.9,"e":583.336}]},{"id":"s4-3-s2","start":583.476,"end":595.06,"words":[{"t":"For","s":583.476,"e":583.716},{"t":"multi-turn","s":583.716,"e":584.437},{"t":"Managed","s":584.437,"e":584.997},{"t":"Agents","s":584.997,"e":585.477},{"t":"sessions","s":585.477,"e":586.118},{"t":"that","s":586.118,"e":586.438},{"t":"span","s":586.438,"e":586.758},{"t":"several","s":586.758,"e":587.319},{"t":"traces,","s":587.319,"e":587.975},{"t":"roll","s":587.975,"e":588.295},{"t":"up","s":588.295,"e":588.455},{"t":"metrics","s":588.455,"e":589.016},{"t":"by","s":589.016,"e":589.176},{"t":"anthropic","s":589.176,"e":589.896},{"t":"session","s":589.896,"e":590.457},{"t":"ID","s":590.457,"e":590.617},{"t":"and","s":590.617,"e":590.857},{"t":"reconstruct","s":590.857,"e":591.738},{"t":"thread","s":591.738,"e":592.218},{"t":"timelines","s":592.218,"e":592.939},{"t":"using","s":592.939,"e":593.339},{"t":"gen","s":593.339,"e":593.579},{"t":"A","s":593.579,"e":593.699},{"t":"I","s":593.699,"e":593.819},{"t":"conversation","s":593.819,"e":594.78},{"t":"ID.","s":594.78,"e":595.06}]}]},{"id":"s4-4","section":"Sampling Strategies, Aggregation & Failure-Cohort Analysis","start":595.42,"end":623.305,"sentences":[{"id":"s4-4-s0","start":595.42,"end":600.519,"words":[{"t":"Failure-cohort","s":595.42,"e":596.417},{"t":"analysis","s":596.417,"e":597.03},{"t":"turns","s":597.03,"e":597.414},{"t":"raw","s":597.414,"e":597.644},{"t":"traces","s":597.644,"e":598.104},{"t":"into","s":598.104,"e":598.41},{"t":"prioritized","s":598.41,"e":599.254},{"t":"engineering","s":599.254,"e":600.097},{"t":"work.","s":600.097,"e":600.519}]},{"id":"s4-4-s1","start":600.659,"end":610.216,"words":[{"t":"Instead","s":600.659,"e":601.145},{"t":"of","s":601.145,"e":601.284},{"t":"reading","s":601.284,"e":601.769},{"t":"random","s":601.769,"e":602.186},{"t":"error","s":602.186,"e":602.533},{"t":"traces,","s":602.533,"e":603.102},{"t":"you","s":603.102,"e":603.31},{"t":"slice","s":603.31,"e":603.657},{"t":"degraded","s":603.657,"e":604.213},{"t":"runs","s":604.213,"e":604.49},{"t":"by","s":604.49,"e":604.629},{"t":"response","s":604.629,"e":605.184},{"t":"model,","s":605.184,"e":605.684},{"t":"stop","s":605.684,"e":605.962},{"t":"reason,","s":605.962,"e":606.531},{"t":"tool","s":606.531,"e":606.808},{"t":"name,","s":606.808,"e":607.239},{"t":"cache","s":607.239,"e":607.586},{"t":"miss","s":607.586,"e":607.863},{"t":"reason,","s":607.863,"e":608.432},{"t":"prompt","s":608.432,"e":608.849},{"t":"version,","s":608.849,"e":609.487},{"t":"and","s":609.487,"e":609.695},{"t":"tenant.","s":609.695,"e":610.216}]},{"id":"s4-4-s2","start":610.356,"end":623.305,"words":[{"t":"A","s":610.356,"e":610.478},{"t":"tiny","s":610.478,"e":610.804},{"t":"overall","s":610.804,"e":611.374},{"t":"error","s":611.374,"e":611.781},{"t":"rate","s":611.781,"e":612.107},{"t":"often","s":612.107,"e":612.514},{"t":"conceals","s":612.514,"e":613.166},{"t":"a","s":613.166,"e":613.288},{"t":"forty-percent","s":613.288,"e":614.265},{"t":"failure","s":614.265,"e":614.835},{"t":"cohort","s":614.835,"e":615.324},{"t":"isolated","s":615.324,"e":615.975},{"t":"to","s":615.975,"e":616.138},{"t":"one","s":616.138,"e":616.383},{"t":"MCP","s":616.383,"e":616.627},{"t":"server","s":616.627,"e":617.116},{"t":"or","s":617.116,"e":617.278},{"t":"one","s":617.278,"e":617.523},{"t":"prompt","s":617.523,"e":618.011},{"t":"revision\u2014giving","s":618.011,"e":619.152},{"t":"you","s":619.152,"e":619.396},{"t":"both","s":619.396,"e":619.722},{"t":"the","s":619.722,"e":619.966},{"t":"root","s":619.966,"e":620.292},{"t":"cause","s":620.292,"e":620.699},{"t":"and","s":620.699,"e":620.943},{"t":"a","s":620.943,"e":621.065},{"t":"ready-made","s":621.065,"e":621.798},{"t":"regression","s":621.798,"e":622.613},{"t":"test","s":622.613,"e":622.939},{"t":"set.","s":622.939,"e":623.305}]}]},{"id":"s4-5","section":"Sampling Strategies, Aggregation & Failure-Cohort Analysis","start":623.665,"end":646.815,"sentences":[{"id":"s4-5-s0","start":623.665,"end":627.441,"words":[{"t":"On","s":623.665,"e":623.806},{"t":"the","s":623.806,"e":624.017},{"t":"exam,","s":624.017,"e":624.453},{"t":"watch","s":624.453,"e":624.804},{"t":"for","s":624.804,"e":625.015},{"t":"two","s":625.015,"e":625.226},{"t":"classic","s":625.226,"e":625.718},{"t":"mistakes","s":625.718,"e":626.281},{"t":"in","s":626.281,"e":626.421},{"t":"trace","s":626.421,"e":626.773},{"t":"analysis.","s":626.773,"e":627.441}]},{"id":"s4-5-s1","start":627.581,"end":634.6,"words":[{"t":"Never","s":627.581,"e":627.932},{"t":"trust","s":627.932,"e":628.284},{"t":"fleet-wide","s":628.284,"e":628.916},{"t":"averages","s":628.916,"e":629.478},{"t":"that","s":629.478,"e":629.759},{"t":"blend","s":629.759,"e":630.11},{"t":"models,","s":630.11,"e":630.687},{"t":"tools,","s":630.687,"e":631.192},{"t":"and","s":631.192,"e":631.403},{"t":"tenants","s":631.403,"e":631.895},{"t":"together\u2014always","s":631.895,"e":632.879},{"t":"slice","s":632.879,"e":633.23},{"t":"into","s":633.23,"e":633.511},{"t":"failure","s":633.511,"e":634.003},{"t":"cohorts.","s":634.003,"e":634.6}]},{"id":"s4-5-s2","start":634.74,"end":646.815,"words":[{"t":"And","s":634.74,"e":634.96},{"t":"never","s":634.96,"e":635.325},{"t":"fix","s":635.325,"e":635.545},{"t":"missing","s":635.545,"e":636.057},{"t":"rare-error","s":636.057,"e":636.716},{"t":"traces","s":636.716,"e":637.155},{"t":"by","s":637.155,"e":637.301},{"t":"cranking","s":637.301,"e":637.887},{"t":"head-based","s":637.887,"e":638.545},{"t":"sampling","s":638.545,"e":639.131},{"t":"to","s":639.131,"e":639.277},{"t":"one","s":639.277,"e":639.497},{"t":"hundred","s":639.497,"e":640.009},{"t":"percent","s":640.009,"e":640.521},{"t":"when","s":640.521,"e":640.814},{"t":"tail-based","s":640.814,"e":641.473},{"t":"sampling","s":641.473,"e":642.058},{"t":"can","s":642.058,"e":642.278},{"t":"keep","s":642.278,"e":642.57},{"t":"every","s":642.57,"e":642.936},{"t":"error","s":642.936,"e":643.302},{"t":"and","s":643.302,"e":643.522},{"t":"latency","s":643.522,"e":644.034},{"t":"outlier","s":644.034,"e":644.546},{"t":"at","s":644.546,"e":644.693},{"t":"a","s":644.693,"e":644.803},{"t":"fraction","s":644.803,"e":645.388},{"t":"of","s":645.388,"e":645.534},{"t":"the","s":645.534,"e":645.754},{"t":"ingestion","s":645.754,"e":646.413},{"t":"cost.","s":646.413,"e":646.815}]}]}]};
+
+(function() {
+  const audio = document.getElementById('voiceAudio');
+  const playBtn = document.getElementById('playBtn');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const scrub = document.getElementById('scrub');
+  const speedBtn = document.getElementById('speedBtn');
+  const autoScrollBtn = document.getElementById('autoScrollBtn');
+  const themeBtn = document.getElementById('themeBtn');
+  const nowLabel = document.getElementById('nowLabel');
+  const timeLabel = document.getElementById('timeLabel');
+  const progressFill = document.getElementById('progressFill');
+
+  const speeds = [0.85, 1.0, 1.15, 1.25, 1.5, 1.75, 2.0];
+  let speedIdx = 1;
+  let autoScroll = true;
+  let activeSegId = null;
+  let activeSentId = null;
+  let activeWordEl = null;
+  let rafId = null;
+
+  const segMap = new Map();
+  const flatSents = [];
+  TIMELINE.segments.forEach((seg, segIdx) => {
+    segMap.set(seg.id, { ...seg, idx: segIdx });
+    (seg.sentences || []).forEach(sent => {
+      flatSents.push({ ...sent, segId: seg.id, segIdx, section: seg.section });
+    });
+  });
+
+  function fmt(sec) {
+    if (!isFinite(sec) || sec < 0) sec = 0;
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  }
+
+  function setPlayUI(playing) {
+    playBtn.innerHTML = playing ? '&#10074;&#10074; Pause' : '&#9654; Play';
+  }
+
+  function findSentenceAt(t) {
+    // Binary search for fast 60fps lookup
+    let lo = 0, hi = flatSents.length - 1, best = null;
+    while (lo <= hi) {
+      const mid = (lo + hi) >> 1;
+      const s = flatSents[mid];
+      if (t >= s.start && t <= s.end) return s;
+      if (t < s.start) hi = mid - 1;
+      else { best = s; lo = mid + 1; }
+    }
+    return best || flatSents[0] || null;
+  }
+
+  function updateHighlights(t) {
+    const sent = findSentenceAt(t);
+    if (!sent) return;
+
+    // 1. Highlight parent block
+    if (activeSegId !== sent.segId) {
+      document.querySelectorAll('.is-speaking').forEach(el => el.classList.remove('is-speaking'));
+      const segEl = document.querySelector(`[data-seg-id="${sent.segId}"]`);
+      if (segEl) segEl.classList.add('is-speaking');
+      activeSegId = sent.segId;
+      nowLabel.textContent = `${sent.section} (${sent.segIdx + 1}/${TIMELINE.segments.length})`;
+
+      const secEl = segEl ? segEl.closest('.section-block') : null;
+      document.querySelectorAll('.toc-list a').forEach(a => a.classList.remove('active'));
+      if (secEl) {
+        const link = document.querySelector(`.toc-list a[href="#${secEl.id}"]`);
+        if (link) link.classList.add('active');
+      } else {
+        const first = document.querySelector('.toc-list a[href="#top"]');
+        if (first) first.classList.add('active');
+      }
+    }
+
+    // 2. Highlight active sentence
+    if (activeSentId !== sent.id) {
+      document.querySelectorAll('.sent.active-sent').forEach(el => {
+        el.classList.remove('active-sent');
+        el.querySelectorAll('.w').forEach(w => w.classList.remove('w-past', 'w-now', 'w-future'));
+      });
+      const sentEl = document.querySelector(`[data-sent-id="${sent.id}"]`);
+      if (sentEl) {
+        sentEl.classList.add('active-sent');
+        if (autoScroll && !audio.paused) {
+          sentEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+      activeSentId = sent.id;
+      activeWordEl = null;
+    }
+
+    // 3. Karaoke word-by-word highlighting inside active sentence
+    const sentEl = document.querySelector(`[data-sent-id="${sent.id}"]`);
+    if (sentEl) {
+      const wordSpans = sentEl.querySelectorAll('.w');
+      const words = sent.words || [];
+      for (let i = 0; i < words.length && i < wordSpans.length; i++) {
+        const w = words[i];
+        const sp = wordSpans[i];
+        if (t >= w.s && t <= w.e) {
+          if (activeWordEl !== sp) {
+            sp.classList.remove('w-past', 'w-future');
+            sp.classList.add('w-now');
+            activeWordEl = sp;
+          }
+        } else if (t > w.e) {
+          sp.classList.remove('w-now', 'w-future');
+          sp.classList.add('w-past');
+        } else {
+          sp.classList.remove('w-now', 'w-past');
+          sp.classList.add('w-future');
+        }
+      }
+    }
+  }
+
+  function syncUI() {
+    const t = audio.currentTime || 0;
+    const dur = audio.duration || TIMELINE.duration || 1;
+    scrub.max = dur;
+    scrub.value = t;
+    timeLabel.textContent = `${fmt(t)} / ${fmt(dur)}`;
+    progressFill.style.width = `${Math.min(100, (t / dur) * 100)}%`;
+    updateHighlights(t);
+  }
+
+  function tick() {
+    syncUI();
+    if (!audio.paused && !audio.ended) {
+      rafId = requestAnimationFrame(tick);
+    }
+  }
+
+  function jumpToTime(t, autoPlay = true) {
+    audio.currentTime = Math.max(0, t + 0.005);
+    syncUI();
+    if (autoPlay) audio.play().catch(() => {});
+  }
+
+  // Click any sentence to jump directly to that exact sentence!
+  document.querySelectorAll('.sent[data-start]').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      jumpToTime(parseFloat(el.dataset.start), true);
+    });
+  });
+
+  // Click block Play button to jump to start of block
+  document.querySelectorAll('.seg-play-btn[data-jump-seg]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const seg = segMap.get(btn.dataset.jumpSeg);
+      if (seg) jumpToTime(seg.start, true);
+    });
+  });
+
+  playBtn.addEventListener('click', () => {
+    if (audio.paused) audio.play().catch(() => {});
+    else audio.pause();
+  });
+
+  prevBtn.addEventListener('click', () => {
+    const cur = findSentenceAt(audio.currentTime || 0);
+    const segIdx = cur ? Math.max(0, cur.segIdx - 1) : 0;
+    jumpToTime(TIMELINE.segments[segIdx].start, !audio.paused);
+  });
+
+  nextBtn.addEventListener('click', () => {
+    const cur = findSentenceAt(audio.currentTime || 0);
+    const segIdx = cur ? Math.min(TIMELINE.segments.length - 1, cur.segIdx + 1) : 0;
+    jumpToTime(TIMELINE.segments[segIdx].start, !audio.paused);
+  });
+
+  scrub.addEventListener('input', () => {
+    audio.currentTime = parseFloat(scrub.value);
+    syncUI();
+  });
+
+  function applySpeed(idx) {
+    speedIdx = ((idx % speeds.length) + speeds.length) % speeds.length;
+    const rate = speeds[speedIdx];
+    audio.preservesPitch = true;
+    audio.webkitPreservesPitch = true;
+    audio.defaultPlaybackRate = rate;
+    audio.playbackRate = rate;
+    speedBtn.textContent = `${rate}x`;
+    try { localStorage.setItem('ccdvp-speed', String(speedIdx)); } catch {}
+    syncUI();
+  }
+
+  speedBtn.addEventListener('click', () => applySpeed(speedIdx + 1));
+  try {
+    const savedSpeed = parseInt(localStorage.getItem('ccdvp-speed'), 10);
+    if (!isNaN(savedSpeed) && savedSpeed >= 0 && savedSpeed < speeds.length) {
+      applySpeed(savedSpeed);
+    } else {
+      applySpeed(1);
+    }
+  } catch { applySpeed(1); }
+
+  autoScrollBtn.addEventListener('click', () => {
+    autoScroll = !autoScroll;
+    autoScrollBtn.classList.toggle('active', autoScroll);
+    autoScrollBtn.textContent = autoScroll ? 'Auto-Scroll: ON' : 'Auto-Scroll: OFF';
+  });
+
+  themeBtn.addEventListener('click', () => {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    themeBtn.textContent = isDark ? 'Dark' : 'Light';
+    try { localStorage.setItem('ccdvp-theme', isDark ? 'light' : 'dark'); } catch {}
+  });
+  try {
+    if (localStorage.getItem('ccdvp-theme') === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      themeBtn.textContent = 'Light';
+    }
+  } catch {}
+
+  audio.addEventListener('play', () => { setPlayUI(true); tick(); });
+  audio.addEventListener('pause', () => { setPlayUI(false); if (rafId) cancelAnimationFrame(rafId); });
+  audio.addEventListener('ended', () => { setPlayUI(false); if (rafId) cancelAnimationFrame(rafId); });
+  audio.addEventListener('timeupdate', syncUI);
+  audio.addEventListener('seeked', syncUI);
+  audio.addEventListener('ratechange', syncUI);
+  audio.addEventListener('loadedmetadata', () => {
+    audio.playbackRate = speeds[speedIdx];
+    syncUI();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    if (e.code === 'Space') { e.preventDefault(); playBtn.click(); }
+    else if (e.code === 'ArrowRight') { e.preventDefault(); nextBtn.click(); }
+    else if (e.code === 'ArrowLeft') { e.preventDefault(); prevBtn.click(); }
+  });
+
+  document.querySelectorAll('.scenario-card').forEach(card => {
+    const correct = card.dataset.correct;
+    const rat = card.querySelector('.rationale');
+    card.querySelectorAll('.opt-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        card.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('correct', 'wrong'));
+        if (btn.dataset.key === correct) {
+          btn.classList.add('correct');
+        } else {
+          btn.classList.add('wrong');
+          const rightBtn = card.querySelector(`.opt-btn[data-key="${correct}"]`);
+          if (rightBtn) rightBtn.classList.add('correct');
+        }
+        rat.classList.add('show');
+      });
+    });
+  });
+
+  syncUI();
+})();
+
+</script>
+</body>
+</html>

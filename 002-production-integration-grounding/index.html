@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Domain 2: Production Integration, Reliability, and Knowledge Grounding — CCDV-P Study Guide</title>
+<style>
+:root {
+  --bg: #FAF8F5;
+  --surface: #FFFFFF;
+  --surface-alt: #F3EFE8;
+  --ink: #1A1915;
+  --ink-muted: #5C5850;
+  --border: #E5DFD5;
+  --accent: #C96442;
+  --accent-soft: #FDF3EC;
+  --accent-border: #E6A98F;
+  --sent-bg: rgba(201, 100, 66, 0.11);
+  --word-bg: #F7C97E;
+  --word-ink: #1A1915;
+  --word-past: #1A1915;
+  --word-future: #6D685F;
+  --code-bg: #1E1D1A;
+  --code-ink: #F4F0E8;
+  --ok: #2D7A4F;
+  --ok-bg: #EAF6EF;
+  --bad: #B83A3A;
+  --bad-bg: #FCEEEE;
+  --shadow: 0 2px 12px rgba(26, 25, 21, 0.06);
+  --radius: 12px;
+}
+[data-theme="dark"] {
+  --bg: #141311;
+  --surface: #1D1C19;
+  --surface-alt: #25231F;
+  --ink: #F2EEE6;
+  --ink-muted: #A9A295;
+  --border: #322F2A;
+  --accent: #E07A56;
+  --accent-soft: #2A1E18;
+  --accent-border: #8A452C;
+  --sent-bg: rgba(224, 122, 86, 0.16);
+  --word-bg: #C96442;
+  --word-ink: #FFFFFF;
+  --word-past: #F2EEE6;
+  --word-future: #9E978B;
+  --code-bg: #0E0D0C;
+  --code-ink: #EFEAE0;
+  --ok: #52B788;
+  --ok-bg: #172B21;
+  --bad: #E06C6C;
+  --bad-bg: #2E1919;
+  --shadow: 0 2px 16px rgba(0, 0, 0, 0.35);
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+  line-height: 1.68;
+  font-size: 16px;
+}
+/* Sticky Audio Bar */
+.audio-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  padding: 10px 20px;
+}
+.audio-bar-inner {
+  max-width: 1240px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.ab-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  background: var(--surface-alt);
+  color: var(--ink);
+  border-radius: 8px;
+  height: 36px;
+  padding: 0 11px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.ab-btn:hover { border-color: var(--accent); color: var(--accent); }
+.ab-btn.primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+  min-width: 96px;
+  gap: 6px;
+}
+.ab-btn.primary:hover { filter: brightness(1.06); color: #fff; }
+.ab-btn.active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.ab-scrubber {
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.ab-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+.ab-now {
+  font-weight: 600;
+  color: var(--accent);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 360px;
+}
+input[type="range"].scrub {
+  width: 100%;
+  accent-color: var(--accent);
+  cursor: pointer;
+  height: 5px;
+}
+/* Layout */
+.layout {
+  max-width: 1240px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 270px minmax(0, 1fr);
+  gap: 32px;
+  padding: 28px 20px 80px;
+}
+@media (max-width: 940px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { position: static !important; }
+}
+.sidebar {
+  position: sticky;
+  top: 76px;
+  align-self: start;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  box-shadow: var(--shadow);
+}
+.side-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.hub-link {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+}
+.hub-link:hover { text-decoration: underline; }
+.side-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-muted);
+  font-weight: 700;
+  margin: 14px 0 8px;
+}
+.toc-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.toc-list a {
+  display: block;
+  padding: 7px 10px;
+  border-radius: 7px;
+  font-size: 13.5px;
+  color: var(--ink-muted);
+  text-decoration: none;
+  border-left: 3px solid transparent;
+  transition: all 0.15s;
+}
+.toc-list a:hover { background: var(--surface-alt); color: var(--ink); }
+.toc-list a.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-left-color: var(--accent);
+  font-weight: 600;
+}
+.progress-track {
+  height: 6px;
+  background: var(--surface-alt);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-top: 6px;
+}
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--accent);
+  transition: width 0.2s linear;
+}
+.domain-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.domain-nav a {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-muted);
+  text-decoration: none;
+  padding: 5px 8px;
+  border-radius: 6px;
+  background: var(--surface-alt);
+}
+.domain-nav a:hover { color: var(--accent); }
+/* Main Content */
+.hero {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px 30px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow);
+  position: relative;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+.badge-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.pill {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 99px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid var(--accent-border);
+}
+.pill.neutral {
+  background: var(--surface-alt);
+  color: var(--ink-muted);
+  border-color: var(--border);
+}
+h1 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 30px;
+  line-height: 1.22;
+  margin: 0 0 10px;
+  letter-spacing: -0.015em;
+}
+.tagline {
+  font-size: 17px;
+  color: var(--ink-muted);
+  margin: 0 0 14px;
+}
+.mental-model {
+  background: var(--surface-alt);
+  border-left: 3px solid var(--accent);
+  padding: 12px 16px;
+  border-radius: 0 8px 8px 0;
+  font-size: 14.5px;
+}
+.section-block {
+  margin-bottom: 34px;
+  scroll-margin-top: 84px;
+}
+.section-header {
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--border);
+}
+.section-obj {
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  font-weight: 700;
+}
+.section-header h2 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 23px;
+  margin: 4px 0 0;
+}
+/* Narrated Segment Cards */
+.seg {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid transparent;
+  border-radius: var(--radius);
+  padding: 18px 22px;
+  margin-bottom: 16px;
+  transition: background 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+}
+.seg.kind-callout {
+  border-left-color: var(--ink-muted);
+}
+.seg.is-speaking, .hero.is-speaking {
+  border-color: var(--accent-border);
+  border-left: 5px solid var(--accent);
+  box-shadow: 0 4px 22px rgba(201, 100, 66, 0.14);
+}
+.seg-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.seg-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--accent);
+}
+.seg-play-btn {
+  font-size: 11.5px;
+  color: var(--ink-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 2px 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.seg-play-btn:hover {
+  border-color: var(--accent-border);
+  color: var(--accent);
+}
+.seg.is-speaking .seg-play-btn, .hero.is-speaking .seg-play-btn {
+  color: var(--accent);
+  font-weight: 700;
+}
+.pulse-dot {
+  display: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: pulse 1.2s infinite ease-in-out;
+}
+.is-speaking .pulse-dot { display: inline-block; }
+@keyframes pulse {
+  0%, 100% { transform: scale(0.85); opacity: 0.6; }
+  50% { transform: scale(1.25); opacity: 1; }
+}
+.seg h3 {
+  font-size: 18px;
+  margin: 0 0 10px;
+  color: var(--ink);
+}
+/* Live Read-Along Synchronized Transcript */
+.read-along {
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 13px 16px;
+  margin: 10px 0 14px;
+  font-size: 16px;
+  line-height: 1.78;
+}
+.is-speaking .read-along {
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+}
+.read-along-tag {
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--ink-muted);
+  margin-bottom: 5px;
+}
+.is-speaking .read-along-tag {
+  color: var(--accent);
+}
+.sent {
+  border-radius: 5px;
+  padding: 2px 3px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.sent:hover {
+  background: var(--sent-bg);
+}
+.sent.active-sent {
+  background: var(--sent-bg);
+}
+.w {
+  border-radius: 4px;
+  padding: 1px 1.5px;
+  transition: background 0.08s ease, color 0.08s ease;
+}
+.sent.active-sent .w.w-future {
+  color: var(--word-future);
+}
+.sent.active-sent .w.w-past {
+  color: var(--word-past);
+}
+.w.w-now {
+  background: var(--word-bg);
+  color: var(--word-ink) !important;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(201, 100, 66, 0.25);
+}
+/* Reference Notes / Code / Tables */
+.ref-notes {
+  font-size: 15px;
+  color: var(--ink);
+}
+.ref-notes p { margin: 0 0 10px; }
+.ref-notes p:last-child { margin-bottom: 0; }
+.ref-notes ul, .ref-notes ol { margin: 6px 0 8px; padding-left: 22px; }
+.ref-notes li { margin-bottom: 5px; }
+.ref-notes code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.88em;
+  background: var(--surface-alt);
+  padding: 2px 5px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+.ref-notes pre {
+  background: var(--code-bg);
+  color: var(--code-ink);
+  padding: 14px 16px;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-size: 13.5px;
+  line-height: 1.5;
+  margin: 10px 0 4px;
+}
+.ref-notes pre code {
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: inherit;
+}
+.ref-notes table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  margin: 8px 0 4px;
+}
+.ref-notes th, .ref-notes td {
+  border: 1px solid var(--border);
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+.ref-notes th {
+  background: var(--surface-alt);
+  font-weight: 700;
+}
+/* Scenarios Quiz */
+.quiz-section {
+  margin-top: 42px;
+  scroll-margin-top: 84px;
+}
+.scenario-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px 24px;
+  margin-bottom: 18px;
+  box-shadow: var(--shadow);
+}
+.scenario-card h3 {
+  margin: 0 0 10px;
+  font-size: 17.5px;
+  color: var(--accent);
+}
+.scenario-prompt {
+  margin: 0 0 16px;
+  font-size: 15.5px;
+}
+.opt-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.opt-btn {
+  text-align: left;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  color: var(--ink);
+  padding: 11px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14.5px;
+  line-height: 1.45;
+  transition: all 0.15s;
+}
+.opt-btn:hover { border-color: var(--accent); }
+.opt-btn.correct { background: var(--ok-bg); border-color: var(--ok); color: var(--ink); font-weight: 600; }
+.opt-btn.wrong { background: var(--bad-bg); border-color: var(--bad); color: var(--ink); }
+.rationale {
+  display: none;
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  background: var(--surface-alt);
+  border-left: 4px solid var(--ok);
+  font-size: 14.5px;
+}
+.rationale.show { display: block; }
+</style>
+</head>
+<body>
+  <audio id="voiceAudio" src="audio.m4a" preload="metadata"></audio>
+
+  <header class="audio-bar">
+    <div class="audio-bar-inner">
+      <button id="playBtn" class="ab-btn primary" title="Play / Pause (Space)">&#9654; Play</button>
+      <button id="prevBtn" class="ab-btn" title="Previous block (Left Arrow)">&lsaquo; Prev</button>
+      <button id="nextBtn" class="ab-btn" title="Next block (Right Arrow)">Next &rsaquo;</button>
+      <div class="ab-scrubber">
+        <div class="ab-meta">
+          <span id="nowLabel" class="ab-now">Ready &mdash; click Play or any sentence</span>
+          <span id="timeLabel">0:00 / 0:00</span>
+        </div>
+        <input id="scrub" class="scrub" type="range" min="0" max="100" step="0.05" value="0" />
+      </div>
+      <button id="speedBtn" class="ab-btn" title="Playback speed">1x</button>
+      <button id="autoScrollBtn" class="ab-btn active" title="Auto-scroll to active sentence">Auto-Scroll: ON</button>
+      <button id="themeBtn" class="ab-btn" title="Toggle theme">Dark</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="side-top">
+        <a class="hub-link" href="../index.html">&larr; All 8 Domains</a>
+        <span class="pill">Weight 20%</span>
+      </div>
+      <div class="side-title">Listening Progress</div>
+      <div class="progress-track"><div id="progressFill" class="progress-fill"></div></div>
+      <div class="side-title">Domain 2 Sections</div>
+      <ul class="toc-list">
+        <li><a href="#top" class="active">Overview &amp; Mental Model</a></li><li><a href="#sec-1">Stop-Reason Dispatch, Resilience, and Platform Parity</a></li><li><a href="#sec-2">Rate Limits, Cache-Aware Throughput, and Batch Pipelines</a></li><li><a href="#sec-3">Remote MCP Operations, Versioning, and Safe Rollouts</a></li><li><a href="#sec-4">Hybrid RAG, Agentic Search, Citations, and Stage Diagnostics</a></li><li><a href="#scenarios">Exam Practice Scenarios</a></li>
+      </ul>
+      <div class="domain-nav">
+        <a href="../001-agent-architecture/index.html">&larr; Domain 1</a>
+        <a href="../003-observability-monitoring/index.html">Domain 3 &rarr;</a>
+      </div>
+    </aside>
+
+    <main id="top">
+      <section class="hero" data-seg-id="intro">
+        <div class="seg-top">
+          <div class="badge-row">
+            <span class="pill">CCDV-P Domain 2 of 8</span>
+            <span class="pill neutral">Exam Weight: 20%</span>
+            <span class="pill neutral">Voice: Kokoro Neural (af_heart)</span>
+          </div>
+          <button class="seg-play-btn" data-jump-seg="intro"><span class="pulse-dot"></span>&#9654; Play intro</button>
+        </div>
+        <h1>Production Integration, Reliability, and Knowledge Grounding</h1>
+        <p class="tagline">Engineer resilient, high-throughput Claude integrations across cloud platforms, govern MCP and model changes safely, and ground generation in verifiable retrieval pipelines.</p>
+        <div class="mental-model">
+          <strong>Staff Engineer Mental Model:</strong> As the highest-weighted domain on the CCDV-P exam at 20%, Domain 2 tests whether you operate Claude like a production distributed system rather than a prototype API call. Senior engineers classify every stop reason and HTTP error before retrying, isolate the true binding throughput constraint before scaling, enforce versioned contracts across MCP servers and cloud platforms, and debug retrieval failures stage by stage from chunking to citation.
+        </div>
+        <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="intro-s0" data-start="0.0" title="Click to jump here"><span class="w">Domain</span> <span class="w">2:</span> <span class="w">Production</span> <span class="w">Integration,</span> <span class="w">Reliability,</span> <span class="w">and</span> <span class="w">Knowledge</span> <span class="w">Grounding.</span></span> <span class="sent" data-sent-id="intro-s1" data-start="4.279" title="Click to jump here"><span class="w">Exam</span> <span class="w">weight:</span> <span class="w">20%.</span></span> <span class="sent" data-sent-id="intro-s2" data-start="6.125" title="Click to jump here"><span class="w">Engineer</span> <span class="w">resilient,</span> <span class="w">high-throughput</span> <span class="w">Claude</span> <span class="w">integrations</span> <span class="w">across</span> <span class="w">cloud</span> <span class="w">platforms,</span> <span class="w">govern</span> <span class="w">MCP</span> <span class="w">and</span> <span class="w">model</span> <span class="w">changes</span> <span class="w">safely,</span> <span class="w">and</span> <span class="w">ground</span> <span class="w">generation</span> <span class="w">in</span> <span class="w">verifiable</span> <span class="w">retrieval</span> <span class="w">pipelines.</span></span> <span class="sent" data-sent-id="intro-s3" data-start="17.636" title="Click to jump here"><span class="w">As</span> <span class="w">the</span> <span class="w">highest-weighted</span> <span class="w">domain</span> <span class="w">on</span> <span class="w">the</span> <span class="w">CCDV-P</span> <span class="w">exam</span> <span class="w">at</span> <span class="w">20%,</span> <span class="w">Domain</span> <span class="w">2</span> <span class="w">tests</span> <span class="w">whether</span> <span class="w">you</span> <span class="w">operate</span> <span class="w">Claude</span> <span class="w">like</span> <span class="w">a</span> <span class="w">production</span> <span class="w">distributed</span> <span class="w">system</span> <span class="w">rather</span> <span class="w">than</span> <span class="w">a</span> <span class="w">prototype</span> <span class="w">API</span> <span class="w">call.</span></span> <span class="sent" data-sent-id="intro-s4" data-start="29.616" title="Click to jump here"><span class="w">Senior</span> <span class="w">engineers</span> <span class="w">classify</span> <span class="w">every</span> <span class="w">stop</span> <span class="w">reason</span> <span class="w">and</span> <span class="w">HTTP</span> <span class="w">error</span> <span class="w">before</span> <span class="w">retrying,</span> <span class="w">isolate</span> <span class="w">the</span> <span class="w">true</span> <span class="w">binding</span> <span class="w">throughput</span> <span class="w">constraint</span> <span class="w">before</span> <span class="w">scaling,</span> <span class="w">enforce</span> <span class="w">versioned</span> <span class="w">contracts</span> <span class="w">across</span> <span class="w">MCP</span> <span class="w">servers</span> <span class="w">and</span> <span class="w">cloud</span> <span class="w">platforms,</span> <span class="w">and</span> <span class="w">debug</span> <span class="w">retrieval</span> <span class="w">failures</span> <span class="w">stage</span> <span class="w">by</span> <span class="w">stage</span> <span class="w">from</span> <span class="w">chunking</span> <span class="w">to</span> <span class="w">citation.</span></span></div></div>
+      </section>
+
+      
+        <section class="section-block" id="sec-1">
+          <div class="section-header">
+            <div class="section-obj">Reliability Engineering for Claude Services</div>
+            <h2>Stop-Reason Dispatch, Resilience, and Platform Parity</h2>
+          </div>
+          
+            <article class="seg kind-prose" data-seg-id="s1-1">
+              <div class="seg-top">
+                <span class="seg-label">KEY CONCEPT</span>
+                <button class="seg-play-btn" data-jump-seg="s1-1"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Classify Before You Retry: Stop Reasons vs. HTTP Errors</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s1-1-s0" data-start="49.367" title="Click to jump here"><span class="w">The</span> <span class="w">most</span> <span class="w">common</span> <span class="w">reliability</span> <span class="w">mistake</span> <span class="w">in</span> <span class="w">production</span> <span class="w">Claude</span> <span class="w">services</span> <span class="w">is</span> <span class="w">using</span> <span class="w">one</span> <span class="w">blanket</span> <span class="w">retry</span> <span class="w">loop</span> <span class="w">for</span> <span class="w">every</span> <span class="w">failure.</span></span> <span class="sent" data-sent-id="s1-1-s1" data-start="56.717" title="Click to jump here"><span class="w">A</span> <span class="w">successful</span> <span class="w">HTTP</span> <span class="w">200</span> <span class="w">response</span> <span class="w">still</span> <span class="w">carries</span> <span class="w">a</span> <span class="w">stop</span> <span class="w">reason</span> <span class="w">field,</span> <span class="w">such</span> <span class="w">as</span> <span class="w">end</span> <span class="w">turn,</span> <span class="w">max</span> <span class="w">tokens,</span> <span class="w">pause</span> <span class="w">turn,</span> <span class="w">refusal,</span> <span class="w">or</span> <span class="w">model</span> <span class="w">context</span> <span class="w">window</span> <span class="w">exceeded.</span></span> <span class="sent" data-sent-id="s1-1-s2" data-start="68.143" title="Click to jump here"><span class="w">Retrying</span> <span class="w">a</span> <span class="w">length</span> <span class="w">stop</span> <span class="w">just</span> <span class="w">wastes</span> <span class="w">tokens,</span> <span class="w">and</span> <span class="w">blindly</span> <span class="w">retrying</span> <span class="w">a</span> <span class="w">refusal</span> <span class="w">repeats</span> <span class="w">the</span> <span class="w">decline.</span></span> <span class="sent" data-sent-id="s1-1-s3" data-start="74.448" title="Click to jump here"><span class="w">Always</span> <span class="w">branch</span> <span class="w">on</span> <span class="w">the</span> <span class="w">exact</span> <span class="w">stop</span> <span class="w">reason</span> <span class="w">and</span> <span class="w">HTTP</span> <span class="w">error</span> <span class="w">before</span> <span class="w">deciding</span> <span class="w">whether</span> <span class="w">to</span> <span class="w">retry,</span> <span class="w">continue,</span> <span class="w">or</span> <span class="w">reroute.</span></span></div></div>
+              <div class="ref-notes"><p>The single most common reliability antipattern in production Claude services is a <strong>one-size-fits-all retry loop</strong>. Every successful HTTP 200 response from the Messages API carries a <code>stop_reason</code> field—<code>end_turn</code>, <code>max_tokens</code>, <code>stop_sequence</code>, <code>tool_use</code>, <code>pause_turn</code>, <code>refusal</code>, or <code>model_context_window_exceeded</code>—that signals a fundamentally different control-flow path than a transient transport error.</p><p>Retrying a <code>max_tokens</code> truncation reproduces the same cut-off and wastes tokens; retrying a <code>refusal</code> without branching repeats the decline and can double your bill. Resilient services branch deterministically on both the HTTP status code and <code>stop_reason</code>.</p></div>
+            </article>
+            <article class="seg kind-table" data-seg-id="s1-2">
+              <div class="seg-top">
+                <span class="seg-label">ARCHITECTURE PATTERN</span>
+                <button class="seg-play-btn" data-jump-seg="s1-2"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Production Error and Stop-Reason Dispatch Matrix</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s1-2-s0" data-start="82.211" title="Click to jump here"><span class="w">Memorize</span> <span class="w">how</span> <span class="w">to</span> <span class="w">tell</span> <span class="w">look-alike</span> <span class="w">errors</span> <span class="w">apart.</span></span> <span class="sent" data-sent-id="s1-2-s1" data-start="84.761" title="Click to jump here"><span class="w">A</span> <span class="w">429</span> <span class="w">rate</span> <span class="w">limit</span> <span class="w">error</span> <span class="w">with</span> <span class="w">a</span> <span class="w">retry</span> <span class="w">after</span> <span class="w">header</span> <span class="w">means</span> <span class="w">back</span> <span class="w">off</span> <span class="w">and</span> <span class="w">wait.</span></span> <span class="sent" data-sent-id="s1-2-s2" data-start="90.235" title="Click to jump here"><span class="w">A</span> <span class="w">429</span> <span class="w">with</span> <span class="w">no</span> <span class="w">retry</span> <span class="w">after</span> <span class="w">header</span> <span class="w">and</span> <span class="w">error</span> <span class="w">code</span> <span class="w">enforced</span> <span class="w">spend</span> <span class="w">limit</span> <span class="w">reached</span> <span class="w">means</span> <span class="w">you</span> <span class="w">hit</span> <span class="w">your</span> <span class="w">tier&#x27;s</span> <span class="w">monthly</span> <span class="w">spend</span> <span class="w">cap,</span> <span class="w">so</span> <span class="w">retrying</span> <span class="w">is</span> <span class="w">useless.</span></span> <span class="sent" data-sent-id="s1-2-s3" data-start="100.273" title="Click to jump here"><span class="w">Meanwhile,</span> <span class="w">a</span> <span class="w">user-configured</span> <span class="w">workspace</span> <span class="w">spend</span> <span class="w">limit</span> <span class="w">returns</span> <span class="w">HTTP</span> <span class="w">400,</span> <span class="w">and</span> <span class="w">529</span> <span class="w">overloaded</span> <span class="w">or</span> <span class="w">504</span> <span class="w">timeout</span> <span class="w">errors</span> <span class="w">call</span> <span class="w">for</span> <span class="w">jittered</span> <span class="w">backoff,</span> <span class="w">streaming,</span> <span class="w">or</span> <span class="w">circuit-broken</span> <span class="w">failover.</span></span></div></div>
+              <div class="ref-notes"><table><thead><tr><th>Signal</th><th>Root Cause</th><th>Correct Production Action</th></tr></thead><tbody><tr><td><code>429 rate_limit_error</code> + <code>retry-after</code></td><td>RPM/ITPM/OTPM or <code>ramp_limit_exceeded</code></td><td>Honor <code>retry-after</code>, apply jittered backoff, shed or queue excess load.</td></tr><tr><td><code>429 rate_limit_error</code> (no <code>retry-after</code>)</td><td>Tier monthly spend cap (<code>enforced_spend_limit_reached</code>)</td><td>Do <strong>not</strong> retry; alert ops to raise tier or fail over to another billing account/platform.</td></tr><tr><td><code>400 invalid_request_error</code></td><td>Malformed payload or user-set org/workspace spend limit</td><td>Never retry blindly; inspect message to separate schema bugs from workspace spend caps.</td></tr><tr><td><code>500</code> / <code>504</code> / <code>529 overloaded_error</code></td><td>Transient server fault, timeout, or global overload</td><td>Exponential backoff with jitter, circuit breaker, or cross-region/cross-model fallback; stream long calls.</td></tr><tr><td><code>413 request_too_large</code></td><td>Payload exceeds cap (128 MB Messages, 256 MB Batch, 500 MB Files)</td><td>Compact or offload large assets via Files API before resending; do not retry unchanged.</td></tr><tr><td><code>stop_reason: max_tokens</code></td><td>Hit caller output budget</td><td>Raise <code>max_tokens</code> or run a continuation turn; never retry with identical parameters.</td></tr><tr><td><code>stop_reason: pause_turn</code></td><td>Server-tool loop hit iteration limit</td><td>Send assistant content back unchanged to resume the loop.</td></tr><tr><td><code>stop_reason: model_context_window_exceeded</code></td><td>Generation filled full model context window</td><td>Treat output as truncated; trigger compaction or context trimming before continuing.</td></tr></tbody></table></div>
+            </article>
+            <article class="seg kind-callout" data-seg-id="s1-3">
+              <div class="seg-top">
+                <span class="seg-label">EXAM TRAP</span>
+                <button class="seg-play-btn" data-jump-seg="s1-3"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Safety Refusals, Billing Rules, and Fallback Credit</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s1-3-s0" data-start="114.713" title="Click to jump here"><span class="w">Watch</span> <span class="w">out</span> <span class="w">for</span> <span class="w">this</span> <span class="w">exam</span> <span class="w">trap</span> <span class="w">on</span> <span class="w">safety</span> <span class="w">refusals.</span></span> <span class="sent" data-sent-id="s1-3-s1" data-start="117.947" title="Click to jump here"><span class="w">A</span> <span class="w">refusal</span> <span class="w">returns</span> <span class="w">HTTP</span> <span class="w">200</span> <span class="w">with</span> <span class="w">stop</span> <span class="w">reason</span> <span class="w">refusal</span> <span class="w">and</span> <span class="w">a</span> <span class="w">stop</span> <span class="w">details</span> <span class="w">category</span> <span class="w">like</span> <span class="w">cyber,</span> <span class="w">bio,</span> <span class="w">frontier</span> <span class="w">LLM,</span> <span class="w">or</span> <span class="w">reasoning</span> <span class="w">extraction.</span></span> <span class="sent" data-sent-id="s1-3-s2" data-start="128.839" title="Click to jump here"><span class="w">Never</span> <span class="w">parse</span> <span class="w">the</span> <span class="w">explanation</span> <span class="w">string,</span> <span class="w">and</span> <span class="w">always</span> <span class="w">discard</span> <span class="w">partial</span> <span class="w">text</span> <span class="w">on</span> <span class="w">a</span> <span class="w">mid-stream</span> <span class="w">refusal.</span></span> <span class="sent" data-sent-id="s1-3-s3" data-start="134.589" title="Click to jump here"><span class="w">Server-side</span> <span class="w">fallback</span> <span class="w">or</span> <span class="w">SDK</span> <span class="w">middleware</span> <span class="w">can</span> <span class="w">route</span> <span class="w">eligible</span> <span class="w">categories</span> <span class="w">to</span> <span class="w">a</span> <span class="w">fallback</span> <span class="w">model</span> <span class="w">with</span> <span class="w">fallback</span> <span class="w">credit</span> <span class="w">covering</span> <span class="w">the</span> <span class="w">cache</span> <span class="w">miss,</span> <span class="w">but</span> <span class="w">reasoning</span> <span class="w">extraction</span> <span class="w">has</span> <span class="w">no</span> <span class="w">fallback.</span></span> <span class="sent" data-sent-id="s1-3-s4" data-start="145.716" title="Click to jump here"><span class="w">You</span> <span class="w">must</span> <span class="w">refactor</span> <span class="w">the</span> <span class="w">prompt</span> <span class="w">to</span> <span class="w">use</span> <span class="w">adaptive</span> <span class="w">thinking</span> <span class="w">blocks</span> <span class="w">instead.</span></span></div></div>
+              <div class="ref-notes"><p><strong>Refusals are HTTP 200 responses</strong> with <code>stop_reason: "refusal"</code> and a <code>stop_details</code> object containing <code>category</code> (<code>cyber</code>, <code>bio</code>, <code>frontier_llm</code>, <code>reasoning_extraction</code>, <code>general_harms</code>, or <code>null</code>) and a non-stable human-readable <code>explanation</code> (display it, never regex-parse it). Any mid-stream refusal must have its partial output discarded.</p><p><strong>Critical billing &amp; fallback rules:</strong> Pre-output refusals in <code>bio</code>, <code>frontier_llm</code>, and <code>reasoning_extraction</code> are billed at normal rates, as are all mid-stream refusals. On the first-party API and Google Cloud (Anthropic managed), you can enable server-side fallback (<code>fallbacks: "default"</code> with beta <code>server-side-fallback-2026-07-01</code>), or use client-side SDK middleware; <strong>Fallback Credit</strong> offsets the prompt-cache miss on the fallback model (except after Claude Haiku 5.5 refusals). However, <code>reasoning_extraction</code> has <strong>no fallback model</strong>—fix the prompt by removing <code>&lt;thinking&gt;</code> or <code>reasoning</code> output fields and use <code>thinking: {"type": "adaptive", "display": "summarized"}</code> instead.</p></div>
+            </article>
+            <article class="seg kind-bullets" data-seg-id="s1-4">
+              <div class="seg-top">
+                <span class="seg-label">ARCHITECTURE PATTERN</span>
+                <button class="seg-play-btn" data-jump-seg="s1-4"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Retries, Circuit Breakers, and Graceful Degradation</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s1-4-s0" data-start="149.511" title="Click to jump here"><span class="w">Resilient</span> <span class="w">integrations</span> <span class="w">layer</span> <span class="w">four</span> <span class="w">defenses</span> <span class="w">cleanly.</span></span> <span class="sent" data-sent-id="s1-4-s1" data-start="152.851" title="Click to jump here"><span class="w">First,</span> <span class="w">avoid</span> <span class="w">retry</span> <span class="w">storms:</span> <span class="w">if</span> <span class="w">your</span> <span class="w">API</span> <span class="w">gateway</span> <span class="w">handles</span> <span class="w">retries</span> <span class="w">with</span> <span class="w">jitter,</span> <span class="w">set</span> <span class="w">SDK</span> <span class="w">max</span> <span class="w">retries</span> <span class="w">to</span> <span class="w">zero</span> <span class="w">so</span> <span class="w">retries</span> <span class="w">do</span> <span class="w">not</span> <span class="w">multiply.</span></span> <span class="sent" data-sent-id="s1-4-s2" data-start="162.804" title="Click to jump here"><span class="w">Second,</span> <span class="w">isolate</span> <span class="w">circuit</span> <span class="w">breakers</span> <span class="w">per</span> <span class="w">model</span> <span class="w">and</span> <span class="w">region</span> <span class="w">so</span> <span class="w">a</span> <span class="w">single</span> <span class="w">degraded</span> <span class="w">route</span> <span class="w">trips</span> <span class="w">fast.</span></span> <span class="sent" data-sent-id="s1-4-s3" data-start="168.533" title="Click to jump here"><span class="w">Third,</span> <span class="w">only</span> <span class="w">fail</span> <span class="w">over</span> <span class="w">to</span> <span class="w">pre-validated</span> <span class="w">models</span> <span class="w">or</span> <span class="w">cross-region</span> <span class="w">profiles.</span></span> <span class="sent" data-sent-id="s1-4-s4" data-start="173.239" title="Click to jump here"><span class="w">Finally,</span> <span class="w">degrade</span> <span class="w">gracefully</span> <span class="w">under</span> <span class="w">pressure</span> <span class="w">by</span> <span class="w">trimming</span> <span class="w">optional</span> <span class="w">tools,</span> <span class="w">lowering</span> <span class="w">effort,</span> <span class="w">or</span> <span class="w">serving</span> <span class="w">cached</span> <span class="w">responses.</span></span></div></div>
+              <div class="ref-notes"><ul><li><strong>Bounded retries with jitter:</strong> Official Anthropic SDKs automatically retry transient failures (connection errors, 429s with <code>retry-after</code>, and 5xx errors) twice by default via <code>max_retries</code>. When layering a gateway retry policy on top, avoid multiplicative retry storms by disabling inner SDK retries (<code>max_retries=0</code>) and centralizing backoff with full jitter.</li><li><strong>Circuit breakers per model &amp; region:</strong> Track rolling 5xx/529 and timeout rates per upstream route. Trip open fast to shed failing routes and probe recovery in half-open state rather than piling up threads.</li><li><strong>Cross-model &amp; cross-region failover:</strong> Prefer same-tier or pre-evaluated fallback models (e.g., Opus to Sonnet, or Bedrock cross-region inference profiles like <code>us.</code> / <code>global.</code>) that passed your regression suite—never silently downgrade safety-critical workflows to an unvalidated model.</li><li><strong>Graceful degradation:</strong> When capacity is constrained, degrade non-critical features first: lower reasoning effort, disable optional web search or secondary enrichment calls, serve cached answers, or defer non-interactive tasks to queues.</li></ul></div>
+            </article>
+            <article class="seg kind-table" data-seg-id="s1-5">
+              <div class="seg-top">
+                <span class="seg-label">PARITY MATRIX</span>
+                <button class="seg-play-btn" data-jump-seg="s1-5"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Per-Platform Feature Parity and Operational Boundaries</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s1-5-s0" data-start="180.617" title="Click to jump here"><span class="w">Cross-platform</span> <span class="w">failover</span> <span class="w">only</span> <span class="w">works</span> <span class="w">if</span> <span class="w">you</span> <span class="w">respect</span> <span class="w">feature</span> <span class="w">parity.</span></span> <span class="sent" data-sent-id="s1-5-s1" data-start="184.64" title="Click to jump here"><span class="w">First-party</span> <span class="w">Claude</span> <span class="w">API</span> <span class="w">gets</span> <span class="w">features</span> <span class="w">like</span> <span class="w">server-side</span> <span class="w">fallback</span> <span class="w">and</span> <span class="w">the</span> <span class="w">Rate</span> <span class="w">Limits</span> <span class="w">API</span> <span class="w">first.</span></span> <span class="sent" data-sent-id="s1-5-s2" data-start="191.137" title="Click to jump here"><span class="w">Amazon</span> <span class="w">Bedrock</span> <span class="w">offers</span> <span class="w">zero</span> <span class="w">operator</span> <span class="w">access</span> <span class="w">inside</span> <span class="w">AWS,</span> <span class="w">uses</span> <span class="w">prefixed</span> <span class="w">model</span> <span class="w">IDs,</span> <span class="w">and</span> <span class="w">requires</span> <span class="w">IAM</span> <span class="w">or</span> <span class="w">service</span> <span class="w">roles.</span></span> <span class="sent" data-sent-id="s1-5-s3" data-start="200.707" title="Click to jump here"><span class="w">Google</span> <span class="w">Cloud</span> <span class="w">Google-managed</span> <span class="w">endpoints</span> <span class="w">move</span> <span class="w">the</span> <span class="w">model</span> <span class="w">into</span> <span class="w">the</span> <span class="w">URL</span> <span class="w">and</span> <span class="w">version</span> <span class="w">into</span> <span class="w">the</span> <span class="w">body,</span> <span class="w">while</span> <span class="w">Microsoft</span> <span class="w">Foundry</span> <span class="w">splits</span> <span class="w">between</span> <span class="w">Azure-hosted</span> <span class="w">and</span> <span class="w">Anthropic-hosted</span> <span class="w">deployments</span> <span class="w">with</span> <span class="w">different</span> <span class="w">model</span> <span class="w">coverage.</span></span> <span class="sent" data-sent-id="s1-5-s4" data-start="213.668" title="Click to jump here"><span class="w">Never</span> <span class="w">assume</span> <span class="w">a</span> <span class="w">request</span> <span class="w">payload</span> <span class="w">is</span> <span class="w">drop-in</span> <span class="w">portable</span> <span class="w">across</span> <span class="w">clouds</span> <span class="w">without</span> <span class="w">an</span> <span class="w">adapter.</span></span></div></div>
+              <div class="ref-notes"><table><thead><tr><th>Platform</th><th>Auth &amp; Endpoint</th><th>Key Parity &amp; Failover Constraints</th></tr></thead><tbody><tr><td><strong>First-Party Claude API</strong></td><td><code>x-api-key</code> / Admin API key; <code>api.anthropic.com/v1/messages</code></td><td>Full feature velocity: Server-side fallback beta, Message Batches, Rate Limits API, ZDR eligibility (excluding Batch/MCP connector).</td></tr><tr><td><strong>Amazon Bedrock</strong> (<code>bedrock-mantle</code> &amp; <code>bedrock-runtime</code>)</td><td>Bedrock service role, IAM assumed role (SigV4), or bearer tokens (block <code>LONG_TERM</code> via SCP)</td><td>Zero operator access inside AWS boundary. Model IDs use <code>anthropic.claude-...</code> or cross-region prefixes (<code>us.</code>, <code>global.</code>). No server-side fallback beta; <code>2026-10-21</code> API version requires Claude 4.7+.</td></tr><tr><td><strong>Claude Platform on AWS</strong></td><td>AWS credentials / SigV4; AWS Marketplace billing</td><td>Returns dual IDs: <code>x-amzn-requestid</code> (CloudTrail) and <code>request-id</code> (Anthropic support). No per-workspace rate limits or Fast Mode.</td></tr><tr><td><strong>Google Cloud</strong> (Google-managed vs. Anthropic-managed)</td><td>IAM <code>aiplatform.endpoints.predict</code> / ADC; <code>:rawPredict</code> &amp; <code>:streamRawPredict</code></td><td>Google-managed puts model in URL and <code>anthropic_version</code> in body (handled by <code>AnthropicVertex</code> SDK) and lacks server-side fallback beta; Anthropic-managed matches first-party API parity more closely.</td></tr><tr><td><strong>Microsoft Foundry</strong></td><td>Azure RBAC / Entra ID; Azure Marketplace (CCUs)</td><td>Two hosting modes: <em>Hosted on Azure</em> (Global or US Data Zone Standard, subset of models/features) vs. <em>Hosted on Anthropic</em> (all Foundry Claude models, Global Standard only).</td></tr></tbody></table></div>
+            </article>
+        </section>
+        <section class="section-block" id="sec-2">
+          <div class="section-header">
+            <div class="section-obj">Scale and Throughput Management</div>
+            <h2>Rate Limits, Cache-Aware Throughput, and Batch Pipelines</h2>
+          </div>
+          
+            <article class="seg kind-prose" data-seg-id="s2-1">
+              <div class="seg-top">
+                <span class="seg-label">KEY CONCEPT</span>
+                <button class="seg-play-btn" data-jump-seg="s2-1"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Token-Bucket Enforcement and Finding the Binding Constraint</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s2-1-s0" data-start="219.424" title="Click to jump here"><span class="w">Claude</span> <span class="w">enforces</span> <span class="w">rate</span> <span class="w">limits</span> <span class="w">using</span> <span class="w">a</span> <span class="w">continuous</span> <span class="w">token</span> <span class="w">bucket</span> <span class="w">across</span> <span class="w">three</span> <span class="w">dimensions:</span> <span class="w">requests</span> <span class="w">per</span> <span class="w">minute,</span> <span class="w">input</span> <span class="w">tokens</span> <span class="w">per</span> <span class="w">minute,</span> <span class="w">and</span> <span class="w">output</span> <span class="w">tokens</span> <span class="w">per</span> <span class="w">minute.</span></span> <span class="sent" data-sent-id="s2-1-s1" data-start="229.505" title="Click to jump here"><span class="w">Because</span> <span class="w">capacity</span> <span class="w">refills</span> <span class="w">continuously,</span> <span class="w">a</span> <span class="w">sharp</span> <span class="w">burst</span> <span class="w">can</span> <span class="w">trigger</span> <span class="w">a</span> <span class="w">429</span> <span class="w">even</span> <span class="w">when</span> <span class="w">your</span> <span class="w">minute-long</span> <span class="w">average</span> <span class="w">looks</span> <span class="w">fine.</span></span> <span class="sent" data-sent-id="s2-1-s2" data-start="237.667" title="Click to jump here"><span class="w">On</span> <span class="w">the</span> <span class="w">exam,</span> <span class="w">always</span> <span class="w">calculate</span> <span class="w">which</span> <span class="w">dimension</span> <span class="w">is</span> <span class="w">your</span> <span class="w">binding</span> <span class="w">constraint</span> <span class="w">first—chatty</span> <span class="w">agents</span> <span class="w">hit</span> <span class="w">RPM,</span> <span class="w">RAG</span> <span class="w">hits</span> <span class="w">input</span> <span class="w">tokens,</span> <span class="w">long</span> <span class="w">generation</span> <span class="w">hits</span> <span class="w">output</span> <span class="w">tokens,</span> <span class="w">and</span> <span class="w">note</span> <span class="w">that</span> <span class="w">US</span> <span class="w">and</span> <span class="w">global</span> <span class="w">inference</span> <span class="w">geo</span> <span class="w">share</span> <span class="w">the</span> <span class="w">exact</span> <span class="w">same</span> <span class="w">rate</span> <span class="w">limit</span> <span class="w">pool.</span></span></div></div>
+              <div class="ref-notes"><p>Claude API rate limits are enforced per organization (and per model class or shared group) using a <strong>token bucket algorithm</strong> across three independent dimensions: <strong>RPM</strong> (requests per minute), <strong>ITPM</strong> (input tokens per minute), and <strong>OTPM</strong> (output tokens per minute). Capacity replenishes continuously, meaning short bursts (e.g., 60 RPM enforced at ~1 RPS) can trigger HTTP 429 even when your one-minute average looks safe.</p><p>In capacity planning, always identify the <strong>binding constraint</strong> first: chatty short-prompt workloads hit RPM, long-context retrieval hits ITPM, verbose code or document generation hits OTPM, sudden traffic spikes hit ramp limits, and offline high-volume jobs are governed by batch queue limits and economics. Note that rate limits are shared across all <code>inference_geo</code> values (<code>us</code> and <code>global</code> draw from the same pool).</p></div>
+            </article>
+            <article class="seg kind-callout" data-seg-id="s2-2">
+              <div class="seg-top">
+                <span class="seg-label">EXAM TRAP</span>
+                <button class="seg-play-btn" data-jump-seg="s2-2"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Cache-Aware ITPM and Real-Time OTPM Mechanics</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s2-2-s0" data-start="254.859" title="Click to jump here"><span class="w">Here</span> <span class="w">are</span> <span class="w">two</span> <span class="w">high-yield</span> <span class="w">throughput</span> <span class="w">facts.</span></span> <span class="sent" data-sent-id="s2-2-s1" data-start="257.025" title="Click to jump here"><span class="w">First,</span> <span class="w">input</span> <span class="w">token</span> <span class="w">rate</span> <span class="w">limits</span> <span class="w">are</span> <span class="w">cache-aware:</span> <span class="w">tokens</span> <span class="w">read</span> <span class="w">from</span> <span class="w">the</span> <span class="w">prompt</span> <span class="w">cache</span> <span class="w">do</span> <span class="w">not</span> <span class="w">count</span> <span class="w">against</span> <span class="w">your</span> <span class="w">ITPM</span> <span class="w">or</span> <span class="w">ramp</span> <span class="w">limits—only</span> <span class="w">uncached</span> <span class="w">input</span> <span class="w">and</span> <span class="w">cache-write</span> <span class="w">tokens</span> <span class="w">count.</span></span> <span class="sent" data-sent-id="s2-2-s2" data-start="268.536" title="Click to jump here"><span class="w">An</span> <span class="w">80</span> <span class="w">percent</span> <span class="w">cache</span> <span class="w">hit</span> <span class="w">rate</span> <span class="w">multiplies</span> <span class="w">your</span> <span class="w">effective</span> <span class="w">input</span> <span class="w">throughput</span> <span class="w">fivefold.</span></span> <span class="sent" data-sent-id="s2-2-s3" data-start="273.369" title="Click to jump here"><span class="w">Second,</span> <span class="w">output</span> <span class="w">token</span> <span class="w">limits</span> <span class="w">are</span> <span class="w">measured</span> <span class="w">in</span> <span class="w">real</span> <span class="w">time</span> <span class="w">on</span> <span class="w">actual</span> <span class="w">generated</span> <span class="w">tokens,</span> <span class="w">not</span> <span class="w">on</span> <span class="w">max</span> <span class="w">tokens,</span> <span class="w">so</span> <span class="w">starving</span> <span class="w">max</span> <span class="w">tokens</span> <span class="w">saves</span> <span class="w">zero</span> <span class="w">quota</span> <span class="w">and</span> <span class="w">only</span> <span class="w">causes</span> <span class="w">truncation.</span></span></div></div>
+              <div class="ref-notes"><p><strong>Cache-aware ITPM is a massive throughput multiplier:</strong> Only uncached <code>input_tokens</code> (tokens after the last cache breakpoint) and <code>cache_creation_input_tokens</code> count toward your ITPM and ramp limits. <code>cache_read_input_tokens</code> <strong>do NOT count toward ITPM</strong>. With a 2M ITPM limit and an 80% cache hit rate, you can process <strong>10M total input tokens per minute</strong> without a tier upgrade.</p><p><strong>OTPM is evaluated in real time</strong> against actual generated tokens—<code>max_tokens</code> is <strong>not</strong> reserved upfront against OTPM. Therefore, lowering <code>max_tokens</code> artificially does nothing to save rate-limit headroom and only risks premature <code>max_tokens</code> truncation.</p></div>
+            </article>
+            <article class="seg kind-bullets" data-seg-id="s2-3">
+              <div class="seg-top">
+                <span class="seg-label">ARCHITECTURE PATTERN</span>
+                <button class="seg-play-btn" data-jump-seg="s2-3"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Ramp Limits, Backpressure, Queueing, and Service Tiers</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s2-3-s0" data-start="285.612" title="Click to jump here"><span class="w">Even</span> <span class="w">when</span> <span class="w">you</span> <span class="w">are</span> <span class="w">well</span> <span class="w">under</span> <span class="w">your</span> <span class="w">published</span> <span class="w">rate</span> <span class="w">limits,</span> <span class="w">a</span> <span class="w">sudden</span> <span class="w">spike</span> <span class="w">can</span> <span class="w">trip</span> <span class="w">a</span> <span class="w">ramp</span> <span class="w">limit,</span> <span class="w">returning</span> <span class="w">a</span> <span class="w">429</span> <span class="w">with</span> <span class="w">error</span> <span class="w">code</span> <span class="w">ramp</span> <span class="w">limit</span> <span class="w">exceeded.</span></span> <span class="sent" data-sent-id="s2-3-s1" data-start="294.733" title="Click to jump here"><span class="w">Smooth</span> <span class="w">scheduled</span> <span class="w">jobs</span> <span class="w">by</span> <span class="w">ramping</span> <span class="w">up</span> <span class="w">gradually</span> <span class="w">and</span> <span class="w">separating</span> <span class="w">interactive</span> <span class="w">traffic</span> <span class="w">from</span> <span class="w">background</span> <span class="w">queues</span> <span class="w">with</span> <span class="w">explicit</span> <span class="w">backpressure.</span></span> <span class="sent" data-sent-id="s2-3-s2" data-start="302.553" title="Click to jump here"><span class="w">Also</span> <span class="w">remember</span> <span class="w">that</span> <span class="w">legacy</span> <span class="w">Priority</span> <span class="w">Tier</span> <span class="w">capacity</span> <span class="w">burns</span> <span class="w">at</span> <span class="w">weighted</span> <span class="w">rates</span> <span class="w">matching</span> <span class="w">token</span> <span class="w">pricing—like</span> <span class="w">0.1x</span> <span class="w">for</span> <span class="w">cache</span> <span class="w">reads</span> <span class="w">and</span> <span class="w">1.1x</span> <span class="w">for</span> <span class="w">US-only</span> <span class="w">inference—while</span> <span class="w">still</span> <span class="w">consuming</span> <span class="w">your</span> <span class="w">normal</span> <span class="w">rate</span> <span class="w">limits.</span></span></div></div>
+              <div class="ref-notes"><ul><li><strong>Ramp limits (<code>ramp_limit_exceeded</code>):</strong> Cap how fast per-minute token usage on a model can grow above your recent peak plus a step—even while below your published ITPM/OTPM limits. Mitigate by warming scheduled or bulk jobs gradually (increasing by at most one step per minute) and pacing bursts with a token-aware client queue.</li><li><strong>Backpressure &amp; priority queueing:</strong> Separate interactive user traffic from background jobs into distinct queues. Apply admission control and shed or defer low-priority work when queue depth or 429 rates climb, rather than letting latency spiral until callers time out.</li><li><strong>Spend-cap hygiene:</strong> Distinguish tier monthly spend caps (Start $500, Build $1k, Scale $200k; returns 429 <code>enforced_spend_limit_reached</code>) from user-set org/workspace spend caps (returns 400). Monitor burn rate proactively so production never hard-stops mid-month.</li><li><strong>Service tiers:</strong> Standard is the default best-effort tier; Batch is async at 50% cost; legacy Priority Tier (existing commitments only, selected via <code>service_tier: "auto"</code>) burns capacity at weighted rates (0.1x cache read, 1.25x 5-min write, 2.0x 1-hr write, 1.1x US-only inference) and still draws from regular rate limits.</li></ul></div>
+            </article>
+            <article class="seg kind-code" data-seg-id="s2-4">
+              <div class="seg-top">
+                <span class="seg-label">CODE PATTERN</span>
+                <button class="seg-play-btn" data-jump-seg="s2-4"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Multi-Tenant Isolation with the Rate Limits API</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s2-4-s0" data-start="317.463" title="Click to jump here"><span class="w">In</span> <span class="w">multi-tenant</span> <span class="w">SaaS,</span> <span class="w">noisy</span> <span class="w">neighbors</span> <span class="w">can</span> <span class="w">starve</span> <span class="w">every</span> <span class="w">other</span> <span class="w">tenant</span> <span class="w">if</span> <span class="w">they</span> <span class="w">share</span> <span class="w">a</span> <span class="w">single</span> <span class="w">API</span> <span class="w">key</span> <span class="w">and</span> <span class="w">bucket.</span></span> <span class="sent" data-sent-id="s2-4-s1" data-start="324.664" title="Click to jump here"><span class="w">Isolate</span> <span class="w">tenants</span> <span class="w">into</span> <span class="w">separate</span> <span class="w">workspaces</span> <span class="w">and</span> <span class="w">manage</span> <span class="w">their</span> <span class="w">quotas</span> <span class="w">programmatically</span> <span class="w">with</span> <span class="w">the</span> <span class="w">Rate</span> <span class="w">Limits</span> <span class="w">API</span> <span class="w">using</span> <span class="w">an</span> <span class="w">Admin</span> <span class="w">API</span> <span class="w">key.</span></span> <span class="sent" data-sent-id="s2-4-s2" data-start="333.593" title="Click to jump here"><span class="w">Have</span> <span class="w">your</span> <span class="w">gateway</span> <span class="w">fetch</span> <span class="w">limits</span> <span class="w">at</span> <span class="w">startup</span> <span class="w">and</span> <span class="w">on</span> <span class="w">a</span> <span class="w">schedule,</span> <span class="w">keying</span> <span class="w">off</span> <span class="w">the</span> <span class="w">stable</span> <span class="w">group</span> <span class="w">ID</span> <span class="w">starting</span> <span class="w">with</span> <span class="w">R</span> <span class="w">L</span> <span class="w">G</span> <span class="w">rather</span> <span class="w">than</span> <span class="w">display</span> <span class="w">names,</span> <span class="w">so</span> <span class="w">your</span> <span class="w">local</span> <span class="w">throttles</span> <span class="w">never</span> <span class="w">drift</span> <span class="w">from</span> <span class="w">Anthropic&#x27;s</span> <span class="w">configured</span> <span class="w">limits.</span></span></div></div>
+              <div class="ref-notes"><pre><code># Sync gateway quotas &amp; enforce per-tenant workspace limits via Admin API
+import anthropic
+
+admin = anthropic.Anthropic()  # Requires Admin API key or org:admin OAuth
+
+# 1. Read org limits dynamically (never hardcode drifting tier numbers)
+for entry in admin.organization.rate_limits.list():
+    # Use entry.group.id (rlg_...) as the stable cross-org key—not display_name
+    print(entry.group.id, entry.group.type, entry.models)
+
+# 2. Enforce tenant workspace isolation via /v1/organizations/workspaces/{id}/rate_limits
+# Workspace overrides return source.type == "workspace" (pass include_inherited=True for org defaults)</code></pre></div>
+            </article>
+            <article class="seg kind-table" data-seg-id="s2-5">
+              <div class="seg-top">
+                <span class="seg-label">ARCHITECTURE PATTERN</span>
+                <button class="seg-play-btn" data-jump-seg="s2-5"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Message Batches API Pipeline Design and Constraints</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s2-5-s0" data-start="346.284" title="Click to jump here"><span class="w">When</span> <span class="w">workloads</span> <span class="w">can</span> <span class="w">tolerate</span> <span class="w">asynchronous</span> <span class="w">turnaround,</span> <span class="w">the</span> <span class="w">Message</span> <span class="w">Batches</span> <span class="w">API</span> <span class="w">cuts</span> <span class="w">token</span> <span class="w">costs</span> <span class="w">by</span> <span class="w">50</span> <span class="w">percent,</span> <span class="w">avoids</span> <span class="w">ramp</span> <span class="w">limits,</span> <span class="w">and</span> <span class="w">scales</span> <span class="w">to</span> <span class="w">100,000</span> <span class="w">requests</span> <span class="w">or</span> <span class="w">256</span> <span class="w">megabytes</span> <span class="w">per</span> <span class="w">batch.</span></span> <span class="sent" data-sent-id="s2-5-s1" data-start="360.397" title="Click to jump here"><span class="w">Always</span> <span class="w">tag</span> <span class="w">every</span> <span class="w">item</span> <span class="w">with</span> <span class="w">a</span> <span class="w">unique</span> <span class="w">custom</span> <span class="w">ID</span> <span class="w">because</span> <span class="w">results</span> <span class="w">stream</span> <span class="w">back</span> <span class="w">out</span> <span class="w">of</span> <span class="w">order,</span> <span class="w">and</span> <span class="w">switch</span> <span class="w">shared</span> <span class="w">prefixes</span> <span class="w">to</span> <span class="w">the</span> <span class="w">one-hour</span> <span class="w">cache</span> <span class="w">TTL.</span></span> <span class="sent" data-sent-id="s2-5-s2" data-start="369.647" title="Click to jump here"><span class="w">Crucially,</span> <span class="w">batch</span> <span class="w">results</span> <span class="w">are</span> <span class="w">retained</span> <span class="w">for</span> <span class="w">29</span> <span class="w">days,</span> <span class="w">so</span> <span class="w">never</span> <span class="w">route</span> <span class="w">Zero</span> <span class="w">Data</span> <span class="w">Retention</span> <span class="w">workloads</span> <span class="w">through</span> <span class="w">the</span> <span class="w">Batches</span> <span class="w">API.</span></span></div></div>
+              <div class="ref-notes"><table><thead><tr><th>Dimension</th><th>Specification &amp; Production Design Rule</th></tr></thead><tbody><tr><td><strong>Economics &amp; Limits</strong></td><td><strong>50% discount</strong> on input/output tokens; separate batch RPM &amp; queue limits (up to 100,000 requests or 256 MB per batch; 200k–500k queued requests by tier); <strong>exempt from ramp limits</strong>.</td></tr><tr><td><strong>Latency &amp; Retention</strong></td><td>Most finish in &lt;1 hour; hard <strong>24-hour expiration</strong>. Results stay downloadable for <strong>29 days</strong>—therefore <strong>NOT ZDR-eligible</strong>.</td></tr><tr><td><strong>Correlation</strong></td><td>Each item requires a unique <code>custom_id</code> (1–64 chars, <code>^[a-zA-Z0-9_-]{1,64}$</code>) because JSONL results return out of order.</td></tr><tr><td><strong>Unsupported Params</strong></td><td><code>stream: true</code>, <code>speed</code> (Fast mode), <code>fallbacks</code> (server-side fallback), and <code>max_tokens: 0</code> (cache pre-warming) return validation errors.</td></tr><tr><td><strong>Caching &amp; Refusals</strong></td><td>Use <strong>1-hour prompt cache TTL</strong> for shared batch prefixes (since batches often exceed 5 min). Handle per-item <code>refusal</code> or <code>errored</code> results in a post-processing retry pass.</td></tr></tbody></table></div>
+            </article>
+        </section>
+        <section class="section-block" id="sec-3">
+          <div class="section-header">
+            <div class="section-obj">Production MCP and Change Management</div>
+            <h2>Remote MCP Operations, Versioning, and Safe Rollouts</h2>
+          </div>
+          
+            <article class="seg kind-prose" data-seg-id="s3-1">
+              <div class="seg-top">
+                <span class="seg-label">KEY CONCEPT</span>
+                <button class="seg-play-btn" data-jump-seg="s3-1"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Remote MCP Deployment, Transports, and Authentication</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s3-1-s0" data-start="378.069" title="Click to jump here"><span class="w">Production</span> <span class="w">M</span> <span class="w">C</span> <span class="w">P</span> <span class="w">deployments</span> <span class="w">use</span> <span class="w">remote</span> <span class="w">servers</span> <span class="w">over</span> <span class="w">Streamable</span> <span class="w">HTTP</span> <span class="w">or</span> <span class="w">SSE</span> <span class="w">rather</span> <span class="w">than</span> <span class="w">local</span> <span class="w">stdio</span> <span class="w">processes.</span></span> <span class="sent" data-sent-id="s3-1-s1" data-start="387.212" title="Click to jump here"><span class="w">With</span> <span class="w">the</span> <span class="w">Messages</span> <span class="w">API</span> <span class="w">M</span> <span class="w">C</span> <span class="w">P</span> <span class="w">connector,</span> <span class="w">you</span> <span class="w">pass</span> <span class="w">server</span> <span class="w">URLs,</span> <span class="w">OAuth</span> <span class="w">bearer</span> <span class="w">tokens,</span> <span class="w">and</span> <span class="w">an</span> <span class="w">M</span> <span class="w">C</span> <span class="w">P</span> <span class="w">toolset</span> <span class="w">to</span> <span class="w">allowlist</span> <span class="w">or</span> <span class="w">denylist</span> <span class="w">specific</span> <span class="w">tools—remembering</span> <span class="w">it</span> <span class="w">supports</span> <span class="w">tool</span> <span class="w">calls</span> <span class="w">only</span> <span class="w">and</span> <span class="w">is</span> <span class="w">not</span> <span class="w">ZDR</span> <span class="w">eligible.</span></span> <span class="sent" data-sent-id="s3-1-s2" data-start="402.712" title="Click to jump here"><span class="w">In</span> <span class="w">Managed</span> <span class="w">Agents,</span> <span class="w">keep</span> <span class="w">secrets</span> <span class="w">out</span> <span class="w">of</span> <span class="w">agent</span> <span class="w">definitions</span> <span class="w">by</span> <span class="w">referencing</span> <span class="w">a</span> <span class="w">session</span> <span class="w">vault</span> <span class="w">for</span> <span class="w">credentials.</span></span></div></div>
+              <div class="ref-notes"><p>Production MCP integrations move beyond local <code>stdio</code> servers to internet- or VPC-hosted <strong>remote MCP servers</strong> exposed over <strong>Streamable HTTP</strong> or <strong>SSE</strong> transports. Through the Messages API <strong>MCP Connector</strong> (beta <code>mcp-client-2025-11-20</code> / <code>mcp-client-2026-09-15</code>), you pass <code>mcp_servers</code> (URL, name, OAuth Bearer <code>authorization_token</code>) and a matching <code>mcp_toolset</code> inside <code>tools</code> to allowlist, denylist, or configure individual tools—note that the connector supports MCP <strong>tool calls only</strong> and is <strong>not ZDR-eligible</strong>.</p><p>In <strong>Claude Managed Agents</strong>, declare MCP servers on the agent definition and bind per-session credentials via a <strong>vault</strong> so secrets never live in the agent spec or prompt context. Always enforce least-privilege OAuth scopes and explicit tool allowlists before exposing remote servers to production agents.</p></div>
+            </article>
+            <article class="seg kind-bullets" data-seg-id="s3-2">
+              <div class="seg-top">
+                <span class="seg-label">ARCHITECTURE PATTERN</span>
+                <button class="seg-play-btn" data-jump-seg="s3-2"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Scaling Tool Catalogs and MCP Protocol/Schema Versioning</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s3-2-s0" data-start="409.301" title="Click to jump here"><span class="w">When</span> <span class="w">an</span> <span class="w">agent</span> <span class="w">connects</span> <span class="w">to</span> <span class="w">dozens</span> <span class="w">of</span> <span class="w">M</span> <span class="w">C</span> <span class="w">P</span> <span class="w">servers,</span> <span class="w">dumping</span> <span class="w">every</span> <span class="w">tool</span> <span class="w">schema</span> <span class="w">upfront</span> <span class="w">wrecks</span> <span class="w">both</span> <span class="w">context</span> <span class="w">budget</span> <span class="w">and</span> <span class="w">tool</span> <span class="w">accuracy.</span></span> <span class="sent" data-sent-id="s3-2-s1" data-start="417.633" title="Click to jump here"><span class="w">Once</span> <span class="w">tool</span> <span class="w">definitions</span> <span class="w">pass</span> <span class="w">one</span> <span class="w">to</span> <span class="w">five</span> <span class="w">percent</span> <span class="w">of</span> <span class="w">your</span> <span class="w">context</span> <span class="w">window,</span> <span class="w">adopt</span> <span class="w">progressive</span> <span class="w">discovery:</span> <span class="w">catalog,</span> <span class="w">inspect,</span> <span class="w">then</span> <span class="w">execute.</span></span> <span class="sent" data-sent-id="s3-2-s2" data-start="426.435" title="Click to jump here"><span class="w">For</span> <span class="w">versioning,</span> <span class="w">M</span> <span class="w">C</span> <span class="w">P</span> <span class="w">uses</span> <span class="w">date-stamped</span> <span class="w">protocol</span> <span class="w">strings</span> <span class="w">negotiated</span> <span class="w">via</span> <span class="w">the</span> <span class="w">M</span> <span class="w">C</span> <span class="w">P</span> <span class="w">Protocol</span> <span class="w">Version</span> <span class="w">header</span> <span class="w">or</span> <span class="w">server</span> <span class="w">discover</span> <span class="w">RPC,</span> <span class="w">while</span> <span class="w">individual</span> <span class="w">tool</span> <span class="w">schemas</span> <span class="w">should</span> <span class="w">evolve</span> <span class="w">additively</span> <span class="w">so</span> <span class="w">in-flight</span> <span class="w">agent</span> <span class="w">turns</span> <span class="w">never</span> <span class="w">fail.</span></span></div></div>
+              <div class="ref-notes"><ul><li><strong>Progressive tool discovery:</strong> Injecting hundreds of MCP tool schemas upfront can burn ~150k tokens and hurt tool-selection accuracy. Switch to progressive discovery once tool definitions exceed <strong>1%–5% of the context window</strong>: expose a lightweight <strong>Catalog</strong> (<code>search_tools</code> via keyword, embedding, hybrid, or built-in tool search), <strong>Inspect</strong> only candidate schemas, then <strong>Execute</strong>.</li><li><strong>MCP protocol negotiation:</strong> MCP versions use <code>YYYY-MM-DD</code> strings (current: <code>2026-07-28</code>), incremented only for backwards-incompatible changes. Requests declare <code>MCP-Protocol-Version</code> (and <code>_meta</code>); clients can probe capabilities upfront with mandatory <code>server/discover</code> or handle <code>UnsupportedProtocolVersionError</code> cleanly.</li><li><strong>Tool &amp; schema versioning:</strong> Treat MCP tool input/output JSON schemas as versioned production contracts. Add optional fields for backwards-compatible evolution; publish versioned tool names or dual-support old and new parameters during cutovers so in-flight agent sessions never break mid-turn.</li></ul></div>
+            </article>
+            <article class="seg kind-callout" data-seg-id="s3-3">
+              <div class="seg-top">
+                <span class="seg-label">EXAM TRAP</span>
+                <button class="seg-play-btn" data-jump-seg="s3-3"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Pinned Model IDs, Infrastructure Drift, and API Version Migrations</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s3-3-s0" data-start="442.325" title="Click to jump here"><span class="w">Do</span> <span class="w">not</span> <span class="w">fall</span> <span class="w">for</span> <span class="w">a</span> <span class="w">classic</span> <span class="w">exam</span> <span class="w">misconception:</span> <span class="w">starting</span> <span class="w">with</span> <span class="w">Claude</span> <span class="w">4.6,</span> <span class="w">dateless</span> <span class="w">model</span> <span class="w">IDs</span> <span class="w">like</span> <span class="w">claude</span> <span class="w">opus</span> <span class="w">5</span> <span class="w">5</span> <span class="w">are</span> <span class="w">pinned</span> <span class="w">snapshots</span> <span class="w">with</span> <span class="w">fixed</span> <span class="w">weights,</span> <span class="w">not</span> <span class="w">evergreen</span> <span class="w">aliases.</span></span> <span class="sent" data-sent-id="s3-3-s1" data-start="455.031" title="Click to jump here"><span class="w">Still,</span> <span class="w">serving</span> <span class="w">infrastructure</span> <span class="w">around</span> <span class="w">the</span> <span class="w">weights—like</span> <span class="w">safety</span> <span class="w">classifiers</span> <span class="w">and</span> <span class="w">routers—can</span> <span class="w">change</span> <span class="w">over</span> <span class="w">time</span> <span class="w">and</span> <span class="w">shift</span> <span class="w">behavior.</span></span> <span class="sent" data-sent-id="s3-3-s2" data-start="462.573" title="Click to jump here"><span class="w">Likewise,</span> <span class="w">upgrading</span> <span class="w">your</span> <span class="w">anthropic</span> <span class="w">version</span> <span class="w">header</span> <span class="w">to</span> <span class="w">2026-10-21</span> <span class="w">introduces</span> <span class="w">hard</span> <span class="w">breaking</span> <span class="w">changes,</span> <span class="w">including</span> <span class="w">HTTP</span> <span class="w">400</span> <span class="w">errors</span> <span class="w">if</span> <span class="w">you</span> <span class="w">still</span> <span class="w">send</span> <span class="w">temperature,</span> <span class="w">top</span> <span class="w">P,</span> <span class="w">or</span> <span class="w">top</span> <span class="w">K.</span></span> <span class="sent" data-sent-id="s3-3-s3" data-start="476.729" title="Click to jump here"><span class="w">Always</span> <span class="w">test</span> <span class="w">both</span> <span class="w">model</span> <span class="w">and</span> <span class="w">API</span> <span class="w">upgrades</span> <span class="w">against</span> <span class="w">regression</span> <span class="w">suites.</span></span></div></div>
+              <div class="ref-notes"><p><strong>Dateless IDs (Claude 4.6+) are pinned snapshots, NOT evergreen aliases:</strong> IDs like <code>claude-sonnet-4-6</code> or <code>claude-opus-5-5</code> map to fixed model weights for their entire lifetime (unlike pre-4.6 convenience aliases such as <code>claude-sonnet-4-5</code>). However, <strong>serving infrastructure</strong> around the weights—request routers, safety classifiers, and sampling logic—can still update over time and cause subtle behavioral shifts even on a pinned model ID.</p><p><strong>API version migrations carry hard breaking changes:</strong> Upgrading <code>anthropic-version</code> to <code>2026-10-21</code> removes <code>temperature</code>, <code>top_p</code>, and <code>top_k</code> (returning HTTP 400 on every model if sent), rejects <code>document</code> blocks in assistant messages, rejects non-empty <code>citations</code> in user messages, and renames Admin API fields (e.g., <code>group.type</code> instead of <code>group_type</code>, <code>scope.workspace_id</code> instead of <code>workspace_id</code>). Always run regression suites against both model and API version upgrades.</p></div>
+            </article>
+            <article class="seg kind-bullets" data-seg-id="s3-4">
+              <div class="seg-top">
+                <span class="seg-label">ARCHITECTURE PATTERN</span>
+                <button class="seg-play-btn" data-jump-seg="s3-4"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Gateway Routing, Prompt Versioning, and Progressive Rollout</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s3-4-s0" data-start="481.505" title="Click to jump here"><span class="w">Mature</span> <span class="w">teams</span> <span class="w">never</span> <span class="w">push</span> <span class="w">prompt,</span> <span class="w">tool,</span> <span class="w">or</span> <span class="w">model</span> <span class="w">edits</span> <span class="w">straight</span> <span class="w">to</span> <span class="w">100</span> <span class="w">percent</span> <span class="w">of</span> <span class="w">traffic.</span></span> <span class="sent" data-sent-id="s3-4-s1" data-start="487.213" title="Click to jump here"><span class="w">Put</span> <span class="w">an</span> <span class="w">internal</span> <span class="w">gateway</span> <span class="w">in</span> <span class="w">front</span> <span class="w">of</span> <span class="w">your</span> <span class="w">providers</span> <span class="w">to</span> <span class="w">normalize</span> <span class="w">auth,</span> <span class="w">model</span> <span class="w">IDs,</span> <span class="w">and</span> <span class="w">request</span> <span class="w">ID</span> <span class="w">logging.</span></span> <span class="sent" data-sent-id="s3-4-s2" data-start="493.839" title="Click to jump here"><span class="w">Bundle</span> <span class="w">prompts,</span> <span class="w">tool</span> <span class="w">schemas,</span> <span class="w">and</span> <span class="w">model</span> <span class="w">versions</span> <span class="w">as</span> <span class="w">immutable</span> <span class="w">releases,</span> <span class="w">validate</span> <span class="w">them</span> <span class="w">offline,</span> <span class="w">and</span> <span class="w">roll</span> <span class="w">out</span> <span class="w">progressively</span> <span class="w">from</span> <span class="w">shadow</span> <span class="w">mode</span> <span class="w">to</span> <span class="w">canary</span> <span class="w">cohorts</span> <span class="w">with</span> <span class="w">automated</span> <span class="w">rollback</span> <span class="w">triggers</span> <span class="w">tied</span> <span class="w">to</span> <span class="w">latency,</span> <span class="w">error,</span> <span class="w">refusal,</span> <span class="w">and</span> <span class="w">quality</span> <span class="w">thresholds.</span></span></div></div>
+              <div class="ref-notes"><ul><li><strong>Centralized AI gateway:</strong> Normalize platform-specific differences (Bedrock SigV4 &amp; model ID prefixes, Vertex URL-embedded models, Foundry Entra ID, dual <code>request-id</code> / <code>x-amzn-requestid</code> logging) behind a single internal gateway that enforces auth, quotas, fallback routing, and telemetry.</li><li><strong>Immutable prompt &amp; config versioning:</strong> Version system prompts, tool schemas, model IDs, and effort settings together as an immutable release bundle in Git/artifact storage so any production trace can be reproduced exactly.</li><li><strong>Progressive delivery pipeline:</strong> Gate changes with offline evals in CI, then run <strong>shadow traffic</strong> (mirroring live inputs without exposing outputs), followed by a <strong>canary cohort</strong> (e.g., 1% → 10% → 50% → 100%) comparing latency, token cost, refusal rate, tool-error rate, and online quality metrics.</li><li><strong>Automated rollback triggers:</strong> Pre-define objective rollback thresholds (e.g., p95 latency spike, refusal-rate jump, schema-validation failure rate) that revert traffic to the last known-good bundle in seconds—never rely on manual prompt hotfixes during an incident.</li></ul></div>
+            </article>
+        </section>
+        <section class="section-block" id="sec-4">
+          <div class="section-header">
+            <div class="section-obj">Retrieval and Knowledge Grounding at Scale</div>
+            <h2>Hybrid RAG, Agentic Search, Citations, and Stage Diagnostics</h2>
+          </div>
+          
+            <article class="seg kind-prose" data-seg-id="s4-1">
+              <div class="seg-top">
+                <span class="seg-label">KEY CONCEPT</span>
+                <button class="seg-play-btn" data-jump-seg="s4-1"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Agentic Search vs. Classic RAG Tradeoffs</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s4-1-s0" data-start="509.856" title="Click to jump here"><span class="w">Choosing</span> <span class="w">between</span> <span class="w">classic</span> <span class="w">RAG</span> <span class="w">and</span> <span class="w">agentic</span> <span class="w">search</span> <span class="w">is</span> <span class="w">a</span> <span class="w">classic</span> <span class="w">latency-versus-reasoning</span> <span class="w">tradeoff.</span></span> <span class="sent" data-sent-id="s4-1-s1" data-start="516.311" title="Click to jump here"><span class="w">Classic</span> <span class="w">retrieve-then-generate</span> <span class="w">gives</span> <span class="w">you</span> <span class="w">predictable</span> <span class="w">single-turn</span> <span class="w">latency</span> <span class="w">and</span> <span class="w">tight</span> <span class="w">token</span> <span class="w">cost</span> <span class="w">when</span> <span class="w">answers</span> <span class="w">sit</span> <span class="w">in</span> <span class="w">a</span> <span class="w">few</span> <span class="w">self-contained</span> <span class="w">passages.</span></span> <span class="sent" data-sent-id="s4-1-s2" data-start="525.368" title="Click to jump here"><span class="w">Agentic</span> <span class="w">search</span> <span class="w">lets</span> <span class="w">Claude</span> <span class="w">refine</span> <span class="w">queries</span> <span class="w">across</span> <span class="w">multiple</span> <span class="w">hops</span> <span class="w">for</span> <span class="w">ambiguous</span> <span class="w">or</span> <span class="w">cross-document</span> <span class="w">questions,</span> <span class="w">but</span> <span class="w">adds</span> <span class="w">latency</span> <span class="w">and</span> <span class="w">variable</span> <span class="w">spend.</span></span> <span class="sent" data-sent-id="s4-1-s3" data-start="534.852" title="Click to jump here"><span class="w">Many</span> <span class="w">production</span> <span class="w">systems</span> <span class="w">blend</span> <span class="w">both</span> <span class="w">by</span> <span class="w">giving</span> <span class="w">Claude</span> <span class="w">a</span> <span class="w">fast</span> <span class="w">hybrid</span> <span class="w">search</span> <span class="w">tool</span> <span class="w">with</span> <span class="w">strict</span> <span class="w">turn</span> <span class="w">caps.</span></span></div></div>
+              <div class="ref-notes"><p>Architecting knowledge grounding starts with choosing between <strong>classic RAG</strong> (retrieve-then-generate) and <strong>agentic search</strong> (Claude iteratively formulates queries, inspects results, and decides when to search again). Classic RAG excels when latency SLOs are tight, query volume is high, and answers live in 1–3 self-contained passages—giving predictable token cost and a single LLM round-trip.</p><p><strong>Agentic search</strong> shines on multi-hop reasoning, ambiguous user questions, codebases, or fast-changing live sources where initial queries need refinement—at the cost of higher latency, variable multi-turn token spend, and looping risk. Production platforms often combine both: a fast hybrid RAG tool called by an agent with strict turn budgets and forced initial retrieval via <code>tool_choice</code> when grounding is mandatory.</p></div>
+            </article>
+            <article class="seg kind-bullets" data-seg-id="s4-2">
+              <div class="seg-top">
+                <span class="seg-label">ARCHITECTURE PATTERN</span>
+                <button class="seg-play-btn" data-jump-seg="s4-2"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Chunking, Embeddings, Hybrid Search, and Reranking</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s4-2-s0" data-start="541.292" title="Click to jump here"><span class="w">High-accuracy</span> <span class="w">retrieval</span> <span class="w">is</span> <span class="w">a</span> <span class="w">four-stage</span> <span class="w">pipeline.</span></span> <span class="sent" data-sent-id="s4-2-s1" data-start="544.44" title="Click to jump here"><span class="w">First,</span> <span class="w">chunk</span> <span class="w">along</span> <span class="w">semantic</span> <span class="w">boundaries</span> <span class="w">and</span> <span class="w">preserve</span> <span class="w">document</span> <span class="w">context</span> <span class="w">using</span> <span class="w">contextualized</span> <span class="w">embeddings</span> <span class="w">like</span> <span class="w">Voyage</span> <span class="w">Context</span> <span class="w">4.</span></span> <span class="sent" data-sent-id="s4-2-s2" data-start="552.943" title="Click to jump here"><span class="w">Second,</span> <span class="w">remember</span> <span class="w">Anthropic</span> <span class="w">does</span> <span class="w">not</span> <span class="w">offer</span> <span class="w">a</span> <span class="w">first-party</span> <span class="w">embedding</span> <span class="w">model—pick</span> <span class="w">domain-matched</span> <span class="w">embeddings</span> <span class="w">and</span> <span class="w">set</span> <span class="w">input</span> <span class="w">type</span> <span class="w">to</span> <span class="w">document</span> <span class="w">versus</span> <span class="w">query.</span></span> <span class="sent" data-sent-id="s4-2-s3" data-start="562.533" title="Click to jump here"><span class="w">Third,</span> <span class="w">fuse</span> <span class="w">BM25</span> <span class="w">lexical</span> <span class="w">search</span> <span class="w">with</span> <span class="w">dense</span> <span class="w">vectors</span> <span class="w">so</span> <span class="w">exact</span> <span class="w">error</span> <span class="w">codes</span> <span class="w">and</span> <span class="w">SKUs</span> <span class="w">never</span> <span class="w">vanish.</span></span> <span class="sent" data-sent-id="s4-2-s4" data-start="570.183" title="Click to jump here"><span class="w">Finally,</span> <span class="w">retrieve</span> <span class="w">broadly</span> <span class="w">and</span> <span class="w">apply</span> <span class="w">a</span> <span class="w">cross-encoder</span> <span class="w">reranker</span> <span class="w">like</span> <span class="w">rerank</span> <span class="w">3</span> <span class="w">to</span> <span class="w">put</span> <span class="w">only</span> <span class="w">the</span> <span class="w">sharpest</span> <span class="w">passages</span> <span class="w">into</span> <span class="w">Claude&#x27;s</span> <span class="w">context.</span></span></div></div>
+              <div class="ref-notes"><ul><li><strong>Chunking strategy:</strong> Preserve semantic boundaries (headings, sections, tables, code ASTs) with modest overlap rather than blind fixed-character splits. For documents where chunks lose surrounding context (e.g., pronouns or section headers), use contextual enrichment or contextualized chunk embeddings such as Voyage AI's <code>voyage-context-4</code> (up to 120k tokens with auto-chunking).</li><li><strong>Embedding selection:</strong> Anthropic does not host its own embedding model; select domain-matched providers like Voyage AI (<code>voyage-4-large</code> / <code>voyage-4</code> for general multilingual, <code>voyage-code-4</code> for code, <code>voyage-finance-2</code> / <code>voyage-law-2</code> for specialized verticals, <code>voyage-multimodal-3.5</code> for interleaved text/images/video) and pass matching <code>input_type</code> (<code>document</code> vs. <code>query</code>).</li><li><strong>Hybrid retrieval:</strong> Combine <strong>lexical search (BM25)</strong>—essential for exact IDs, SKUs, error codes, and rare acronyms—with <strong>dense vector search</strong> for semantic similarity, fused via Reciprocal Rank Fusion (RRF).</li><li><strong>Cross-encoder reranking:</strong> Retrieve a broad candidate set (e.g., top 50–100) cheaply, then apply a cross-encoder reranker (such as <code>rerank-3</code> or <code>rerank-3-lite</code>) to promote the highest-precision top 5–10 chunks into Claude's context window.</li></ul></div>
+            </article>
+            <article class="seg kind-code" data-seg-id="s4-3">
+              <div class="seg-top">
+                <span class="seg-label">CODE PATTERN</span>
+                <button class="seg-play-btn" data-jump-seg="s4-3"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Native Grounding with Citations API and Search Result Blocks</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s4-3-s0" data-start="578.927" title="Click to jump here"><span class="w">Instead</span> <span class="w">of</span> <span class="w">begging</span> <span class="w">Claude</span> <span class="w">in</span> <span class="w">a</span> <span class="w">prompt</span> <span class="w">to</span> <span class="w">invent</span> <span class="w">bracketed</span> <span class="w">footnotes,</span> <span class="w">use</span> <span class="w">native</span> <span class="w">grounding</span> <span class="w">blocks.</span></span> <span class="sent" data-sent-id="s4-3-s1" data-start="584.187" title="Click to jump here"><span class="w">Pass</span> <span class="w">static</span> <span class="w">files</span> <span class="w">as</span> <span class="w">document</span> <span class="w">blocks</span> <span class="w">with</span> <span class="w">citations</span> <span class="w">enabled,</span> <span class="w">or</span> <span class="w">return</span> <span class="w">search</span> <span class="w">result</span> <span class="w">blocks</span> <span class="w">from</span> <span class="w">your</span> <span class="w">RAG</span> <span class="w">tools</span> <span class="w">with</span> <span class="w">a</span> <span class="w">stable</span> <span class="w">source</span> <span class="w">ID,</span> <span class="w">title,</span> <span class="w">and</span> <span class="w">text</span> <span class="w">content.</span></span> <span class="sent" data-sent-id="s4-3-s2" data-start="595.143" title="Click to jump here"><span class="w">Every</span> <span class="w">search</span> <span class="w">result</span> <span class="w">block</span> <span class="w">in</span> <span class="w">a</span> <span class="w">request</span> <span class="w">must</span> <span class="w">share</span> <span class="w">the</span> <span class="w">same</span> <span class="w">citations</span> <span class="w">enabled</span> <span class="w">setting,</span> <span class="w">both</span> <span class="w">features</span> <span class="w">are</span> <span class="w">ZDR</span> <span class="w">eligible,</span> <span class="w">and</span> <span class="w">in</span> <span class="w">Managed</span> <span class="w">Agents,</span> <span class="w">search</span> <span class="w">results</span> <span class="w">must</span> <span class="w">come</span> <span class="w">from</span> <span class="w">tool</span> <span class="w">results</span> <span class="w">rather</span> <span class="w">than</span> <span class="w">user</span> <span class="w">messages.</span></span></div></div>
+              <div class="ref-notes"><pre><code># Return native search_result blocks from a RAG tool (or top-level user content)
+from anthropic.types import SearchResultBlockParam, TextBlockParam
+
+def search_kb(query: str) -&gt; list[SearchResultBlockParam]:
+    return [
+        SearchResultBlockParam(
+            type="search_result",
+            source="kb://policies/timeouts-v4",   # URL or stable internal ID
+            title="Timeout Configuration Policy",
+            content=[TextBlockParam(type="text", text="Default timeout is 30s (range 10-120s).")],
+            citations={"enabled": True},          # Must match across all search_results in request
+        )
+    ]
+# Both Citations API (type="document") and search_result blocks are ZDR-eligible
+# Note: Managed Agents accept search_result only inside tool results, not user.message events</code></pre></div>
+            </article>
+            <article class="seg kind-callout" data-seg-id="s4-4">
+              <div class="seg-top">
+                <span class="seg-label">EXAM TRAP</span>
+                <button class="seg-play-btn" data-jump-seg="s4-4"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Uncertainty Declaration, Confidence Signals, and JSON Citation Pitfalls</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s4-4-s0" data-start="608.943" title="Click to jump here"><span class="w">Watch</span> <span class="w">for</span> <span class="w">a</span> <span class="w">subtle</span> <span class="w">grounding</span> <span class="w">pitfall:</span> <span class="w">if</span> <span class="w">you</span> <span class="w">instruct</span> <span class="w">Claude</span> <span class="w">to</span> <span class="w">respond</span> <span class="w">in</span> <span class="w">strict</span> <span class="w">JSON</span> <span class="w">only,</span> <span class="w">native</span> <span class="w">citation</span> <span class="w">blocks</span> <span class="w">often</span> <span class="w">drop</span> <span class="w">to</span> <span class="w">zero.</span></span> <span class="sent" data-sent-id="s4-4-s1" data-start="617.787" title="Click to jump here"><span class="w">For</span> <span class="w">structured</span> <span class="w">extraction,</span> <span class="w">include</span> <span class="w">explicit</span> <span class="w">source</span> <span class="w">ID,</span> <span class="w">verbatim</span> <span class="w">quote,</span> <span class="w">and</span> <span class="w">support-status</span> <span class="w">fields</span> <span class="w">in</span> <span class="w">your</span> <span class="w">schema.</span></span> <span class="sent" data-sent-id="s4-4-s2" data-start="624.689" title="Click to jump here"><span class="w">Equally</span> <span class="w">important,</span> <span class="w">build</span> <span class="w">explicit</span> <span class="w">abstention</span> <span class="w">into</span> <span class="w">both</span> <span class="w">your</span> <span class="w">prompt</span> <span class="w">and</span> <span class="w">your</span> <span class="w">pipeline—pair</span> <span class="w">a</span> <span class="w">reranker</span> <span class="w">score</span> <span class="w">floor</span> <span class="w">with</span> <span class="w">instructions</span> <span class="w">to</span> <span class="w">declare</span> <span class="w">insufficient</span> <span class="w">evidence</span> <span class="w">rather</span> <span class="w">than</span> <span class="w">letting</span> <span class="w">Claude</span> <span class="w">extrapolate.</span></span></div></div>
+              <div class="ref-notes"><p><strong>Structured JSON suppresses native citations:</strong> Asking Claude to return <em>only JSON</em> often produces few or no native citation blocks. When you need structured extraction with verifiable provenance, design an explicit schema that pairs each extracted field with its verbatim quote, source ID, and a groundedness/confidence enum (e.g., <code>supported</code>, <code>partial</code>, <code>insufficient_evidence</code>), or run a dedicated citation-aware extraction pattern.</p><p><strong>Explicit abstention beats confident hallucination:</strong> Instruct Claude to declare uncertainty and abstain when retrieved passages do not answer the question, and pair prompt-level abstention with deterministic retrieval-score thresholds (e.g., reranker score floor) so low-relevance queries trigger an "insufficient evidence" path or human escalation before generation.</p></div>
+            </article>
+            <article class="seg kind-table" data-seg-id="s4-5">
+              <div class="seg-top">
+                <span class="seg-label">DIAGNOSTIC FRAMEWORK</span>
+                <button class="seg-play-btn" data-jump-seg="s4-5"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Diagnosing Retrieval-Quality Failures by Stage</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s4-5-s0" data-start="637.401" title="Click to jump here"><span class="w">When</span> <span class="w">users</span> <span class="w">report</span> <span class="w">wrong</span> <span class="w">answers</span> <span class="w">in</span> <span class="w">a</span> <span class="w">RAG</span> <span class="w">system,</span> <span class="w">never</span> <span class="w">jump</span> <span class="w">straight</span> <span class="w">to</span> <span class="w">prompt</span> <span class="w">tweaking—isolate</span> <span class="w">the</span> <span class="w">failure</span> <span class="w">stage</span> <span class="w">by</span> <span class="w">stage.</span></span> <span class="sent" data-sent-id="s4-5-s1" data-start="645.285" title="Click to jump here"><span class="w">If</span> <span class="w">the</span> <span class="w">fact</span> <span class="w">is</span> <span class="w">split</span> <span class="w">across</span> <span class="w">chunks,</span> <span class="w">fix</span> <span class="w">chunking.</span></span> <span class="sent" data-sent-id="s4-5-s2" data-start="648.071" title="Click to jump here"><span class="w">If</span> <span class="w">Recall</span> <span class="w">at</span> <span class="w">50</span> <span class="w">is</span> <span class="w">low,</span> <span class="w">fix</span> <span class="w">hybrid</span> <span class="w">retrieval</span> <span class="w">or</span> <span class="w">embeddings.</span></span> <span class="sent" data-sent-id="s4-5-s3" data-start="652.221" title="Click to jump here"><span class="w">If</span> <span class="w">Recall</span> <span class="w">at</span> <span class="w">50</span> <span class="w">is</span> <span class="w">high</span> <span class="w">but</span> <span class="w">Precision</span> <span class="w">at</span> <span class="w">5</span> <span class="w">is</span> <span class="w">low,</span> <span class="w">you</span> <span class="w">have</span> <span class="w">a</span> <span class="w">reranking</span> <span class="w">problem.</span></span> <span class="sent" data-sent-id="s4-5-s4" data-start="657.375" title="Click to jump here"><span class="w">Only</span> <span class="w">when</span> <span class="w">the</span> <span class="w">exact</span> <span class="w">evidence</span> <span class="w">sits</span> <span class="w">cleanly</span> <span class="w">in</span> <span class="w">context</span> <span class="w">and</span> <span class="w">Claude</span> <span class="w">still</span> <span class="w">contradicts</span> <span class="w">it</span> <span class="w">do</span> <span class="w">you</span> <span class="w">have</span> <span class="w">a</span> <span class="w">generation</span> <span class="w">or</span> <span class="w">grounding</span> <span class="w">problem.</span></span></div></div>
+              <div class="ref-notes"><table><thead><tr><th>Pipeline Stage</th><th>Diagnostic Symptom</th><th>Targeted Fix</th></tr></thead><tbody><tr><td><strong>1. Indexing &amp; Chunking</strong></td><td>Ground-truth document is missing from corpus or split mid-table/mid-clause so no chunk contains the full fact.</td><td>Fix ingestion freshness/ACL sync; use structure-aware chunking and contextualized embeddings.</td></tr><tr><td><strong>2. Retrieval (Recall@K)</strong></td><td>Relevant chunk exists in index but is absent from top-50 candidates (especially for exact codes or acronyms).</td><td>Add BM25 hybrid search + RRF, query rewriting/expansion, or domain-specific embeddings.</td></tr><tr><td><strong>3. Reranking (Precision@5)</strong></td><td>Correct chunk appears in top-50 (high Recall@50) but drops below the top-5 cutoff passed to Claude.</td><td>Add or tune a cross-encoder reranker (<code>rerank-3</code>), remove noisy near-duplicates, check metadata filters.</td></tr><tr><td><strong>4. Context Assembly</strong></td><td>Right chunks are passed to Claude, but conflicting versions or massive irrelevant filler dilute attention.</td><td>Deduplicate stale versions, include timestamps/source titles, trim low-scoring tail chunks.</td></tr><tr><td><strong>5. Generation &amp; Grounding</strong></td><td>Right passage is cleanly in context, yet Claude extrapolates, ignores citations, or contradicts the text.</td><td>Enable native Citations / <code>search_result</code> blocks, enforce abstention rules, audit prompt instructions or model tier.</td></tr></tbody></table></div>
+            </article>
+        </section>
+
+      <section class="quiz-section" id="scenarios">
+        <div class="section-header">
+          <div class="section-obj">CCDV-P Scenario Practice</div>
+          <h2>Production Scenario Questions</h2>
+        </div>
+        
+        <div class="scenario-card" data-correct="B">
+          <h3>Scenario 1: Differentiating 429s and Stop Reasons Under Incident Load</h3>
+          <p class="scenario-prompt">A production legal-review service on the first-party Claude API runs an automated nightly batch of synchronous Messages API calls. At 02:00 UTC, error rates spike and costs surge. Logs reveal three distinct failure signatures hitting the same generic retry wrapper: (1) HTTP 429 responses containing `error.details.error_code: &quot;enforced_spend_limit_reached&quot;` with no `retry-after` header, (2) HTTP 200 responses with `stop_reason: &quot;refusal&quot;` and `stop_details.category: &quot;reasoning_extraction&quot;` after a prompt update added a `&lt;reasoning&gt;` JSON field, and (3) HTTP 429 responses with `error.details.error_code: &quot;ramp_limit_exceeded&quot;` and a `retry-after` header. Which remediation plan addresses all three root causes?</p>
+          <div class="opt-list"><button class="opt-btn" data-key="A"><strong>A.</strong> Increase SDK `max_retries` to 8 with longer exponential backoff, and enable `fallbacks: &quot;default&quot;` with `server-side-fallback-2026-07-01` so refused requests succeed automatically.</button><button class="opt-btn" data-key="B"><strong>B.</strong> Stop retrying `enforced_spend_limit_reached` and alert ops to raise the tier spend cap; remove the `&lt;reasoning&gt;` output field and switch to adaptive thinking blocks; and pace the nightly job with a gradual ramp honoring `retry-after`.</button><button class="opt-btn" data-key="C"><strong>C.</strong> Switch all nightly calls to `inference_geo: &quot;global&quot;` to double the rate limit pool, and lower `max_tokens` to free up OTPM headroom.</button><button class="opt-btn" data-key="D"><strong>D.</strong> Configure a circuit breaker that fails all HTTP 429 and `refusal` responses over to Claude Haiku 5.5 so Fallback Credit eliminates the extra cache-write cost.</button></div>
+          <div class="rationale">
+            <strong>Answer: B</strong> &mdash; B correctly separates all three failure classes: (1) `enforced_spend_limit_reached` has no `retry-after` and will fail until the next month or a tier upgrade, so retrying is futile; (2) `reasoning_extraction` refusals are billed before output and have no recommended fallback model—they must be fixed by removing reasoning-output fields and using adaptive thinking (`thinking: {&quot;type&quot;: &quot;adaptive&quot;, &quot;display&quot;: &quot;summarized&quot;}`); (3) `ramp_limit_exceeded` requires honoring `retry-after` and ramping traffic gradually. A worsens the retry storm and fails because `reasoning_extraction` has no server-side fallback. C is doubly wrong: `inference_geo` values share one rate limit pool, and `max_tokens` does not reserve OTPM. D fails because Haiku 5.5 has no server-side fallback and carries no Fallback Credit, and `reasoning_extraction` should not be retried on another model.
+          </div>
+        </div>
+        <div class="scenario-card" data-correct="B">
+          <h3>Scenario 2: Scaling a ZDR-Regulated High-Context Workload</h3>
+          <p class="scenario-prompt">A healthcare SaaS platform processes 1,500 clinical summaries per minute using Claude Opus 5.5 under a strict Zero Data Retention (ZDR) agreement. Each request sends a shared 40,000-token clinical guideline prefix plus a 1,000-token patient note and generates ~400 output tokens. The organization&#x27;s Scale-tier limits are 13,000 RPM, 10,000,000 ITPM, and 2,000,000 OTPM. Requests are failing with HTTP 429 ITPM rate-limit errors. Which architectural change resolves the bottleneck while staying compliant with ZDR?</p>
+          <div class="opt-list"><button class="opt-btn" data-key="A"><strong>A.</strong> Migrate the workload to the Message Batches API to cut costs by 50% and move off synchronous ITPM limits.</button><button class="opt-btn" data-key="B"><strong>B.</strong> Enable prompt caching on the 40,000-token shared clinical guideline prefix so repeated prefix tokens are served as `cache_read_input_tokens`, which do not count toward ITPM.</button><button class="opt-btn" data-key="C"><strong>C.</strong> Lower `max_tokens` from 4,096 to 600 on every request so the token bucket reserves fewer tokens per minute.</button><button class="opt-btn" data-key="D"><strong>D.</strong> Attach the 40,000-token guideline via a remote MCP server using the Messages API MCP Connector so the prefix stays out of the prompt.</button></div>
+          <div class="rationale">
+            <strong>Answer: B</strong> &mdash; At 1,500 RPM × 41,000 input tokens = 61.5M uncached ITPM, uncached input tokens are the clear binding constraint (RPM is 1,500 vs. 13,000; OTPM is 600k vs. 2M). Because Anthropic&#x27;s ITPM rate limit is cache-aware, `cache_read_input_tokens` do not count toward ITPM—caching the 40,000-token shared prefix drops billable ITPM usage to ~1.5M uncached tokens/min (well under 10M) while remaining ZDR-eligible. A violates ZDR because the Message Batches API retains results for 29 days and is not ZDR-eligible. C has no effect on ITPM (and `max_tokens` does not reserve OTPM anyway). D violates ZDR because the Messages API MCP Connector is not ZDR-eligible and still injects tool outputs into context.
+          </div>
+        </div>
+        <div class="scenario-card" data-correct="B">
+          <h3>Scenario 3: Diagnosing a Production RAG Grounding Regression</h3>
+          <p class="scenario-prompt">An enterprise policy assistant uses dense vector search over 500,000 documents to inject the top 5 chunks into Claude Sonnet 5.5 via `search_result` blocks, returning a strict JSON-only answer schema. Users report two issues: (1) queries referencing exact internal policy codes like `POL-8842-B` frequently return wrong policies, and (2) even when the right chunk is retrieved, the UI shows zero native citations. Offline diagnostics show Recall@50 is 94% on conceptual queries, Recall@50 is 41% on policy-code queries, and Precision@5 on conceptual queries is only 52%. Which combination of changes best fixes both issues?</p>
+          <div class="opt-list"><button class="opt-btn" data-key="A"><strong>A.</strong> Upgrade the generation model to Claude Opus 5.5 and add stronger system-prompt instructions demanding exact citations in JSON.</button><button class="opt-btn" data-key="B"><strong>B.</strong> Add BM25 hybrid search with RRF for exact policy codes, insert a cross-encoder reranker (`rerank-3`) between top-50 retrieval and top-5 context assembly, and include explicit source-ID/quote fields (or non-JSON-only citation extraction) in the output design.</button><button class="opt-btn" data-key="C"><strong>C.</strong> Reduce chunk size to 100 tokens with zero overlap and pass all 50 retrieved chunks directly into `search_result` blocks with `citations: {&quot;enabled&quot;: false}` on lower-ranked chunks.</button><button class="opt-btn" data-key="D"><strong>D.</strong> Replace the vector index with an unbounded agentic search loop so Claude can run up to 20 sequential searches per user turn.</button></div>
+          <div class="rationale">
+            <strong>Answer: B</strong> &mdash; Stage-by-stage diagnostics pinpoint three distinct issues: (1) 41% Recall@50 on exact codes like `POL-8842-B` is a classic dense-only retrieval gap solved by BM25 hybrid search + RRF; (2) 94% Recall@50 dropping to 52% Precision@5 is a ranking cutoff problem solved by a cross-encoder reranker such as `rerank-3`; (3) asking for strict JSON-only output suppresses native citation blocks, so structured extraction needs explicit quote/source fields or a citation-aware extraction design. A misdiagnoses retrieval/ranking failures as a generation model problem. C is invalid API usage (all `search_result` blocks in a request must use the same `citations.enabled` setting) and 100-token zero-overlap chunks destroy semantic context. D adds unbounded latency and cost without fixing the underlying lexical retrieval and JSON-citation issues.
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+<script>
+const TIMELINE = {"duration":665.481,"segments":[{"id":"intro","section":"Overview","start":0.0,"end":48.667,"sentences":[{"id":"intro-s0","start":0.0,"end":4.139,"words":[{"t":"Domain","s":0.0,"e":0.362},{"t":"2:","s":0.362,"e":0.585},{"t":"Production","s":0.585,"e":1.189},{"t":"Integration,","s":1.189,"e":1.985},{"t":"Reliability,","s":1.985,"e":2.781},{"t":"and","s":2.781,"e":2.962},{"t":"Knowledge","s":2.962,"e":3.505},{"t":"Grounding.","s":3.505,"e":4.139}]},{"id":"intro-s1","start":4.279,"end":5.985,"words":[{"t":"Exam","s":4.279,"e":4.714},{"t":"weight:","s":4.714,"e":5.605},{"t":"20%.","s":5.605,"e":5.985}]},{"id":"intro-s2","start":6.125,"end":17.496,"words":[{"t":"Engineer","s":6.125,"e":6.708},{"t":"resilient,","s":6.708,"e":7.524},{"t":"high-throughput","s":7.524,"e":8.543},{"t":"Claude","s":8.543,"e":8.98},{"t":"integrations","s":8.98,"e":9.855},{"t":"across","s":9.855,"e":10.292},{"t":"cloud","s":10.292,"e":10.656},{"t":"platforms,","s":10.656,"e":11.472},{"t":"govern","s":11.472,"e":11.909},{"t":"MCP","s":11.909,"e":12.127},{"t":"and","s":12.127,"e":12.346},{"t":"model","s":12.346,"e":12.71},{"t":"changes","s":12.71,"e":13.22},{"t":"safely,","s":13.22,"e":13.817},{"t":"and","s":13.817,"e":14.036},{"t":"ground","s":14.036,"e":14.473},{"t":"generation","s":14.473,"e":15.201},{"t":"in","s":15.201,"e":15.347},{"t":"verifiable","s":15.347,"e":16.076},{"t":"retrieval","s":16.076,"e":16.731},{"t":"pipelines.","s":16.731,"e":17.496}]},{"id":"intro-s3","start":17.636,"end":29.476,"words":[{"t":"As","s":17.636,"e":17.801},{"t":"the","s":17.801,"e":18.049},{"t":"highest-weighted","s":18.049,"e":19.29},{"t":"domain","s":19.29,"e":19.786},{"t":"on","s":19.786,"e":19.951},{"t":"the","s":19.951,"e":20.199},{"t":"CCDV-P","s":20.199,"e":20.613},{"t":"exam","s":20.613,"e":20.943},{"t":"at","s":20.943,"e":21.109},{"t":"20%,","s":21.109,"e":21.456},{"t":"Domain","s":21.456,"e":21.952},{"t":"2","s":21.952,"e":22.076},{"t":"tests","s":22.076,"e":22.489},{"t":"whether","s":22.489,"e":23.068},{"t":"you","s":23.068,"e":23.316},{"t":"operate","s":23.316,"e":23.895},{"t":"Claude","s":23.895,"e":24.391},{"t":"like","s":24.391,"e":24.722},{"t":"a","s":24.722,"e":24.846},{"t":"production","s":24.846,"e":25.673},{"t":"distributed","s":25.673,"e":26.582},{"t":"system","s":26.582,"e":27.078},{"t":"rather","s":27.078,"e":27.574},{"t":"than","s":27.574,"e":27.905},{"t":"a","s":27.905,"e":28.029},{"t":"prototype","s":28.029,"e":28.773},{"t":"API","s":28.773,"e":29.021},{"t":"call.","s":29.021,"e":29.476}]},{"id":"intro-s4","start":29.616,"end":48.667,"words":[{"t":"Senior","s":29.616,"e":30.086},{"t":"engineers","s":30.086,"e":30.792},{"t":"classify","s":30.792,"e":31.418},{"t":"every","s":31.418,"e":31.81},{"t":"stop","s":31.81,"e":32.124},{"t":"reason","s":32.124,"e":32.594},{"t":"and","s":32.594,"e":32.829},{"t":"HTTP","s":32.829,"e":33.143},{"t":"error","s":33.143,"e":33.534},{"t":"before","s":33.534,"e":34.005},{"t":"retrying,","s":34.005,"e":34.804},{"t":"isolate","s":34.804,"e":35.352},{"t":"the","s":35.352,"e":35.588},{"t":"true","s":35.588,"e":35.901},{"t":"binding","s":35.901,"e":36.45},{"t":"throughput","s":36.45,"e":37.233},{"t":"constraint","s":37.233,"e":38.017},{"t":"before","s":38.017,"e":38.487},{"t":"scaling,","s":38.487,"e":39.208},{"t":"enforce","s":39.208,"e":39.757},{"t":"versioned","s":39.757,"e":40.462},{"t":"contracts","s":40.462,"e":41.167},{"t":"across","s":41.167,"e":41.637},{"t":"MCP","s":41.637,"e":41.873},{"t":"servers","s":41.873,"e":42.421},{"t":"and","s":42.421,"e":42.656},{"t":"cloud","s":42.656,"e":43.048},{"t":"platforms,","s":43.048,"e":43.926},{"t":"and","s":43.926,"e":44.161},{"t":"debug","s":44.161,"e":44.553},{"t":"retrieval","s":44.553,"e":45.258},{"t":"failures","s":45.258,"e":45.885},{"t":"stage","s":45.885,"e":46.277},{"t":"by","s":46.277,"e":46.434},{"t":"stage","s":46.434,"e":46.825},{"t":"from","s":46.825,"e":47.139},{"t":"chunking","s":47.139,"e":47.766},{"t":"to","s":47.766,"e":47.923},{"t":"citation.","s":47.923,"e":48.667}]}]},{"id":"s1-1","section":"Stop-Reason Dispatch, Resilience, and Platform Parity","start":49.367,"end":81.851,"sentences":[{"id":"s1-1-s0","start":49.367,"end":56.577,"words":[{"t":"The","s":49.367,"e":49.584},{"t":"most","s":49.584,"e":49.874},{"t":"common","s":49.874,"e":50.309},{"t":"reliability","s":50.309,"e":51.106},{"t":"mistake","s":51.106,"e":51.613},{"t":"in","s":51.613,"e":51.758},{"t":"production","s":51.758,"e":52.483},{"t":"Claude","s":52.483,"e":52.918},{"t":"services","s":52.918,"e":53.497},{"t":"is","s":53.497,"e":53.642},{"t":"using","s":53.642,"e":54.005},{"t":"one","s":54.005,"e":54.222},{"t":"blanket","s":54.222,"e":54.729},{"t":"retry","s":54.729,"e":55.092},{"t":"loop","s":55.092,"e":55.381},{"t":"for","s":55.381,"e":55.599},{"t":"every","s":55.599,"e":55.961},{"t":"failure.","s":55.961,"e":56.577}]},{"id":"s1-1-s1","start":56.717,"end":68.003,"words":[{"t":"A","s":56.717,"e":56.844},{"t":"successful","s":56.844,"e":57.689},{"t":"HTTP","s":57.689,"e":58.027},{"t":"200","s":58.027,"e":58.281},{"t":"response","s":58.281,"e":58.957},{"t":"still","s":58.957,"e":59.38},{"t":"carries","s":59.38,"e":59.972},{"t":"a","s":59.972,"e":60.099},{"t":"stop","s":60.099,"e":60.437},{"t":"reason","s":60.437,"e":60.944},{"t":"field,","s":60.944,"e":61.553},{"t":"such","s":61.553,"e":61.891},{"t":"as","s":61.891,"e":62.06},{"t":"end","s":62.06,"e":62.314},{"t":"turn,","s":62.314,"e":62.838},{"t":"max","s":62.838,"e":63.091},{"t":"tokens,","s":63.091,"e":63.784},{"t":"pause","s":63.784,"e":64.207},{"t":"turn,","s":64.207,"e":64.731},{"t":"refusal,","s":64.731,"e":65.509},{"t":"or","s":65.509,"e":65.678},{"t":"model","s":65.678,"e":66.101},{"t":"context","s":66.101,"e":66.693},{"t":"window","s":66.693,"e":67.2},{"t":"exceeded.","s":67.2,"e":68.003}]},{"id":"s1-1-s2","start":68.143,"end":74.308,"words":[{"t":"Retrying","s":68.143,"e":68.739},{"t":"a","s":68.739,"e":68.851},{"t":"length","s":68.851,"e":69.298},{"t":"stop","s":69.298,"e":69.597},{"t":"just","s":69.597,"e":69.895},{"t":"wastes","s":69.895,"e":70.342},{"t":"tokens,","s":70.342,"e":70.953},{"t":"and","s":70.953,"e":71.177},{"t":"blindly","s":71.177,"e":71.699},{"t":"retrying","s":71.699,"e":72.295},{"t":"a","s":72.295,"e":72.407},{"t":"refusal","s":72.407,"e":72.929},{"t":"repeats","s":72.929,"e":73.451},{"t":"the","s":73.451,"e":73.674},{"t":"decline.","s":73.674,"e":74.308}]},{"id":"s1-1-s3","start":74.448,"end":81.851,"words":[{"t":"Always","s":74.448,"e":74.916},{"t":"branch","s":74.916,"e":75.384},{"t":"on","s":75.384,"e":75.54},{"t":"the","s":75.54,"e":75.774},{"t":"exact","s":75.774,"e":76.164},{"t":"stop","s":76.164,"e":76.476},{"t":"reason","s":76.476,"e":76.944},{"t":"and","s":76.944,"e":77.178},{"t":"HTTP","s":77.178,"e":77.49},{"t":"error","s":77.49,"e":77.88},{"t":"before","s":77.88,"e":78.348},{"t":"deciding","s":78.348,"e":78.972},{"t":"whether","s":78.972,"e":79.519},{"t":"to","s":79.519,"e":79.675},{"t":"retry,","s":79.675,"e":80.236},{"t":"continue,","s":80.236,"e":81.032},{"t":"or","s":81.032,"e":81.188},{"t":"reroute.","s":81.188,"e":81.851}]}]},{"id":"s1-2","section":"Stop-Reason Dispatch, Resilience, and Platform Parity","start":82.211,"end":114.353,"sentences":[{"id":"s1-2-s0","start":82.211,"end":84.621,"words":[{"t":"Memorize","s":82.211,"e":82.712},{"t":"how","s":82.712,"e":82.9},{"t":"to","s":82.9,"e":83.025},{"t":"tell","s":83.025,"e":83.275},{"t":"look-alike","s":83.275,"e":83.839},{"t":"errors","s":83.839,"e":84.214},{"t":"apart.","s":84.214,"e":84.621}]},{"id":"s1-2-s1","start":84.761,"end":90.095,"words":[{"t":"A","s":84.761,"e":84.893},{"t":"429","s":84.893,"e":85.158},{"t":"rate","s":85.158,"e":85.51},{"t":"limit","s":85.51,"e":85.951},{"t":"error","s":85.951,"e":86.392},{"t":"with","s":86.392,"e":86.745},{"t":"a","s":86.745,"e":86.877},{"t":"retry","s":86.877,"e":87.318},{"t":"after","s":87.318,"e":87.759},{"t":"header","s":87.759,"e":88.288},{"t":"means","s":88.288,"e":88.728},{"t":"back","s":88.728,"e":89.081},{"t":"off","s":89.081,"e":89.346},{"t":"and","s":89.346,"e":89.61},{"t":"wait.","s":89.61,"e":90.095}]},{"id":"s1-2-s2","start":90.235,"end":100.133,"words":[{"t":"A","s":90.235,"e":90.358},{"t":"429","s":90.358,"e":90.603},{"t":"with","s":90.603,"e":90.929},{"t":"no","s":90.929,"e":91.093},{"t":"retry","s":91.093,"e":91.501},{"t":"after","s":91.501,"e":91.909},{"t":"header","s":91.909,"e":92.399},{"t":"and","s":92.399,"e":92.644},{"t":"error","s":92.644,"e":93.052},{"t":"code","s":93.052,"e":93.379},{"t":"enforced","s":93.379,"e":94.032},{"t":"spend","s":94.032,"e":94.441},{"t":"limit","s":94.441,"e":94.849},{"t":"reached","s":94.849,"e":95.421},{"t":"means","s":95.421,"e":95.829},{"t":"you","s":95.829,"e":96.074},{"t":"hit","s":96.074,"e":96.319},{"t":"your","s":96.319,"e":96.646},{"t":"tier's","s":96.646,"e":97.054},{"t":"monthly","s":97.054,"e":97.626},{"t":"spend","s":97.626,"e":98.034},{"t":"cap,","s":98.034,"e":98.459},{"t":"so","s":98.459,"e":98.622},{"t":"retrying","s":98.622,"e":99.276},{"t":"is","s":99.276,"e":99.439},{"t":"useless.","s":99.439,"e":100.133}]},{"id":"s1-2-s3","start":100.273,"end":114.353,"words":[{"t":"Meanwhile,","s":100.273,"e":101.285},{"t":"a","s":101.285,"e":101.421},{"t":"user-configured","s":101.421,"e":102.686},{"t":"workspace","s":102.686,"e":103.499},{"t":"spend","s":103.499,"e":103.951},{"t":"limit","s":103.951,"e":104.403},{"t":"returns","s":104.403,"e":105.036},{"t":"HTTP","s":105.036,"e":105.397},{"t":"400,","s":105.397,"e":105.867},{"t":"and","s":105.867,"e":106.138},{"t":"529","s":106.138,"e":106.409},{"t":"overloaded","s":106.409,"e":107.313},{"t":"or","s":107.313,"e":107.494},{"t":"504","s":107.494,"e":107.765},{"t":"timeout","s":107.765,"e":108.397},{"t":"errors","s":108.397,"e":108.94},{"t":"call","s":108.94,"e":109.301},{"t":"for","s":109.301,"e":109.572},{"t":"jittered","s":109.572,"e":110.295},{"t":"backoff,","s":110.295,"e":111.127},{"t":"streaming,","s":111.127,"e":112.139},{"t":"or","s":112.139,"e":112.32},{"t":"circuit-broken","s":112.32,"e":113.494},{"t":"failover.","s":113.494,"e":114.353}]}]},{"id":"s1-3","section":"Stop-Reason Dispatch, Resilience, and Platform Parity","start":114.713,"end":149.151,"sentences":[{"id":"s1-3-s0","start":114.713,"end":117.807,"words":[{"t":"Watch","s":114.713,"e":115.095},{"t":"out","s":115.095,"e":115.324},{"t":"for","s":115.324,"e":115.553},{"t":"this","s":115.553,"e":115.859},{"t":"exam","s":115.859,"e":116.165},{"t":"trap","s":116.165,"e":116.47},{"t":"on","s":116.47,"e":116.623},{"t":"safety","s":116.623,"e":117.081},{"t":"refusals.","s":117.081,"e":117.807}]},{"id":"s1-3-s1","start":117.947,"end":128.699,"words":[{"t":"A","s":117.947,"e":118.082},{"t":"refusal","s":118.082,"e":118.714},{"t":"returns","s":118.714,"e":119.346},{"t":"HTTP","s":119.346,"e":119.707},{"t":"200","s":119.707,"e":119.978},{"t":"with","s":119.978,"e":120.339},{"t":"stop","s":120.339,"e":120.7},{"t":"reason","s":120.7,"e":121.242},{"t":"refusal","s":121.242,"e":121.874},{"t":"and","s":121.874,"e":122.145},{"t":"a","s":122.145,"e":122.28},{"t":"stop","s":122.28,"e":122.641},{"t":"details","s":122.641,"e":123.273},{"t":"category","s":123.273,"e":123.996},{"t":"like","s":123.996,"e":124.357},{"t":"cyber,","s":124.357,"e":125.007},{"t":"bio,","s":125.007,"e":125.476},{"t":"frontier","s":125.476,"e":126.198},{"t":"LLM,","s":126.198,"e":126.668},{"t":"or","s":126.668,"e":126.848},{"t":"reasoning","s":126.848,"e":127.661},{"t":"extraction.","s":127.661,"e":128.699}]},{"id":"s1-3-s2","start":128.839,"end":134.449,"words":[{"t":"Never","s":128.839,"e":129.189},{"t":"parse","s":129.189,"e":129.539},{"t":"the","s":129.539,"e":129.748},{"t":"explanation","s":129.748,"e":130.518},{"t":"string,","s":130.518,"e":131.091},{"t":"and","s":131.091,"e":131.301},{"t":"always","s":131.301,"e":131.721},{"t":"discard","s":131.721,"e":132.211},{"t":"partial","s":132.211,"e":132.7},{"t":"text","s":132.7,"e":132.98},{"t":"on","s":132.98,"e":133.12},{"t":"a","s":133.12,"e":133.225},{"t":"mid-stream","s":133.225,"e":133.854},{"t":"refusal.","s":133.854,"e":134.449}]},{"id":"s1-3-s3","start":134.589,"end":145.576,"words":[{"t":"Server-side","s":134.589,"e":135.311},{"t":"fallback","s":135.311,"e":135.888},{"t":"or","s":135.888,"e":136.033},{"t":"SDK","s":136.033,"e":136.249},{"t":"middleware","s":136.249,"e":136.971},{"t":"can","s":136.971,"e":137.188},{"t":"route","s":137.188,"e":137.549},{"t":"eligible","s":137.549,"e":138.126},{"t":"categories","s":138.126,"e":138.848},{"t":"to","s":138.848,"e":138.992},{"t":"a","s":138.992,"e":139.101},{"t":"fallback","s":139.101,"e":139.678},{"t":"model","s":139.678,"e":140.039},{"t":"with","s":140.039,"e":140.328},{"t":"fallback","s":140.328,"e":140.905},{"t":"credit","s":140.905,"e":141.339},{"t":"covering","s":141.339,"e":141.916},{"t":"the","s":141.916,"e":142.133},{"t":"cache","s":142.133,"e":142.494},{"t":"miss,","s":142.494,"e":142.941},{"t":"but","s":142.941,"e":143.158},{"t":"reasoning","s":143.158,"e":143.807},{"t":"extraction","s":143.807,"e":144.529},{"t":"has","s":144.529,"e":144.746},{"t":"no","s":144.746,"e":144.89},{"t":"fallback.","s":144.89,"e":145.576}]},{"id":"s1-3-s4","start":145.716,"end":149.151,"words":[{"t":"You","s":145.716,"e":145.889},{"t":"must","s":145.889,"e":146.12},{"t":"refactor","s":146.12,"e":146.582},{"t":"the","s":146.582,"e":146.755},{"t":"prompt","s":146.755,"e":147.102},{"t":"to","s":147.102,"e":147.217},{"t":"use","s":147.217,"e":147.39},{"t":"adaptive","s":147.39,"e":147.852},{"t":"thinking","s":147.852,"e":148.314},{"t":"blocks","s":148.314,"e":148.66},{"t":"instead.","s":148.66,"e":149.151}]}]},{"id":"s1-4","section":"Stop-Reason Dispatch, Resilience, and Platform Parity","start":149.511,"end":180.257,"sentences":[{"id":"s1-4-s0","start":149.511,"end":152.711,"words":[{"t":"Resilient","s":149.511,"e":150.13},{"t":"integrations","s":150.13,"e":150.956},{"t":"layer","s":150.956,"e":151.3},{"t":"four","s":151.3,"e":151.576},{"t":"defenses","s":151.576,"e":152.126},{"t":"cleanly.","s":152.126,"e":152.711}]},{"id":"s1-4-s1","start":152.851,"end":162.664,"words":[{"t":"First,","s":152.851,"e":153.476},{"t":"avoid","s":153.476,"e":153.91},{"t":"retry","s":153.91,"e":154.343},{"t":"storms:","s":154.343,"e":155.055},{"t":"if","s":155.055,"e":155.228},{"t":"your","s":155.228,"e":155.575},{"t":"API","s":155.575,"e":155.836},{"t":"gateway","s":155.836,"e":156.443},{"t":"handles","s":156.443,"e":157.05},{"t":"retries","s":157.05,"e":157.658},{"t":"with","s":157.658,"e":158.005},{"t":"jitter,","s":158.005,"e":158.716},{"t":"set","s":158.716,"e":158.977},{"t":"SDK","s":158.977,"e":159.237},{"t":"max","s":159.237,"e":159.497},{"t":"retries","s":159.497,"e":160.104},{"t":"to","s":160.104,"e":160.278},{"t":"zero","s":160.278,"e":160.625},{"t":"so","s":160.625,"e":160.799},{"t":"retries","s":160.799,"e":161.406},{"t":"do","s":161.406,"e":161.579},{"t":"not","s":161.579,"e":161.84},{"t":"multiply.","s":161.84,"e":162.664}]},{"id":"s1-4-s2","start":162.804,"end":168.393,"words":[{"t":"Second,","s":162.804,"e":163.375},{"t":"isolate","s":163.375,"e":163.863},{"t":"circuit","s":163.863,"e":164.351},{"t":"breakers","s":164.351,"e":164.909},{"t":"per","s":164.909,"e":165.118},{"t":"model","s":165.118,"e":165.466},{"t":"and","s":165.466,"e":165.675},{"t":"region","s":165.675,"e":166.093},{"t":"so","s":166.093,"e":166.233},{"t":"a","s":166.233,"e":166.337},{"t":"single","s":166.337,"e":166.755},{"t":"degraded","s":166.755,"e":167.313},{"t":"route","s":167.313,"e":167.661},{"t":"trips","s":167.661,"e":168.01},{"t":"fast.","s":168.01,"e":168.393}]},{"id":"s1-4-s3","start":168.533,"end":173.099,"words":[{"t":"Third,","s":168.533,"e":169.066},{"t":"only","s":169.066,"e":169.362},{"t":"fail","s":169.362,"e":169.658},{"t":"over","s":169.658,"e":169.954},{"t":"to","s":169.954,"e":170.102},{"t":"pre-validated","s":170.102,"e":170.99},{"t":"models","s":170.99,"e":171.434},{"t":"or","s":171.434,"e":171.582},{"t":"cross-region","s":171.582,"e":172.396},{"t":"profiles.","s":172.396,"e":173.099}]},{"id":"s1-4-s4","start":173.239,"end":180.257,"words":[{"t":"Finally,","s":173.239,"e":173.848},{"t":"degrade","s":173.848,"e":174.311},{"t":"gracefully","s":174.311,"e":174.972},{"t":"under","s":174.972,"e":175.303},{"t":"pressure","s":175.303,"e":175.832},{"t":"by","s":175.832,"e":175.964},{"t":"trimming","s":175.964,"e":176.493},{"t":"optional","s":176.493,"e":177.023},{"t":"tools,","s":177.023,"e":177.499},{"t":"lowering","s":177.499,"e":178.028},{"t":"effort,","s":178.028,"e":178.57},{"t":"or","s":178.57,"e":178.703},{"t":"serving","s":178.703,"e":179.166},{"t":"cached","s":179.166,"e":179.562},{"t":"responses.","s":179.562,"e":180.257}]}]},{"id":"s1-5","section":"Stop-Reason Dispatch, Resilience, and Platform Parity","start":180.617,"end":218.724,"sentences":[{"id":"s1-5-s0","start":180.617,"end":184.5,"words":[{"t":"Cross-platform","s":180.617,"e":181.51},{"t":"failover","s":181.51,"e":182.06},{"t":"only","s":182.06,"e":182.335},{"t":"works","s":182.335,"e":182.679},{"t":"if","s":182.679,"e":182.816},{"t":"you","s":182.816,"e":183.022},{"t":"respect","s":183.022,"e":183.503},{"t":"feature","s":183.503,"e":183.985},{"t":"parity.","s":183.985,"e":184.5}]},{"id":"s1-5-s1","start":184.64,"end":190.997,"words":[{"t":"First-party","s":184.64,"e":185.45},{"t":"Claude","s":185.45,"e":185.936},{"t":"API","s":185.936,"e":186.179},{"t":"gets","s":186.179,"e":186.503},{"t":"features","s":186.503,"e":187.15},{"t":"like","s":187.15,"e":187.474},{"t":"server-side","s":187.474,"e":188.284},{"t":"fallback","s":188.284,"e":188.932},{"t":"and","s":188.932,"e":189.175},{"t":"the","s":189.175,"e":189.418},{"t":"Rate","s":189.418,"e":189.742},{"t":"Limits","s":189.742,"e":190.228},{"t":"API","s":190.228,"e":190.471},{"t":"first.","s":190.471,"e":190.997}]},{"id":"s1-5-s2","start":191.137,"end":200.567,"words":[{"t":"Amazon","s":191.137,"e":191.703},{"t":"Bedrock","s":191.703,"e":192.364},{"t":"offers","s":192.364,"e":192.93},{"t":"zero","s":192.93,"e":193.308},{"t":"operator","s":193.308,"e":194.063},{"t":"access","s":194.063,"e":194.63},{"t":"inside","s":194.63,"e":195.196},{"t":"AWS,","s":195.196,"e":195.687},{"t":"uses","s":195.687,"e":196.064},{"t":"prefixed","s":196.064,"e":196.82},{"t":"model","s":196.82,"e":197.292},{"t":"IDs,","s":197.292,"e":197.782},{"t":"and","s":197.782,"e":198.066},{"t":"requires","s":198.066,"e":198.821},{"t":"IAM","s":198.821,"e":199.104},{"t":"or","s":199.104,"e":199.293},{"t":"service","s":199.293,"e":199.953},{"t":"roles.","s":199.953,"e":200.567}]},{"id":"s1-5-s3","start":200.707,"end":213.528,"words":[{"t":"Google","s":200.707,"e":201.135},{"t":"Cloud","s":201.135,"e":201.492},{"t":"Google-managed","s":201.492,"e":202.419},{"t":"endpoints","s":202.419,"e":203.061},{"t":"move","s":203.061,"e":203.347},{"t":"the","s":203.347,"e":203.561},{"t":"model","s":203.561,"e":203.918},{"t":"into","s":203.918,"e":204.203},{"t":"the","s":204.203,"e":204.417},{"t":"URL","s":204.417,"e":204.631},{"t":"and","s":204.631,"e":204.845},{"t":"version","s":204.845,"e":205.345},{"t":"into","s":205.345,"e":205.63},{"t":"the","s":205.63,"e":205.844},{"t":"body,","s":205.844,"e":206.286},{"t":"while","s":206.286,"e":206.643},{"t":"Microsoft","s":206.643,"e":207.285},{"t":"Foundry","s":207.285,"e":207.785},{"t":"splits","s":207.785,"e":208.213},{"t":"between","s":208.213,"e":208.712},{"t":"Azure-hosted","s":208.712,"e":209.497},{"t":"and","s":209.497,"e":209.711},{"t":"Anthropic-hosted","s":209.711,"e":210.781},{"t":"deployments","s":210.781,"e":211.566},{"t":"with","s":211.566,"e":211.851},{"t":"different","s":211.851,"e":212.493},{"t":"model","s":212.493,"e":212.85},{"t":"coverage.","s":212.85,"e":213.528}]},{"id":"s1-5-s4","start":213.668,"end":218.724,"words":[{"t":"Never","s":213.668,"e":214.019},{"t":"assume","s":214.019,"e":214.44},{"t":"a","s":214.44,"e":214.546},{"t":"request","s":214.546,"e":215.037},{"t":"payload","s":215.037,"e":215.529},{"t":"is","s":215.529,"e":215.669},{"t":"drop-in","s":215.669,"e":216.091},{"t":"portable","s":216.091,"e":216.652},{"t":"across","s":216.652,"e":217.074},{"t":"clouds","s":217.074,"e":217.495},{"t":"without","s":217.495,"e":217.987},{"t":"an","s":217.987,"e":218.127},{"t":"adapter.","s":218.127,"e":218.724}]}]},{"id":"s2-1","section":"Rate Limits, Cache-Aware Throughput, and Batch Pipelines","start":219.424,"end":254.499,"sentences":[{"id":"s2-1-s0","start":219.424,"end":229.365,"words":[{"t":"Claude","s":219.424,"e":219.845},{"t":"enforces","s":219.845,"e":220.407},{"t":"rate","s":220.407,"e":220.688},{"t":"limits","s":220.688,"e":221.109},{"t":"using","s":221.109,"e":221.46},{"t":"a","s":221.46,"e":221.565},{"t":"continuous","s":221.565,"e":222.267},{"t":"token","s":222.267,"e":222.618},{"t":"bucket","s":222.618,"e":223.04},{"t":"across","s":223.04,"e":223.461},{"t":"three","s":223.461,"e":223.812},{"t":"dimensions:","s":223.812,"e":224.668},{"t":"requests","s":224.668,"e":225.23},{"t":"per","s":225.23,"e":225.441},{"t":"minute,","s":225.441,"e":226.016},{"t":"input","s":226.016,"e":226.367},{"t":"tokens","s":226.367,"e":226.788},{"t":"per","s":226.788,"e":226.999},{"t":"minute,","s":226.999,"e":227.575},{"t":"and","s":227.575,"e":227.785},{"t":"output","s":227.785,"e":228.207},{"t":"tokens","s":228.207,"e":228.628},{"t":"per","s":228.628,"e":228.838},{"t":"minute.","s":228.838,"e":229.365}]},{"id":"s2-1-s1","start":229.505,"end":237.527,"words":[{"t":"Because","s":229.505,"e":230.057},{"t":"capacity","s":230.057,"e":230.688},{"t":"refills","s":230.688,"e":231.24},{"t":"continuously,","s":231.24,"e":232.36},{"t":"a","s":232.36,"e":232.479},{"t":"sharp","s":232.479,"e":232.873},{"t":"burst","s":232.873,"e":233.268},{"t":"can","s":233.268,"e":233.504},{"t":"trigger","s":233.504,"e":234.056},{"t":"a","s":234.056,"e":234.175},{"t":"429","s":234.175,"e":234.411},{"t":"even","s":234.411,"e":234.727},{"t":"when","s":234.727,"e":235.042},{"t":"your","s":235.042,"e":235.358},{"t":"minute-long","s":235.358,"e":236.147},{"t":"average","s":236.147,"e":236.699},{"t":"looks","s":236.699,"e":237.093},{"t":"fine.","s":237.093,"e":237.527}]},{"id":"s2-1-s2","start":237.667,"end":254.499,"words":[{"t":"On","s":237.667,"e":237.83},{"t":"the","s":237.83,"e":238.075},{"t":"exam,","s":238.075,"e":238.581},{"t":"always","s":238.581,"e":239.07},{"t":"calculate","s":239.07,"e":239.805},{"t":"which","s":239.805,"e":240.213},{"t":"dimension","s":240.213,"e":240.947},{"t":"is","s":240.947,"e":241.11},{"t":"your","s":241.11,"e":241.436},{"t":"binding","s":241.436,"e":242.008},{"t":"constraint","s":242.008,"e":242.823},{"t":"first\u2014chatty","s":242.823,"e":243.721},{"t":"agents","s":243.721,"e":244.211},{"t":"hit","s":244.211,"e":244.455},{"t":"RPM,","s":244.455,"e":244.88},{"t":"RAG","s":244.88,"e":245.124},{"t":"hits","s":245.124,"e":245.451},{"t":"input","s":245.451,"e":245.859},{"t":"tokens,","s":245.859,"e":246.528},{"t":"long","s":246.528,"e":246.854},{"t":"generation","s":246.854,"e":247.67},{"t":"hits","s":247.67,"e":247.996},{"t":"output","s":247.996,"e":248.486},{"t":"tokens,","s":248.486,"e":249.155},{"t":"and","s":249.155,"e":249.4},{"t":"note","s":249.4,"e":249.726},{"t":"that","s":249.726,"e":250.052},{"t":"US","s":250.052,"e":250.216},{"t":"and","s":250.216,"e":250.46},{"t":"global","s":250.46,"e":250.95},{"t":"inference","s":250.95,"e":251.684},{"t":"geo","s":251.684,"e":251.929},{"t":"share","s":251.929,"e":252.337},{"t":"the","s":252.337,"e":252.582},{"t":"exact","s":252.582,"e":252.99},{"t":"same","s":252.99,"e":253.316},{"t":"rate","s":253.316,"e":253.642},{"t":"limit","s":253.642,"e":254.05},{"t":"pool.","s":254.05,"e":254.499}]}]},{"id":"s2-2","section":"Rate Limits, Cache-Aware Throughput, and Batch Pipelines","start":254.859,"end":285.252,"sentences":[{"id":"s2-2-s0","start":254.859,"end":256.885,"words":[{"t":"Here","s":254.859,"e":255.087},{"t":"are","s":255.087,"e":255.258},{"t":"two","s":255.258,"e":255.43},{"t":"high-yield","s":255.43,"e":255.943},{"t":"throughput","s":255.943,"e":256.514},{"t":"facts.","s":256.514,"e":256.885}]},{"id":"s2-2-s1","start":257.025,"end":268.396,"words":[{"t":"First,","s":257.025,"e":257.571},{"t":"input","s":257.571,"e":257.95},{"t":"token","s":257.95,"e":258.33},{"t":"rate","s":258.33,"e":258.633},{"t":"limits","s":258.633,"e":259.088},{"t":"are","s":259.088,"e":259.316},{"t":"cache-aware:","s":259.316,"e":260.241},{"t":"tokens","s":260.241,"e":260.696},{"t":"read","s":260.696,"e":261.0},{"t":"from","s":261.0,"e":261.303},{"t":"the","s":261.303,"e":261.531},{"t":"prompt","s":261.531,"e":261.986},{"t":"cache","s":261.986,"e":262.365},{"t":"do","s":262.365,"e":262.517},{"t":"not","s":262.517,"e":262.745},{"t":"count","s":262.745,"e":263.124},{"t":"against","s":263.124,"e":263.655},{"t":"your","s":263.655,"e":263.958},{"t":"ITPM","s":263.958,"e":264.262},{"t":"or","s":264.262,"e":264.413},{"t":"ramp","s":264.413,"e":264.717},{"t":"limits\u2014only","s":264.717,"e":265.475},{"t":"uncached","s":265.475,"e":266.082},{"t":"input","s":266.082,"e":266.462},{"t":"and","s":266.462,"e":266.689},{"t":"cache-write","s":266.689,"e":267.448},{"t":"tokens","s":267.448,"e":267.903},{"t":"count.","s":267.903,"e":268.396}]},{"id":"s2-2-s2","start":268.536,"end":273.229,"words":[{"t":"An","s":268.536,"e":268.669},{"t":"80","s":268.669,"e":268.802},{"t":"percent","s":268.802,"e":269.268},{"t":"cache","s":269.268,"e":269.601},{"t":"hit","s":269.601,"e":269.801},{"t":"rate","s":269.801,"e":270.067},{"t":"multiplies","s":270.067,"e":270.733},{"t":"your","s":270.733,"e":270.999},{"t":"effective","s":270.999,"e":271.598},{"t":"input","s":271.598,"e":271.931},{"t":"throughput","s":271.931,"e":272.597},{"t":"fivefold.","s":272.597,"e":273.229}]},{"id":"s2-2-s3","start":273.369,"end":285.252,"words":[{"t":"Second,","s":273.369,"e":274.041},{"t":"output","s":274.041,"e":274.532},{"t":"token","s":274.532,"e":274.941},{"t":"limits","s":274.941,"e":275.433},{"t":"are","s":275.433,"e":275.678},{"t":"measured","s":275.678,"e":276.334},{"t":"in","s":276.334,"e":276.497},{"t":"real","s":276.497,"e":276.825},{"t":"time","s":276.825,"e":277.153},{"t":"on","s":277.153,"e":277.316},{"t":"actual","s":277.316,"e":277.808},{"t":"generated","s":277.808,"e":278.545},{"t":"tokens,","s":278.545,"e":279.216},{"t":"not","s":279.216,"e":279.462},{"t":"on","s":279.462,"e":279.626},{"t":"max","s":279.626,"e":279.871},{"t":"tokens,","s":279.871,"e":280.543},{"t":"so","s":280.543,"e":280.707},{"t":"starving","s":280.707,"e":281.362},{"t":"max","s":281.362,"e":281.608},{"t":"tokens","s":281.608,"e":282.099},{"t":"saves","s":282.099,"e":282.509},{"t":"zero","s":282.509,"e":282.836},{"t":"quota","s":282.836,"e":283.246},{"t":"and","s":283.246,"e":283.491},{"t":"only","s":283.491,"e":283.819},{"t":"causes","s":283.819,"e":284.31},{"t":"truncation.","s":284.31,"e":285.252}]}]},{"id":"s2-3","section":"Rate Limits, Cache-Aware Throughput, and Batch Pipelines","start":285.612,"end":317.103,"sentences":[{"id":"s2-3-s0","start":285.612,"end":294.593,"words":[{"t":"Even","s":285.612,"e":285.898},{"t":"when","s":285.898,"e":286.185},{"t":"you","s":286.185,"e":286.4},{"t":"are","s":286.4,"e":286.615},{"t":"well","s":286.615,"e":286.901},{"t":"under","s":286.901,"e":287.259},{"t":"your","s":287.259,"e":287.546},{"t":"published","s":287.546,"e":288.19},{"t":"rate","s":288.19,"e":288.477},{"t":"limits,","s":288.477,"e":289.064},{"t":"a","s":289.064,"e":289.171},{"t":"sudden","s":289.171,"e":289.601},{"t":"spike","s":289.601,"e":289.959},{"t":"can","s":289.959,"e":290.174},{"t":"trip","s":290.174,"e":290.461},{"t":"a","s":290.461,"e":290.568},{"t":"ramp","s":290.568,"e":290.854},{"t":"limit,","s":290.854,"e":291.37},{"t":"returning","s":291.37,"e":292.015},{"t":"a","s":292.015,"e":292.122},{"t":"429","s":292.122,"e":292.337},{"t":"with","s":292.337,"e":292.623},{"t":"error","s":292.623,"e":292.982},{"t":"code","s":292.982,"e":293.268},{"t":"ramp","s":293.268,"e":293.555},{"t":"limit","s":293.555,"e":293.913},{"t":"exceeded.","s":293.913,"e":294.593}]},{"id":"s2-3-s1","start":294.733,"end":302.413,"words":[{"t":"Smooth","s":294.733,"e":295.132},{"t":"scheduled","s":295.132,"e":295.73},{"t":"jobs","s":295.73,"e":295.996},{"t":"by","s":295.996,"e":296.129},{"t":"ramping","s":296.129,"e":296.595},{"t":"up","s":296.595,"e":296.728},{"t":"gradually","s":296.728,"e":297.326},{"t":"and","s":297.326,"e":297.526},{"t":"separating","s":297.526,"e":298.191},{"t":"interactive","s":298.191,"e":298.922},{"t":"traffic","s":298.922,"e":299.388},{"t":"from","s":299.388,"e":299.654},{"t":"background","s":299.654,"e":300.318},{"t":"queues","s":300.318,"e":300.717},{"t":"with","s":300.717,"e":300.983},{"t":"explicit","s":300.983,"e":301.515},{"t":"backpressure.","s":301.515,"e":302.413}]},{"id":"s2-3-s2","start":302.553,"end":317.103,"words":[{"t":"Also","s":302.553,"e":302.903},{"t":"remember","s":302.903,"e":303.602},{"t":"that","s":303.602,"e":303.951},{"t":"legacy","s":303.951,"e":304.476},{"t":"Priority","s":304.476,"e":305.175},{"t":"Tier","s":305.175,"e":305.524},{"t":"capacity","s":305.524,"e":306.223},{"t":"burns","s":306.223,"e":306.66},{"t":"at","s":306.66,"e":306.835},{"t":"weighted","s":306.835,"e":307.534},{"t":"rates","s":307.534,"e":307.971},{"t":"matching","s":307.971,"e":308.67},{"t":"token","s":308.67,"e":309.107},{"t":"pricing\u2014like","s":309.107,"e":310.068},{"t":"0.1x","s":310.068,"e":310.33},{"t":"for","s":310.33,"e":310.593},{"t":"cache","s":310.593,"e":311.03},{"t":"reads","s":311.03,"e":311.467},{"t":"and","s":311.467,"e":311.729},{"t":"1.1x","s":311.729,"e":311.991},{"t":"for","s":311.991,"e":312.253},{"t":"US-only","s":312.253,"e":312.777},{"t":"inference\u2014while","s":312.777,"e":314.001},{"t":"still","s":314.001,"e":314.438},{"t":"consuming","s":314.438,"e":315.224},{"t":"your","s":315.224,"e":315.574},{"t":"normal","s":315.574,"e":316.098},{"t":"rate","s":316.098,"e":316.448},{"t":"limits.","s":316.448,"e":317.103}]}]},{"id":"s2-4","section":"Rate Limits, Cache-Aware Throughput, and Batch Pipelines","start":317.463,"end":345.924,"sentences":[{"id":"s2-4-s0","start":317.463,"end":324.524,"words":[{"t":"In","s":317.463,"e":317.615},{"t":"multi-tenant","s":317.615,"e":318.448},{"t":"SaaS,","s":318.448,"e":318.918},{"t":"noisy","s":318.918,"e":319.296},{"t":"neighbors","s":319.296,"e":319.978},{"t":"can","s":319.978,"e":320.206},{"t":"starve","s":320.206,"e":320.66},{"t":"every","s":320.66,"e":321.039},{"t":"other","s":321.039,"e":321.418},{"t":"tenant","s":321.418,"e":321.872},{"t":"if","s":321.872,"e":322.024},{"t":"they","s":322.024,"e":322.327},{"t":"share","s":322.327,"e":322.706},{"t":"a","s":322.706,"e":322.819},{"t":"single","s":322.819,"e":323.274},{"t":"API","s":323.274,"e":323.501},{"t":"key","s":323.501,"e":323.729},{"t":"and","s":323.729,"e":323.956},{"t":"bucket.","s":323.956,"e":324.524}]},{"id":"s2-4-s1","start":324.664,"end":333.453,"words":[{"t":"Isolate","s":324.664,"e":325.216},{"t":"tenants","s":325.216,"e":325.768},{"t":"into","s":325.768,"e":326.083},{"t":"separate","s":326.083,"e":326.713},{"t":"workspaces","s":326.713,"e":327.502},{"t":"and","s":327.502,"e":327.738},{"t":"manage","s":327.738,"e":328.211},{"t":"their","s":328.211,"e":328.605},{"t":"quotas","s":328.605,"e":329.078},{"t":"programmatically","s":329.078,"e":330.339},{"t":"with","s":330.339,"e":330.655},{"t":"the","s":330.655,"e":330.891},{"t":"Rate","s":330.891,"e":331.206},{"t":"Limits","s":331.206,"e":331.679},{"t":"API","s":331.679,"e":331.916},{"t":"using","s":331.916,"e":332.31},{"t":"an","s":332.31,"e":332.468},{"t":"Admin","s":332.468,"e":332.862},{"t":"API","s":332.862,"e":333.098},{"t":"key.","s":333.098,"e":333.453}]},{"id":"s2-4-s2","start":333.593,"end":345.924,"words":[{"t":"Have","s":333.593,"e":333.869},{"t":"your","s":333.869,"e":334.144},{"t":"gateway","s":334.144,"e":334.627},{"t":"fetch","s":334.627,"e":334.972},{"t":"limits","s":334.972,"e":335.385},{"t":"at","s":335.385,"e":335.523},{"t":"startup","s":335.523,"e":336.005},{"t":"and","s":336.005,"e":336.212},{"t":"on","s":336.212,"e":336.35},{"t":"a","s":336.35,"e":336.453},{"t":"schedule,","s":336.453,"e":337.157},{"t":"keying","s":337.157,"e":337.57},{"t":"off","s":337.57,"e":337.777},{"t":"the","s":337.777,"e":337.984},{"t":"stable","s":337.984,"e":338.397},{"t":"group","s":338.397,"e":338.742},{"t":"ID","s":338.742,"e":338.88},{"t":"starting","s":338.88,"e":339.431},{"t":"with","s":339.431,"e":339.707},{"t":"R","s":339.707,"e":339.81},{"t":"L","s":339.81,"e":339.914},{"t":"G","s":339.914,"e":340.017},{"t":"rather","s":340.017,"e":340.431},{"t":"than","s":340.431,"e":340.706},{"t":"display","s":340.706,"e":341.189},{"t":"names,","s":341.189,"e":341.685},{"t":"so","s":341.685,"e":341.823},{"t":"your","s":341.823,"e":342.099},{"t":"local","s":342.099,"e":342.443},{"t":"throttles","s":342.443,"e":343.064},{"t":"never","s":343.064,"e":343.408},{"t":"drift","s":343.408,"e":343.753},{"t":"from","s":343.753,"e":344.029},{"t":"Anthropic's","s":344.029,"e":344.718},{"t":"configured","s":344.718,"e":345.407},{"t":"limits.","s":345.407,"e":345.924}]}]},{"id":"s2-5","section":"Rate Limits, Cache-Aware Throughput, and Batch Pipelines","start":346.284,"end":377.369,"sentences":[{"id":"s2-5-s0","start":346.284,"end":360.257,"words":[{"t":"When","s":346.284,"e":346.629},{"t":"workloads","s":346.629,"e":347.405},{"t":"can","s":347.405,"e":347.663},{"t":"tolerate","s":347.663,"e":348.353},{"t":"asynchronous","s":348.353,"e":349.387},{"t":"turnaround,","s":349.387,"e":350.439},{"t":"the","s":350.439,"e":350.697},{"t":"Message","s":350.697,"e":351.301},{"t":"Batches","s":351.301,"e":351.904},{"t":"API","s":351.904,"e":352.163},{"t":"cuts","s":352.163,"e":352.508},{"t":"token","s":352.508,"e":352.939},{"t":"costs","s":352.939,"e":353.37},{"t":"by","s":353.37,"e":353.542},{"t":"50","s":353.542,"e":353.714},{"t":"percent,","s":353.714,"e":354.507},{"t":"avoids","s":354.507,"e":355.025},{"t":"ramp","s":355.025,"e":355.369},{"t":"limits,","s":355.369,"e":356.076},{"t":"and","s":356.076,"e":356.335},{"t":"scales","s":356.335,"e":356.852},{"t":"to","s":356.852,"e":357.025},{"t":"100,000","s":357.025,"e":357.542},{"t":"requests","s":357.542,"e":358.231},{"t":"or","s":358.231,"e":358.404},{"t":"256","s":358.404,"e":358.662},{"t":"megabytes","s":358.662,"e":359.438},{"t":"per","s":359.438,"e":359.697},{"t":"batch.","s":359.697,"e":360.257}]},{"id":"s2-5-s1","start":360.397,"end":369.507,"words":[{"t":"Always","s":360.397,"e":360.859},{"t":"tag","s":360.859,"e":361.091},{"t":"every","s":361.091,"e":361.476},{"t":"item","s":361.476,"e":361.784},{"t":"with","s":361.784,"e":362.093},{"t":"a","s":362.093,"e":362.208},{"t":"unique","s":362.208,"e":362.671},{"t":"custom","s":362.671,"e":363.133},{"t":"ID","s":363.133,"e":363.287},{"t":"because","s":363.287,"e":363.827},{"t":"results","s":363.827,"e":364.366},{"t":"stream","s":364.366,"e":364.829},{"t":"back","s":364.829,"e":365.137},{"t":"out","s":365.137,"e":365.368},{"t":"of","s":365.368,"e":365.522},{"t":"order,","s":365.522,"e":366.077},{"t":"and","s":366.077,"e":366.308},{"t":"switch","s":366.308,"e":366.771},{"t":"shared","s":366.771,"e":367.233},{"t":"prefixes","s":367.233,"e":367.85},{"t":"to","s":367.85,"e":368.004},{"t":"the","s":368.004,"e":368.235},{"t":"one-hour","s":368.235,"e":368.775},{"t":"cache","s":368.775,"e":369.16},{"t":"TTL.","s":369.16,"e":369.507}]},{"id":"s2-5-s2","start":369.647,"end":377.369,"words":[{"t":"Crucially,","s":369.647,"e":370.471},{"t":"batch","s":370.471,"e":370.84},{"t":"results","s":370.84,"e":371.355},{"t":"are","s":371.355,"e":371.576},{"t":"retained","s":371.576,"e":372.165},{"t":"for","s":372.165,"e":372.385},{"t":"29","s":372.385,"e":372.533},{"t":"days,","s":372.533,"e":372.989},{"t":"so","s":372.989,"e":373.136},{"t":"never","s":373.136,"e":373.504},{"t":"route","s":373.504,"e":373.872},{"t":"Zero","s":373.872,"e":374.167},{"t":"Data","s":374.167,"e":374.461},{"t":"Retention","s":374.461,"e":375.124},{"t":"workloads","s":375.124,"e":375.786},{"t":"through","s":375.786,"e":376.302},{"t":"the","s":376.302,"e":376.522},{"t":"Batches","s":376.522,"e":377.038},{"t":"API.","s":377.038,"e":377.369}]}]},{"id":"s3-1","section":"Remote MCP Operations, Versioning, and Safe Rollouts","start":378.069,"end":408.941,"sentences":[{"id":"s3-1-s0","start":378.069,"end":387.072,"words":[{"t":"Production","s":378.069,"e":379.017},{"t":"M","s":379.017,"e":379.159},{"t":"C","s":379.159,"e":379.301},{"t":"P","s":379.301,"e":379.443},{"t":"deployments","s":379.443,"e":380.486},{"t":"use","s":380.486,"e":380.77},{"t":"remote","s":380.77,"e":381.339},{"t":"servers","s":381.339,"e":382.002},{"t":"over","s":382.002,"e":382.381},{"t":"Streamable","s":382.381,"e":383.329},{"t":"HTTP","s":383.329,"e":383.708},{"t":"or","s":383.708,"e":383.897},{"t":"SSE","s":383.897,"e":384.182},{"t":"rather","s":384.182,"e":384.75},{"t":"than","s":384.75,"e":385.129},{"t":"local","s":385.129,"e":385.603},{"t":"stdio","s":385.603,"e":386.077},{"t":"processes.","s":386.077,"e":387.072}]},{"id":"s3-1-s1","start":387.212,"end":402.572,"words":[{"t":"With","s":387.212,"e":387.559},{"t":"the","s":387.559,"e":387.819},{"t":"Messages","s":387.819,"e":388.513},{"t":"API","s":388.513,"e":388.773},{"t":"M","s":388.773,"e":388.903},{"t":"C","s":388.903,"e":389.033},{"t":"P","s":389.033,"e":389.163},{"t":"connector,","s":389.163,"e":390.135},{"t":"you","s":390.135,"e":390.395},{"t":"pass","s":390.395,"e":390.742},{"t":"server","s":390.742,"e":391.262},{"t":"URLs,","s":391.262,"e":391.8},{"t":"OAuth","s":391.8,"e":392.234},{"t":"bearer","s":392.234,"e":392.754},{"t":"tokens,","s":392.754,"e":393.465},{"t":"and","s":393.465,"e":393.725},{"t":"an","s":393.725,"e":393.899},{"t":"M","s":393.899,"e":394.029},{"t":"C","s":394.029,"e":394.159},{"t":"P","s":394.159,"e":394.289},{"t":"toolset","s":394.289,"e":394.896},{"t":"to","s":394.896,"e":395.07},{"t":"allowlist","s":395.07,"e":395.85},{"t":"or","s":395.85,"e":396.024},{"t":"denylist","s":396.024,"e":396.718},{"t":"specific","s":396.718,"e":397.412},{"t":"tools\u2014remembering","s":397.412,"e":398.799},{"t":"it","s":398.799,"e":398.973},{"t":"supports","s":398.973,"e":399.667},{"t":"tool","s":399.667,"e":400.013},{"t":"calls","s":400.013,"e":400.447},{"t":"only","s":400.447,"e":400.794},{"t":"and","s":400.794,"e":401.054},{"t":"is","s":401.054,"e":401.228},{"t":"not","s":401.228,"e":401.488},{"t":"ZDR","s":401.488,"e":401.748},{"t":"eligible.","s":401.748,"e":402.572}]},{"id":"s3-1-s2","start":402.712,"end":408.941,"words":[{"t":"In","s":402.712,"e":402.849},{"t":"Managed","s":402.849,"e":403.327},{"t":"Agents,","s":403.327,"e":403.887},{"t":"keep","s":403.887,"e":404.16},{"t":"secrets","s":404.16,"e":404.638},{"t":"out","s":404.638,"e":404.843},{"t":"of","s":404.843,"e":404.98},{"t":"agent","s":404.98,"e":405.321},{"t":"definitions","s":405.321,"e":406.072},{"t":"by","s":406.072,"e":406.209},{"t":"referencing","s":406.209,"e":406.96},{"t":"a","s":406.96,"e":407.063},{"t":"session","s":407.063,"e":407.541},{"t":"vault","s":407.541,"e":407.882},{"t":"for","s":407.882,"e":408.087},{"t":"credentials.","s":408.087,"e":408.941}]}]},{"id":"s3-2","section":"Remote MCP Operations, Versioning, and Safe Rollouts","start":409.301,"end":441.965,"sentences":[{"id":"s3-2-s0","start":409.301,"end":417.493,"words":[{"t":"When","s":409.301,"e":409.596},{"t":"an","s":409.596,"e":409.743},{"t":"agent","s":409.743,"e":410.111},{"t":"connects","s":410.111,"e":410.701},{"t":"to","s":410.701,"e":410.848},{"t":"dozens","s":410.848,"e":411.29},{"t":"of","s":411.29,"e":411.437},{"t":"M","s":411.437,"e":411.548},{"t":"C","s":411.548,"e":411.658},{"t":"P","s":411.658,"e":411.769},{"t":"servers,","s":411.769,"e":412.447},{"t":"dumping","s":412.447,"e":412.962},{"t":"every","s":412.962,"e":413.331},{"t":"tool","s":413.331,"e":413.625},{"t":"schema","s":413.625,"e":414.067},{"t":"upfront","s":414.067,"e":414.583},{"t":"wrecks","s":414.583,"e":415.025},{"t":"both","s":415.025,"e":415.32},{"t":"context","s":415.32,"e":415.835},{"t":"budget","s":415.835,"e":416.277},{"t":"and","s":416.277,"e":416.498},{"t":"tool","s":416.498,"e":416.793},{"t":"accuracy.","s":416.793,"e":417.493}]},{"id":"s3-2-s1","start":417.633,"end":426.295,"words":[{"t":"Once","s":417.633,"e":417.926},{"t":"tool","s":417.926,"e":418.219},{"t":"definitions","s":418.219,"e":419.024},{"t":"pass","s":419.024,"e":419.317},{"t":"one","s":419.317,"e":419.537},{"t":"to","s":419.537,"e":419.683},{"t":"five","s":419.683,"e":419.976},{"t":"percent","s":419.976,"e":420.489},{"t":"of","s":420.489,"e":420.635},{"t":"your","s":420.635,"e":420.928},{"t":"context","s":420.928,"e":421.44},{"t":"window,","s":421.44,"e":422.041},{"t":"adopt","s":422.041,"e":422.407},{"t":"progressive","s":422.407,"e":423.212},{"t":"discovery:","s":423.212,"e":424.032},{"t":"catalog,","s":424.032,"e":424.706},{"t":"inspect,","s":424.706,"e":425.38},{"t":"then","s":425.38,"e":425.673},{"t":"execute.","s":425.673,"e":426.295}]},{"id":"s3-2-s2","start":426.435,"end":441.965,"words":[{"t":"For","s":426.435,"e":426.679},{"t":"versioning,","s":426.679,"e":427.672},{"t":"M","s":427.672,"e":427.794},{"t":"C","s":427.794,"e":427.916},{"t":"P","s":427.916,"e":428.038},{"t":"uses","s":428.038,"e":428.363},{"t":"date-stamped","s":428.363,"e":429.258},{"t":"protocol","s":429.258,"e":429.909},{"t":"strings","s":429.909,"e":430.478},{"t":"negotiated","s":430.478,"e":431.292},{"t":"via","s":431.292,"e":431.536},{"t":"the","s":431.536,"e":431.78},{"t":"M","s":431.78,"e":431.902},{"t":"C","s":431.902,"e":432.024},{"t":"P","s":432.024,"e":432.146},{"t":"Protocol","s":432.146,"e":432.797},{"t":"Version","s":432.797,"e":433.366},{"t":"header","s":433.366,"e":433.854},{"t":"or","s":433.854,"e":434.017},{"t":"server","s":434.017,"e":434.505},{"t":"discover","s":434.505,"e":435.156},{"t":"RPC,","s":435.156,"e":435.579},{"t":"while","s":435.579,"e":435.986},{"t":"individual","s":435.986,"e":436.799},{"t":"tool","s":436.799,"e":437.125},{"t":"schemas","s":437.125,"e":437.694},{"t":"should","s":437.694,"e":438.182},{"t":"evolve","s":438.182,"e":438.67},{"t":"additively","s":438.67,"e":439.484},{"t":"so","s":439.484,"e":439.646},{"t":"in-flight","s":439.646,"e":440.297},{"t":"agent","s":440.297,"e":440.704},{"t":"turns","s":440.704,"e":441.111},{"t":"never","s":441.111,"e":441.518},{"t":"fail.","s":441.518,"e":441.965}]}]},{"id":"s3-3","section":"Remote MCP Operations, Versioning, and Safe Rollouts","start":442.325,"end":481.145,"sentences":[{"id":"s3-3-s0","start":442.325,"end":454.891,"words":[{"t":"Do","s":442.325,"e":442.491},{"t":"not","s":442.491,"e":442.739},{"t":"fall","s":442.739,"e":443.071},{"t":"for","s":443.071,"e":443.32},{"t":"a","s":443.32,"e":443.444},{"t":"classic","s":443.444,"e":444.024},{"t":"exam","s":444.024,"e":444.356},{"t":"misconception:","s":444.356,"e":445.616},{"t":"starting","s":445.616,"e":446.279},{"t":"with","s":446.279,"e":446.61},{"t":"Claude","s":446.61,"e":447.108},{"t":"4.6,","s":447.108,"e":447.456},{"t":"dateless","s":447.456,"e":448.119},{"t":"model","s":448.119,"e":448.533},{"t":"IDs","s":448.533,"e":448.782},{"t":"like","s":448.782,"e":449.114},{"t":"claude","s":449.114,"e":449.611},{"t":"opus","s":449.611,"e":449.943},{"t":"5","s":449.943,"e":450.067},{"t":"5","s":450.067,"e":450.191},{"t":"are","s":450.191,"e":450.44},{"t":"pinned","s":450.44,"e":450.937},{"t":"snapshots","s":450.937,"e":451.683},{"t":"with","s":451.683,"e":452.015},{"t":"fixed","s":452.015,"e":452.429},{"t":"weights,","s":452.429,"e":453.192},{"t":"not","s":453.192,"e":453.44},{"t":"evergreen","s":453.44,"e":454.186},{"t":"aliases.","s":454.186,"e":454.891}]},{"id":"s3-3-s1","start":455.031,"end":462.433,"words":[{"t":"Still,","s":455.031,"e":455.517},{"t":"serving","s":455.517,"e":455.989},{"t":"infrastructure","s":455.989,"e":456.934},{"t":"around","s":456.934,"e":457.339},{"t":"the","s":457.339,"e":457.541},{"t":"weights\u2014like","s":457.541,"e":458.283},{"t":"safety","s":458.283,"e":458.688},{"t":"classifiers","s":458.688,"e":459.43},{"t":"and","s":459.43,"e":459.633},{"t":"routers\u2014can","s":459.633,"e":460.308},{"t":"change","s":460.308,"e":460.712},{"t":"over","s":460.712,"e":460.982},{"t":"time","s":460.982,"e":461.252},{"t":"and","s":461.252,"e":461.455},{"t":"shift","s":461.455,"e":461.792},{"t":"behavior.","s":461.792,"e":462.433}]},{"id":"s3-3-s2","start":462.573,"end":476.589,"words":[{"t":"Likewise,","s":462.573,"e":463.524},{"t":"upgrading","s":463.524,"e":464.363},{"t":"your","s":464.363,"e":464.736},{"t":"anthropic","s":464.736,"e":465.576},{"t":"version","s":465.576,"e":466.229},{"t":"header","s":466.229,"e":466.788},{"t":"to","s":466.788,"e":466.975},{"t":"2026-10-21","s":466.975,"e":467.721},{"t":"introduces","s":467.721,"e":468.653},{"t":"hard","s":468.653,"e":469.026},{"t":"breaking","s":469.026,"e":469.772},{"t":"changes,","s":469.772,"e":470.63},{"t":"including","s":470.63,"e":471.469},{"t":"HTTP","s":471.469,"e":471.842},{"t":"400","s":471.842,"e":472.122},{"t":"errors","s":472.122,"e":472.682},{"t":"if","s":472.682,"e":472.868},{"t":"you","s":472.868,"e":473.148},{"t":"still","s":473.148,"e":473.614},{"t":"send","s":473.614,"e":473.987},{"t":"temperature,","s":473.987,"e":475.218},{"t":"top","s":475.218,"e":475.498},{"t":"P,","s":475.498,"e":475.843},{"t":"or","s":475.843,"e":476.029},{"t":"top","s":476.029,"e":476.309},{"t":"K.","s":476.309,"e":476.589}]},{"id":"s3-3-s3","start":476.729,"end":481.145,"words":[{"t":"Always","s":476.729,"e":477.19},{"t":"test","s":477.19,"e":477.497},{"t":"both","s":477.497,"e":477.804},{"t":"model","s":477.804,"e":478.188},{"t":"and","s":478.188,"e":478.419},{"t":"API","s":478.419,"e":478.649},{"t":"upgrades","s":478.649,"e":479.263},{"t":"against","s":479.263,"e":479.801},{"t":"regression","s":479.801,"e":480.569},{"t":"suites.","s":480.569,"e":481.145}]}]},{"id":"s3-4","section":"Remote MCP Operations, Versioning, and Safe Rollouts","start":481.505,"end":509.156,"sentences":[{"id":"s3-4-s0","start":481.505,"end":487.073,"words":[{"t":"Mature","s":481.505,"e":481.939},{"t":"teams","s":481.939,"e":482.301},{"t":"never","s":482.301,"e":482.663},{"t":"push","s":482.663,"e":482.953},{"t":"prompt,","s":482.953,"e":483.547},{"t":"tool,","s":483.547,"e":483.996},{"t":"or","s":483.996,"e":484.141},{"t":"model","s":484.141,"e":484.503},{"t":"edits","s":484.503,"e":484.865},{"t":"straight","s":484.865,"e":485.444},{"t":"to","s":485.444,"e":485.589},{"t":"100","s":485.589,"e":485.806},{"t":"percent","s":485.806,"e":486.313},{"t":"of","s":486.313,"e":486.458},{"t":"traffic.","s":486.458,"e":487.073}]},{"id":"s3-4-s1","start":487.213,"end":493.699,"words":[{"t":"Put","s":487.213,"e":487.429},{"t":"an","s":487.429,"e":487.574},{"t":"internal","s":487.574,"e":488.151},{"t":"gateway","s":488.151,"e":488.656},{"t":"in","s":488.656,"e":488.8},{"t":"front","s":488.8,"e":489.161},{"t":"of","s":489.161,"e":489.305},{"t":"your","s":489.305,"e":489.594},{"t":"providers","s":489.594,"e":490.243},{"t":"to","s":490.243,"e":490.387},{"t":"normalize","s":490.387,"e":491.037},{"t":"auth,","s":491.037,"e":491.484},{"t":"model","s":491.484,"e":491.845},{"t":"IDs,","s":491.845,"e":492.22},{"t":"and","s":492.22,"e":492.436},{"t":"request","s":492.436,"e":492.941},{"t":"ID","s":492.941,"e":493.086},{"t":"logging.","s":493.086,"e":493.699}]},{"id":"s3-4-s2","start":493.839,"end":509.156,"words":[{"t":"Bundle","s":493.839,"e":494.255},{"t":"prompts,","s":494.255,"e":494.893},{"t":"tool","s":494.893,"e":495.17},{"t":"schemas,","s":495.17,"e":495.808},{"t":"and","s":495.808,"e":496.016},{"t":"model","s":496.016,"e":496.363},{"t":"versions","s":496.363,"e":496.918},{"t":"as","s":496.918,"e":497.056},{"t":"immutable","s":497.056,"e":497.68},{"t":"releases,","s":497.68,"e":498.388},{"t":"validate","s":498.388,"e":498.942},{"t":"them","s":498.942,"e":499.22},{"t":"offline,","s":499.22,"e":499.858},{"t":"and","s":499.858,"e":500.066},{"t":"roll","s":500.066,"e":500.343},{"t":"out","s":500.343,"e":500.551},{"t":"progressively","s":500.551,"e":501.452},{"t":"from","s":501.452,"e":501.73},{"t":"shadow","s":501.73,"e":502.146},{"t":"mode","s":502.146,"e":502.423},{"t":"to","s":502.423,"e":502.562},{"t":"canary","s":502.562,"e":502.978},{"t":"cohorts","s":502.978,"e":503.463},{"t":"with","s":503.463,"e":503.741},{"t":"automated","s":503.741,"e":504.365},{"t":"rollback","s":504.365,"e":504.919},{"t":"triggers","s":504.919,"e":505.474},{"t":"tied","s":505.474,"e":505.751},{"t":"to","s":505.751,"e":505.89},{"t":"latency,","s":505.89,"e":506.528},{"t":"error,","s":506.528,"e":507.027},{"t":"refusal,","s":507.027,"e":507.665},{"t":"and","s":507.665,"e":507.873},{"t":"quality","s":507.873,"e":508.359},{"t":"thresholds.","s":508.359,"e":509.156}]}]},{"id":"s4-1","section":"Hybrid RAG, Agentic Search, Citations, and Stage Diagnostics","start":509.856,"end":540.932,"sentences":[{"id":"s4-1-s0","start":509.856,"end":516.171,"words":[{"t":"Choosing","s":509.856,"e":510.465},{"t":"between","s":510.465,"e":510.997},{"t":"classic","s":510.997,"e":511.53},{"t":"RAG","s":511.53,"e":511.758},{"t":"and","s":511.758,"e":511.986},{"t":"agentic","s":511.986,"e":512.519},{"t":"search","s":512.519,"e":512.975},{"t":"is","s":512.975,"e":513.128},{"t":"a","s":513.128,"e":513.242},{"t":"classic","s":513.242,"e":513.774},{"t":"latency-versus-reasoning","s":513.774,"e":515.448},{"t":"tradeoff.","s":515.448,"e":516.171}]},{"id":"s4-1-s1","start":516.311,"end":525.228,"words":[{"t":"Classic","s":516.311,"e":516.818},{"t":"retrieve-then-generate","s":516.818,"e":518.268},{"t":"gives","s":518.268,"e":518.631},{"t":"you","s":518.631,"e":518.848},{"t":"predictable","s":518.848,"e":519.646},{"t":"single-turn","s":519.646,"e":520.371},{"t":"latency","s":520.371,"e":520.878},{"t":"and","s":520.878,"e":521.096},{"t":"tight","s":521.096,"e":521.458},{"t":"token","s":521.458,"e":521.821},{"t":"cost","s":521.821,"e":522.111},{"t":"when","s":522.111,"e":522.401},{"t":"answers","s":522.401,"e":522.908},{"t":"sit","s":522.908,"e":523.126},{"t":"in","s":523.126,"e":523.271},{"t":"a","s":523.271,"e":523.379},{"t":"few","s":523.379,"e":523.597},{"t":"self-contained","s":523.597,"e":524.539},{"t":"passages.","s":524.539,"e":525.228}]},{"id":"s4-1-s2","start":525.368,"end":534.712,"words":[{"t":"Agentic","s":525.368,"e":525.897},{"t":"search","s":525.897,"e":526.35},{"t":"lets","s":526.35,"e":526.652},{"t":"Claude","s":526.652,"e":527.105},{"t":"refine","s":527.105,"e":527.559},{"t":"queries","s":527.559,"e":528.087},{"t":"across","s":528.087,"e":528.541},{"t":"multiple","s":528.541,"e":529.145},{"t":"hops","s":529.145,"e":529.447},{"t":"for","s":529.447,"e":529.674},{"t":"ambiguous","s":529.674,"e":530.353},{"t":"or","s":530.353,"e":530.505},{"t":"cross-document","s":530.505,"e":531.487},{"t":"questions,","s":531.487,"e":532.333},{"t":"but","s":532.333,"e":532.559},{"t":"adds","s":532.559,"e":532.861},{"t":"latency","s":532.861,"e":533.39},{"t":"and","s":533.39,"e":533.617},{"t":"variable","s":533.617,"e":534.221},{"t":"spend.","s":534.221,"e":534.712}]},{"id":"s4-1-s3","start":534.852,"end":540.932,"words":[{"t":"Many","s":534.852,"e":535.138},{"t":"production","s":535.138,"e":535.853},{"t":"systems","s":535.853,"e":536.354},{"t":"blend","s":536.354,"e":536.712},{"t":"both","s":536.712,"e":536.998},{"t":"by","s":536.998,"e":537.141},{"t":"giving","s":537.141,"e":537.57},{"t":"Claude","s":537.57,"e":537.999},{"t":"a","s":537.999,"e":538.107},{"t":"fast","s":538.107,"e":538.393},{"t":"hybrid","s":538.393,"e":538.822},{"t":"search","s":538.822,"e":539.251},{"t":"tool","s":539.251,"e":539.537},{"t":"with","s":539.537,"e":539.823},{"t":"strict","s":539.823,"e":540.252},{"t":"turn","s":540.252,"e":540.539},{"t":"caps.","s":540.539,"e":540.932}]}]},{"id":"s4-2","section":"Hybrid RAG, Agentic Search, Citations, and Stage Diagnostics","start":541.292,"end":578.567,"sentences":[{"id":"s4-2-s0","start":541.292,"end":544.3,"words":[{"t":"High-accuracy","s":541.292,"e":542.131},{"t":"retrieval","s":542.131,"e":542.761},{"t":"is","s":542.761,"e":542.901},{"t":"a","s":542.901,"e":543.006},{"t":"four-stage","s":543.006,"e":543.635},{"t":"pipeline.","s":543.635,"e":544.3}]},{"id":"s4-2-s1","start":544.44,"end":552.803,"words":[{"t":"First,","s":544.44,"e":544.986},{"t":"chunk","s":544.986,"e":545.366},{"t":"along","s":545.366,"e":545.745},{"t":"semantic","s":545.745,"e":546.352},{"t":"boundaries","s":546.352,"e":547.111},{"t":"and","s":547.111,"e":547.339},{"t":"preserve","s":547.339,"e":547.946},{"t":"document","s":547.946,"e":548.553},{"t":"context","s":548.553,"e":549.084},{"t":"using","s":549.084,"e":549.464},{"t":"contextualized","s":549.464,"e":550.526},{"t":"embeddings","s":550.526,"e":551.285},{"t":"like","s":551.285,"e":551.589},{"t":"Voyage","s":551.589,"e":552.044},{"t":"Context","s":552.044,"e":552.575},{"t":"4.","s":552.575,"e":552.803}]},{"id":"s4-2-s2","start":552.943,"end":562.393,"words":[{"t":"Second,","s":552.943,"e":553.552},{"t":"remember","s":553.552,"e":554.147},{"t":"Anthropic","s":554.147,"e":554.815},{"t":"does","s":554.815,"e":555.112},{"t":"not","s":555.112,"e":555.335},{"t":"offer","s":555.335,"e":555.707},{"t":"a","s":555.707,"e":555.818},{"t":"first-party","s":555.818,"e":556.561},{"t":"embedding","s":556.561,"e":557.23},{"t":"model\u2014pick","s":557.23,"e":557.898},{"t":"domain-matched","s":557.898,"e":558.864},{"t":"embeddings","s":558.864,"e":559.607},{"t":"and","s":559.607,"e":559.83},{"t":"set","s":559.83,"e":560.053},{"t":"input","s":560.053,"e":560.424},{"t":"type","s":560.424,"e":560.721},{"t":"to","s":560.721,"e":560.87},{"t":"document","s":560.87,"e":561.464},{"t":"versus","s":561.464,"e":561.91},{"t":"query.","s":561.91,"e":562.393}]},{"id":"s4-2-s3","start":562.533,"end":570.043,"words":[{"t":"Third,","s":562.533,"e":563.203},{"t":"fuse","s":563.203,"e":563.575},{"t":"BM25","s":563.575,"e":563.948},{"t":"lexical","s":563.948,"e":564.599},{"t":"search","s":564.599,"e":565.157},{"t":"with","s":565.157,"e":565.53},{"t":"dense","s":565.53,"e":565.995},{"t":"vectors","s":565.995,"e":566.646},{"t":"so","s":566.646,"e":566.832},{"t":"exact","s":566.832,"e":567.298},{"t":"error","s":567.298,"e":567.763},{"t":"codes","s":567.763,"e":568.228},{"t":"and","s":568.228,"e":568.507},{"t":"SKUs","s":568.507,"e":568.88},{"t":"never","s":568.88,"e":569.345},{"t":"vanish.","s":569.345,"e":570.043}]},{"id":"s4-2-s4","start":570.183,"end":578.567,"words":[{"t":"Finally,","s":570.183,"e":570.867},{"t":"retrieve","s":570.867,"e":571.463},{"t":"broadly","s":571.463,"e":571.983},{"t":"and","s":571.983,"e":572.206},{"t":"apply","s":572.206,"e":572.578},{"t":"a","s":572.578,"e":572.69},{"t":"cross-encoder","s":572.69,"e":573.583},{"t":"reranker","s":573.583,"e":574.178},{"t":"like","s":574.178,"e":574.475},{"t":"rerank","s":574.475,"e":574.922},{"t":"3","s":574.922,"e":575.033},{"t":"to","s":575.033,"e":575.182},{"t":"put","s":575.182,"e":575.405},{"t":"only","s":575.405,"e":575.703},{"t":"the","s":575.703,"e":575.926},{"t":"sharpest","s":575.926,"e":576.521},{"t":"passages","s":576.521,"e":577.116},{"t":"into","s":577.116,"e":577.414},{"t":"Claude's","s":577.414,"e":577.935},{"t":"context.","s":577.935,"e":578.567}]}]},{"id":"s4-3","section":"Hybrid RAG, Agentic Search, Citations, and Stage Diagnostics","start":578.927,"end":608.583,"sentences":[{"id":"s4-3-s0","start":578.927,"end":584.047,"words":[{"t":"Instead","s":578.927,"e":579.348},{"t":"of","s":579.348,"e":579.468},{"t":"begging","s":579.468,"e":579.889},{"t":"Claude","s":579.889,"e":580.249},{"t":"in","s":580.249,"e":580.369},{"t":"a","s":580.369,"e":580.459},{"t":"prompt","s":580.459,"e":580.82},{"t":"to","s":580.82,"e":580.94},{"t":"invent","s":580.94,"e":581.301},{"t":"bracketed","s":581.301,"e":581.842},{"t":"footnotes,","s":581.842,"e":582.515},{"t":"use","s":582.515,"e":582.695},{"t":"native","s":582.695,"e":583.055},{"t":"grounding","s":583.055,"e":583.596},{"t":"blocks.","s":583.596,"e":584.047}]},{"id":"s4-3-s1","start":584.187,"end":595.003,"words":[{"t":"Pass","s":584.187,"e":584.497},{"t":"static","s":584.497,"e":584.962},{"t":"files","s":584.962,"e":585.349},{"t":"as","s":585.349,"e":585.504},{"t":"document","s":585.504,"e":586.124},{"t":"blocks","s":586.124,"e":586.589},{"t":"with","s":586.589,"e":586.899},{"t":"citations","s":586.899,"e":587.596},{"t":"enabled,","s":587.596,"e":588.309},{"t":"or","s":588.309,"e":588.464},{"t":"return","s":588.464,"e":588.929},{"t":"search","s":588.929,"e":589.394},{"t":"result","s":589.394,"e":589.858},{"t":"blocks","s":589.858,"e":590.323},{"t":"from","s":590.323,"e":590.633},{"t":"your","s":590.633,"e":590.943},{"t":"RAG","s":590.943,"e":591.176},{"t":"tools","s":591.176,"e":591.563},{"t":"with","s":591.563,"e":591.873},{"t":"a","s":591.873,"e":591.989},{"t":"stable","s":591.989,"e":592.454},{"t":"source","s":592.454,"e":592.919},{"t":"ID,","s":592.919,"e":593.244},{"t":"title,","s":593.244,"e":593.802},{"t":"and","s":593.802,"e":594.035},{"t":"text","s":594.035,"e":594.344},{"t":"content.","s":594.344,"e":595.003}]},{"id":"s4-3-s2","start":595.143,"end":608.583,"words":[{"t":"Every","s":595.143,"e":595.513},{"t":"search","s":595.513,"e":595.957},{"t":"result","s":595.957,"e":596.401},{"t":"block","s":596.401,"e":596.771},{"t":"in","s":596.771,"e":596.919},{"t":"a","s":596.919,"e":597.03},{"t":"request","s":597.03,"e":597.548},{"t":"must","s":597.548,"e":597.844},{"t":"share","s":597.844,"e":598.214},{"t":"the","s":598.214,"e":598.436},{"t":"same","s":598.436,"e":598.732},{"t":"citations","s":598.732,"e":599.399},{"t":"enabled","s":599.399,"e":599.917},{"t":"setting,","s":599.917,"e":600.597},{"t":"both","s":600.597,"e":600.893},{"t":"features","s":600.893,"e":601.486},{"t":"are","s":601.486,"e":601.708},{"t":"ZDR","s":601.708,"e":601.93},{"t":"eligible,","s":601.93,"e":602.684},{"t":"and","s":602.684,"e":602.907},{"t":"in","s":602.907,"e":603.055},{"t":"Managed","s":603.055,"e":603.573},{"t":"Agents,","s":603.573,"e":604.179},{"t":"search","s":604.179,"e":604.624},{"t":"results","s":604.624,"e":605.142},{"t":"must","s":605.142,"e":605.438},{"t":"come","s":605.438,"e":605.734},{"t":"from","s":605.734,"e":606.03},{"t":"tool","s":606.03,"e":606.326},{"t":"results","s":606.326,"e":606.844},{"t":"rather","s":606.844,"e":607.288},{"t":"than","s":607.288,"e":607.584},{"t":"user","s":607.584,"e":607.88},{"t":"messages.","s":607.88,"e":608.583}]}]},{"id":"s4-4","section":"Hybrid RAG, Agentic Search, Citations, and Stage Diagnostics","start":608.943,"end":637.041,"sentences":[{"id":"s4-4-s0","start":608.943,"end":617.647,"words":[{"t":"Watch","s":608.943,"e":609.317},{"t":"for","s":609.317,"e":609.541},{"t":"a","s":609.541,"e":609.653},{"t":"subtle","s":609.653,"e":610.102},{"t":"grounding","s":610.102,"e":610.775},{"t":"pitfall:","s":610.775,"e":611.463},{"t":"if","s":611.463,"e":611.613},{"t":"you","s":611.613,"e":611.837},{"t":"instruct","s":611.837,"e":612.435},{"t":"Claude","s":612.435,"e":612.884},{"t":"to","s":612.884,"e":613.033},{"t":"respond","s":613.033,"e":613.557},{"t":"in","s":613.557,"e":613.706},{"t":"strict","s":613.706,"e":614.155},{"t":"JSON","s":614.155,"e":614.454},{"t":"only,","s":614.454,"e":614.918},{"t":"native","s":614.918,"e":615.366},{"t":"citation","s":615.366,"e":615.965},{"t":"blocks","s":615.965,"e":616.413},{"t":"often","s":616.413,"e":616.787},{"t":"drop","s":616.787,"e":617.086},{"t":"to","s":617.086,"e":617.236},{"t":"zero.","s":617.236,"e":617.647}]},{"id":"s4-4-s1","start":617.787,"end":624.549,"words":[{"t":"For","s":617.787,"e":617.988},{"t":"structured","s":617.988,"e":618.656},{"t":"extraction,","s":618.656,"e":619.472},{"t":"include","s":619.472,"e":619.941},{"t":"explicit","s":619.941,"e":620.476},{"t":"source","s":620.476,"e":620.877},{"t":"ID,","s":620.877,"e":621.158},{"t":"verbatim","s":621.158,"e":621.693},{"t":"quote,","s":621.693,"e":622.175},{"t":"and","s":622.175,"e":622.375},{"t":"support-status","s":622.375,"e":623.245},{"t":"fields","s":623.245,"e":623.646},{"t":"in","s":623.646,"e":623.78},{"t":"your","s":623.78,"e":624.047},{"t":"schema.","s":624.047,"e":624.549}]},{"id":"s4-4-s2","start":624.689,"end":637.041,"words":[{"t":"Equally","s":624.689,"e":625.174},{"t":"important,","s":625.174,"e":625.951},{"t":"build","s":625.951,"e":626.297},{"t":"explicit","s":626.297,"e":626.852},{"t":"abstention","s":626.852,"e":627.545},{"t":"into","s":627.545,"e":627.822},{"t":"both","s":627.822,"e":628.099},{"t":"your","s":628.099,"e":628.377},{"t":"prompt","s":628.377,"e":628.792},{"t":"and","s":628.792,"e":629.0},{"t":"your","s":629.0,"e":629.278},{"t":"pipeline\u2014pair","s":629.278,"e":630.109},{"t":"a","s":630.109,"e":630.213},{"t":"reranker","s":630.213,"e":630.768},{"t":"score","s":630.768,"e":631.115},{"t":"floor","s":631.115,"e":631.461},{"t":"with","s":631.461,"e":631.738},{"t":"instructions","s":631.738,"e":632.57},{"t":"to","s":632.57,"e":632.709},{"t":"declare","s":632.709,"e":633.194},{"t":"insufficient","s":633.194,"e":634.026},{"t":"evidence","s":634.026,"e":634.58},{"t":"rather","s":634.58,"e":634.996},{"t":"than","s":634.996,"e":635.273},{"t":"letting","s":635.273,"e":635.759},{"t":"Claude","s":635.759,"e":636.175},{"t":"extrapolate.","s":636.175,"e":637.041}]}]},{"id":"s4-5","section":"Hybrid RAG, Agentic Search, Citations, and Stage Diagnostics","start":637.401,"end":665.481,"sentences":[{"id":"s4-5-s0","start":637.401,"end":645.145,"words":[{"t":"When","s":637.401,"e":637.695},{"t":"users","s":637.695,"e":638.064},{"t":"report","s":638.064,"e":638.505},{"t":"wrong","s":638.505,"e":638.873},{"t":"answers","s":638.873,"e":639.389},{"t":"in","s":639.389,"e":639.536},{"t":"a","s":639.536,"e":639.646},{"t":"RAG","s":639.646,"e":639.867},{"t":"system,","s":639.867,"e":640.471},{"t":"never","s":640.471,"e":640.839},{"t":"jump","s":640.839,"e":641.133},{"t":"straight","s":641.133,"e":641.722},{"t":"to","s":641.722,"e":641.869},{"t":"prompt","s":641.869,"e":642.311},{"t":"tweaking\u2014isolate","s":642.311,"e":643.415},{"t":"the","s":643.415,"e":643.636},{"t":"failure","s":643.636,"e":644.151},{"t":"stage","s":644.151,"e":644.519},{"t":"by","s":644.519,"e":644.667},{"t":"stage.","s":644.667,"e":645.145}]},{"id":"s4-5-s1","start":645.285,"end":647.931,"words":[{"t":"If","s":645.285,"e":645.409},{"t":"the","s":645.409,"e":645.595},{"t":"fact","s":645.595,"e":645.843},{"t":"is","s":645.843,"e":645.967},{"t":"split","s":645.967,"e":646.276},{"t":"across","s":646.276,"e":646.648},{"t":"chunks,","s":646.648,"e":647.156},{"t":"fix","s":647.156,"e":647.342},{"t":"chunking.","s":647.342,"e":647.931}]},{"id":"s4-5-s2","start":648.071,"end":652.081,"words":[{"t":"If","s":648.071,"e":648.229},{"t":"Recall","s":648.229,"e":648.704},{"t":"at","s":648.704,"e":648.862},{"t":"50","s":648.862,"e":649.02},{"t":"is","s":649.02,"e":649.178},{"t":"low,","s":649.178,"e":649.59},{"t":"fix","s":649.59,"e":649.827},{"t":"hybrid","s":649.827,"e":650.301},{"t":"retrieval","s":650.301,"e":651.013},{"t":"or","s":651.013,"e":651.171},{"t":"embeddings.","s":651.171,"e":652.081}]},{"id":"s4-5-s3","start":652.221,"end":657.235,"words":[{"t":"If","s":652.221,"e":652.371},{"t":"Recall","s":652.371,"e":652.822},{"t":"at","s":652.822,"e":652.973},{"t":"50","s":652.973,"e":653.123},{"t":"is","s":653.123,"e":653.273},{"t":"high","s":653.273,"e":653.574},{"t":"but","s":653.574,"e":653.8},{"t":"Precision","s":653.8,"e":654.476},{"t":"at","s":654.476,"e":654.627},{"t":"5","s":654.627,"e":654.739},{"t":"is","s":654.739,"e":654.89},{"t":"low,","s":654.89,"e":655.281},{"t":"you","s":655.281,"e":655.506},{"t":"have","s":655.506,"e":655.807},{"t":"a","s":655.807,"e":655.919},{"t":"reranking","s":655.919,"e":656.596},{"t":"problem.","s":656.596,"e":657.235}]},{"id":"s4-5-s4","start":657.375,"end":665.481,"words":[{"t":"Only","s":657.375,"e":657.667},{"t":"when","s":657.667,"e":657.959},{"t":"the","s":657.959,"e":658.178},{"t":"exact","s":658.178,"e":658.543},{"t":"evidence","s":658.543,"e":659.128},{"t":"sits","s":659.128,"e":659.42},{"t":"cleanly","s":659.42,"e":659.931},{"t":"in","s":659.931,"e":660.077},{"t":"context","s":660.077,"e":660.588},{"t":"and","s":660.588,"e":660.807},{"t":"Claude","s":660.807,"e":661.245},{"t":"still","s":661.245,"e":661.611},{"t":"contradicts","s":661.611,"e":662.414},{"t":"it","s":662.414,"e":662.56},{"t":"do","s":662.56,"e":662.706},{"t":"you","s":662.706,"e":662.925},{"t":"have","s":662.925,"e":663.217},{"t":"a","s":663.217,"e":663.327},{"t":"generation","s":663.327,"e":664.057},{"t":"or","s":664.057,"e":664.203},{"t":"grounding","s":664.203,"e":664.86},{"t":"problem.","s":664.86,"e":665.481}]}]}]};
+
+(function() {
+  const audio = document.getElementById('voiceAudio');
+  const playBtn = document.getElementById('playBtn');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const scrub = document.getElementById('scrub');
+  const speedBtn = document.getElementById('speedBtn');
+  const autoScrollBtn = document.getElementById('autoScrollBtn');
+  const themeBtn = document.getElementById('themeBtn');
+  const nowLabel = document.getElementById('nowLabel');
+  const timeLabel = document.getElementById('timeLabel');
+  const progressFill = document.getElementById('progressFill');
+
+  const speeds = [0.85, 1.0, 1.15, 1.25, 1.5, 1.75, 2.0];
+  let speedIdx = 1;
+  let autoScroll = true;
+  let activeSegId = null;
+  let activeSentId = null;
+  let activeWordEl = null;
+  let rafId = null;
+
+  const segMap = new Map();
+  const flatSents = [];
+  TIMELINE.segments.forEach((seg, segIdx) => {
+    segMap.set(seg.id, { ...seg, idx: segIdx });
+    (seg.sentences || []).forEach(sent => {
+      flatSents.push({ ...sent, segId: seg.id, segIdx, section: seg.section });
+    });
+  });
+
+  function fmt(sec) {
+    if (!isFinite(sec) || sec < 0) sec = 0;
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  }
+
+  function setPlayUI(playing) {
+    playBtn.innerHTML = playing ? '&#10074;&#10074; Pause' : '&#9654; Play';
+  }
+
+  function findSentenceAt(t) {
+    // Binary search for fast 60fps lookup
+    let lo = 0, hi = flatSents.length - 1, best = null;
+    while (lo <= hi) {
+      const mid = (lo + hi) >> 1;
+      const s = flatSents[mid];
+      if (t >= s.start && t <= s.end) return s;
+      if (t < s.start) hi = mid - 1;
+      else { best = s; lo = mid + 1; }
+    }
+    return best || flatSents[0] || null;
+  }
+
+  function updateHighlights(t) {
+    const sent = findSentenceAt(t);
+    if (!sent) return;
+
+    // 1. Highlight parent block
+    if (activeSegId !== sent.segId) {
+      document.querySelectorAll('.is-speaking').forEach(el => el.classList.remove('is-speaking'));
+      const segEl = document.querySelector(`[data-seg-id="${sent.segId}"]`);
+      if (segEl) segEl.classList.add('is-speaking');
+      activeSegId = sent.segId;
+      nowLabel.textContent = `${sent.section} (${sent.segIdx + 1}/${TIMELINE.segments.length})`;
+
+      const secEl = segEl ? segEl.closest('.section-block') : null;
+      document.querySelectorAll('.toc-list a').forEach(a => a.classList.remove('active'));
+      if (secEl) {
+        const link = document.querySelector(`.toc-list a[href="#${secEl.id}"]`);
+        if (link) link.classList.add('active');
+      } else {
+        const first = document.querySelector('.toc-list a[href="#top"]');
+        if (first) first.classList.add('active');
+      }
+    }
+
+    // 2. Highlight active sentence
+    if (activeSentId !== sent.id) {
+      document.querySelectorAll('.sent.active-sent').forEach(el => {
+        el.classList.remove('active-sent');
+        el.querySelectorAll('.w').forEach(w => w.classList.remove('w-past', 'w-now', 'w-future'));
+      });
+      const sentEl = document.querySelector(`[data-sent-id="${sent.id}"]`);
+      if (sentEl) {
+        sentEl.classList.add('active-sent');
+        if (autoScroll && !audio.paused) {
+          sentEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+      activeSentId = sent.id;
+      activeWordEl = null;
+    }
+
+    // 3. Karaoke word-by-word highlighting inside active sentence
+    const sentEl = document.querySelector(`[data-sent-id="${sent.id}"]`);
+    if (sentEl) {
+      const wordSpans = sentEl.querySelectorAll('.w');
+      const words = sent.words || [];
+      for (let i = 0; i < words.length && i < wordSpans.length; i++) {
+        const w = words[i];
+        const sp = wordSpans[i];
+        if (t >= w.s && t <= w.e) {
+          if (activeWordEl !== sp) {
+            sp.classList.remove('w-past', 'w-future');
+            sp.classList.add('w-now');
+            activeWordEl = sp;
+          }
+        } else if (t > w.e) {
+          sp.classList.remove('w-now', 'w-future');
+          sp.classList.add('w-past');
+        } else {
+          sp.classList.remove('w-now', 'w-past');
+          sp.classList.add('w-future');
+        }
+      }
+    }
+  }
+
+  function syncUI() {
+    const t = audio.currentTime || 0;
+    const dur = audio.duration || TIMELINE.duration || 1;
+    scrub.max = dur;
+    scrub.value = t;
+    timeLabel.textContent = `${fmt(t)} / ${fmt(dur)}`;
+    progressFill.style.width = `${Math.min(100, (t / dur) * 100)}%`;
+    updateHighlights(t);
+  }
+
+  function tick() {
+    syncUI();
+    if (!audio.paused && !audio.ended) {
+      rafId = requestAnimationFrame(tick);
+    }
+  }
+
+  function jumpToTime(t, autoPlay = true) {
+    audio.currentTime = Math.max(0, t + 0.005);
+    syncUI();
+    if (autoPlay) audio.play().catch(() => {});
+  }
+
+  // Click any sentence to jump directly to that exact sentence!
+  document.querySelectorAll('.sent[data-start]').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      jumpToTime(parseFloat(el.dataset.start), true);
+    });
+  });
+
+  // Click block Play button to jump to start of block
+  document.querySelectorAll('.seg-play-btn[data-jump-seg]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const seg = segMap.get(btn.dataset.jumpSeg);
+      if (seg) jumpToTime(seg.start, true);
+    });
+  });
+
+  playBtn.addEventListener('click', () => {
+    if (audio.paused) audio.play().catch(() => {});
+    else audio.pause();
+  });
+
+  prevBtn.addEventListener('click', () => {
+    const cur = findSentenceAt(audio.currentTime || 0);
+    const segIdx = cur ? Math.max(0, cur.segIdx - 1) : 0;
+    jumpToTime(TIMELINE.segments[segIdx].start, !audio.paused);
+  });
+
+  nextBtn.addEventListener('click', () => {
+    const cur = findSentenceAt(audio.currentTime || 0);
+    const segIdx = cur ? Math.min(TIMELINE.segments.length - 1, cur.segIdx + 1) : 0;
+    jumpToTime(TIMELINE.segments[segIdx].start, !audio.paused);
+  });
+
+  scrub.addEventListener('input', () => {
+    audio.currentTime = parseFloat(scrub.value);
+    syncUI();
+  });
+
+  function applySpeed(idx) {
+    speedIdx = ((idx % speeds.length) + speeds.length) % speeds.length;
+    const rate = speeds[speedIdx];
+    audio.preservesPitch = true;
+    audio.webkitPreservesPitch = true;
+    audio.defaultPlaybackRate = rate;
+    audio.playbackRate = rate;
+    speedBtn.textContent = `${rate}x`;
+    try { localStorage.setItem('ccdvp-speed', String(speedIdx)); } catch {}
+    syncUI();
+  }
+
+  speedBtn.addEventListener('click', () => applySpeed(speedIdx + 1));
+  try {
+    const savedSpeed = parseInt(localStorage.getItem('ccdvp-speed'), 10);
+    if (!isNaN(savedSpeed) && savedSpeed >= 0 && savedSpeed < speeds.length) {
+      applySpeed(savedSpeed);
+    } else {
+      applySpeed(1);
+    }
+  } catch { applySpeed(1); }
+
+  autoScrollBtn.addEventListener('click', () => {
+    autoScroll = !autoScroll;
+    autoScrollBtn.classList.toggle('active', autoScroll);
+    autoScrollBtn.textContent = autoScroll ? 'Auto-Scroll: ON' : 'Auto-Scroll: OFF';
+  });
+
+  themeBtn.addEventListener('click', () => {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    themeBtn.textContent = isDark ? 'Dark' : 'Light';
+    try { localStorage.setItem('ccdvp-theme', isDark ? 'light' : 'dark'); } catch {}
+  });
+  try {
+    if (localStorage.getItem('ccdvp-theme') === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      themeBtn.textContent = 'Light';
+    }
+  } catch {}
+
+  audio.addEventListener('play', () => { setPlayUI(true); tick(); });
+  audio.addEventListener('pause', () => { setPlayUI(false); if (rafId) cancelAnimationFrame(rafId); });
+  audio.addEventListener('ended', () => { setPlayUI(false); if (rafId) cancelAnimationFrame(rafId); });
+  audio.addEventListener('timeupdate', syncUI);
+  audio.addEventListener('seeked', syncUI);
+  audio.addEventListener('ratechange', syncUI);
+  audio.addEventListener('loadedmetadata', () => {
+    audio.playbackRate = speeds[speedIdx];
+    syncUI();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    if (e.code === 'Space') { e.preventDefault(); playBtn.click(); }
+    else if (e.code === 'ArrowRight') { e.preventDefault(); nextBtn.click(); }
+    else if (e.code === 'ArrowLeft') { e.preventDefault(); prevBtn.click(); }
+  });
+
+  document.querySelectorAll('.scenario-card').forEach(card => {
+    const correct = card.dataset.correct;
+    const rat = card.querySelector('.rationale');
+    card.querySelectorAll('.opt-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        card.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('correct', 'wrong'));
+        if (btn.dataset.key === correct) {
+          btn.classList.add('correct');
+        } else {
+          btn.classList.add('wrong');
+          const rightBtn = card.querySelector(`.opt-btn[data-key="${correct}"]`);
+          if (rightBtn) rightBtn.classList.add('correct');
+        }
+        rat.classList.add('show');
+      });
+    });
+  });
+
+  syncUI();
+})();
+
+</script>
+</body>
+</html>

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Claude Certified Developer – Professional (CCDV-P) Audio Study Hub</title>
+<style>
+:root {
+  --bg: #FAF8F5; --surface: #FFFFFF; --ink: #1A1915; --muted: #5C5850;
+  --border: #E5DFD5; --accent: #C96442; --accent-soft: #FDF3EC; --accent-b: #E6A98F;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+  line-height: 1.6; padding: 40px 20px 80px;
+}
+.wrap { max-width: 1080px; margin: 0 auto; }
+.hero { margin-bottom: 32px; }
+.pill {
+  display: inline-block; font-size: 12px; font-weight: 700; padding: 3px 10px;
+  border-radius: 99px; background: var(--accent-soft); color: var(--accent);
+  border: 1px solid var(--accent-b);
+}
+h1 { font-family: Georgia, serif; font-size: 34px; margin: 10px 0 8px; }
+.sub { color: var(--muted); font-size: 17px; max-width: 780px; margin: 0; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 18px; }
+.card {
+  display: flex; flex-direction: column; text-decoration: none; color: inherit;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+  padding: 22px; transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+.card:hover {
+  transform: translateY(-2px); border-color: var(--accent);
+  box-shadow: 0 6px 22px rgba(201, 100, 66, 0.12);
+}
+.card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.weight { font-weight: 700; font-size: 13px; color: var(--muted); }
+.card h2 { font-family: Georgia, serif; font-size: 20px; margin: 0 0 8px; line-height: 1.28; }
+.card p { font-size: 14px; color: var(--muted); margin: 0 0 14px; flex: 1; }
+.card-meta { font-size: 12px; color: var(--accent); font-weight: 600; display: flex; gap: 6px; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <span class="pill">CCDV-P v1.0 &middot; Kokoro Neural Voice-Over &middot; Word-by-Word Highlighting</span>
+      <h1>Claude Certified Developer &ndash; Professional</h1>
+      <p class="sub">Interactive, voice-narrated study guides with live sentence &amp; word-by-word text highlighting and production scenario practice across all 8 official exam domains. Grounded in <code>000-sources/</code>.</p>
+    </div>
+    <div class="grid">
+      
+        <a class="card" href="001-agent-architecture/index.html">
+          <div class="card-top">
+            <span class="pill">Domain 1</span>
+            <span class="weight">17%</span>
+          </div>
+          <h2>Advanced Agent Architecture and Orchestration</h2>
+          <p>Designing, orchestrating, and evolving durable, context-efficient multi-agent Claude systems that survive real-world failures, restarts, and scale.</p>
+          <div class="card-meta">
+            <span>4 objectives</span>
+            <span>&middot;</span>
+            <span>75 synced sentences (10.6 min Kokoro audio)</span>
+            <span>&middot;</span>
+            <span>3 scenarios</span>
+          </div>
+        </a>
+        <a class="card" href="002-production-integration-grounding/index.html">
+          <div class="card-top">
+            <span class="pill">Domain 2</span>
+            <span class="weight">20%</span>
+          </div>
+          <h2>Production Integration, Reliability, and Knowledge Grounding</h2>
+          <p>Engineer resilient, high-throughput Claude integrations across cloud platforms, govern MCP and model changes safely, and ground generation in verifiable retrieval pipelines.</p>
+          <div class="card-meta">
+            <span>4 objectives</span>
+            <span>&middot;</span>
+            <span>77 synced sentences (11.1 min Kokoro audio)</span>
+            <span>&middot;</span>
+            <span>3 scenarios</span>
+          </div>
+        </a>
+        <a class="card" href="003-observability-monitoring/index.html">
+          <div class="card-top">
+            <span class="pill">Domain 3</span>
+            <span class="weight">12%</span>
+          </div>
+          <h2>Observability and Production Monitoring</h2>
+          <p>Instrumenting Claude systems with OpenTelemetry, diagnosing cache and privacy constraints, defining LLM-native SLOs, and surfacing systemic failures at scale.</p>
+          <div class="card-meta">
+            <span>4 objectives</span>
+            <span>&middot;</span>
+            <span>70 synced sentences (10.8 min Kokoro audio)</span>
+            <span>&middot;</span>
+            <span>3 scenarios</span>
+          </div>
+        </a>
+        <a class="card" href="004-debugging-incident-response/index.html">
+          <div class="card-top">
+            <span class="pill">Domain 4</span>
+            <span class="weight">10%</span>
+          </div>
+          <h2>Advanced Debugging and Incident Response</h2>
+          <p>Isolating root cause across model output, agent harness, tools, and data during complex production failures, then turning every incident into durable evals and monitoring.</p>
+          <div class="card-meta">
+            <span>4 objectives</span>
+            <span>&middot;</span>
+            <span>64 synced sentences (8.9 min Kokoro audio)</span>
+            <span>&middot;</span>
+            <span>3 scenarios</span>
+          </div>
+        </a>
+        <a class="card" href="005-evaluation-engineering/index.html">
+          <div class="card-top">
+            <span class="pill">Domain 5</span>
+            <span class="weight">12%</span>
+          </div>
+          <h2>Evaluation Engineering and Quality Assurance</h2>
+          <p>Proving that prompt, model, and agent changes genuinely improve production quality through calibrated offline suites, unbiased LLM judges, and live-traffic measurement.</p>
+          <div class="card-meta">
+            <span>4 objectives</span>
+            <span>&middot;</span>
+            <span>83 synced sentences (10.4 min Kokoro audio)</span>
+            <span>&middot;</span>
+            <span>3 scenarios</span>
+          </div>
+        </a>
+        <a class="card" href="006-cost-latency-optimization/index.html">
+          <div class="card-top">
+            <span class="pill">Domain 6</span>
+            <span class="weight">8%</span>
+          </div>
+          <h2>Cost and Latency Optimization at Scale</h2>
+          <p>Optimize fleet-level unit economics and end-to-end latency across the Claude model family using caching, routing, budget governance, streaming, parallelism, and effort controls.</p>
+          <div class="card-meta">
+            <span>4 objectives</span>
+            <span>&middot;</span>
+            <span>77 synced sentences (11.6 min Kokoro audio)</span>
+            <span>&middot;</span>
+            <span>3 scenarios</span>
+          </div>
+        </a>
+        <a class="card" href="007-guardrails-security/index.html">
+          <div class="card-top">
+            <span class="pill">Domain 7</span>
+            <span class="weight">11%</span>
+          </div>
+          <h2>Runtime Guardrails and Production Security</h2>
+          <p>Hardening tool-using Claude agents in production with deterministic guardrails, sandbox isolation, threat defense against untrusted input, and enterprise identity and audit controls.</p>
+          <div class="card-meta">
+            <span>4 objectives</span>
+            <span>&middot;</span>
+            <span>72 synced sentences (11.5 min Kokoro audio)</span>
+            <span>&middot;</span>
+            <span>3 scenarios</span>
+          </div>
+        </a>
+        <a class="card" href="008-agent-fleet-operations/index.html">
+          <div class="card-top">
+            <span class="pill">Domain 8</span>
+            <span class="weight">10%</span>
+          </div>
+          <h2>Agent Fleet Operations for Software Delivery</h2>
+          <p>Orchestrating parallel coding agents, calibrating AI code review, running unattended event-driven workflows, and governing enterprise agent fleets at scale.</p>
+          <div class="card-meta">
+            <span>4 objectives</span>
+            <span>&middot;</span>
+            <span>81 synced sentences (12.0 min Kokoro audio)</span>
+            <span>&middot;</span>
+            <span>3 scenarios</span>
+          </div>
+        </a>
+        <a class="card" href="009-exam-questions/index.html" style="border-color: var(--accent); background: var(--accent-soft);">
+          <div class="card-top">
+            <span class="pill">009 &middot; Exam Simulator</span>
+            <span class="weight">100% Blueprint</span>
+          </div>
+          <h2>CCDV-P Proctored Exam Simulator</h2>
+          <p>128 exam-grade scenario questions (98 single-choice + 30 Select TWO) in a full proctored exam UI with 70-question / 120-minute simulation, countdown timer, flagging, strikethrough, and scaled score report.</p>
+          <div class="card-meta">
+            <span>128 balanced items</span>
+            <span>&middot;</span>
+            <span>70 Qs / 120m official mode</span>
+            <span>&middot;</span>
+            <span>Scaled score &amp; domain report</span>
+          </div>
+        </a>
+    </div>
+  </div>
+</body>
+</html>

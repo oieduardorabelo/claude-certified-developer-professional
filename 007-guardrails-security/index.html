@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Domain 7: Runtime Guardrails and Production Security — CCDV-P Study Guide</title>
+<style>
+:root {
+  --bg: #FAF8F5;
+  --surface: #FFFFFF;
+  --surface-alt: #F3EFE8;
+  --ink: #1A1915;
+  --ink-muted: #5C5850;
+  --border: #E5DFD5;
+  --accent: #C96442;
+  --accent-soft: #FDF3EC;
+  --accent-border: #E6A98F;
+  --sent-bg: rgba(201, 100, 66, 0.11);
+  --word-bg: #F7C97E;
+  --word-ink: #1A1915;
+  --word-past: #1A1915;
+  --word-future: #6D685F;
+  --code-bg: #1E1D1A;
+  --code-ink: #F4F0E8;
+  --ok: #2D7A4F;
+  --ok-bg: #EAF6EF;
+  --bad: #B83A3A;
+  --bad-bg: #FCEEEE;
+  --shadow: 0 2px 12px rgba(26, 25, 21, 0.06);
+  --radius: 12px;
+}
+[data-theme="dark"] {
+  --bg: #141311;
+  --surface: #1D1C19;
+  --surface-alt: #25231F;
+  --ink: #F2EEE6;
+  --ink-muted: #A9A295;
+  --border: #322F2A;
+  --accent: #E07A56;
+  --accent-soft: #2A1E18;
+  --accent-border: #8A452C;
+  --sent-bg: rgba(224, 122, 86, 0.16);
+  --word-bg: #C96442;
+  --word-ink: #FFFFFF;
+  --word-past: #F2EEE6;
+  --word-future: #9E978B;
+  --code-bg: #0E0D0C;
+  --code-ink: #EFEAE0;
+  --ok: #52B788;
+  --ok-bg: #172B21;
+  --bad: #E06C6C;
+  --bad-bg: #2E1919;
+  --shadow: 0 2px 16px rgba(0, 0, 0, 0.35);
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+  line-height: 1.68;
+  font-size: 16px;
+}
+/* Sticky Audio Bar */
+.audio-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  padding: 10px 20px;
+}
+.audio-bar-inner {
+  max-width: 1240px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.ab-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  background: var(--surface-alt);
+  color: var(--ink);
+  border-radius: 8px;
+  height: 36px;
+  padding: 0 11px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.ab-btn:hover { border-color: var(--accent); color: var(--accent); }
+.ab-btn.primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+  min-width: 96px;
+  gap: 6px;
+}
+.ab-btn.primary:hover { filter: brightness(1.06); color: #fff; }
+.ab-btn.active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.ab-scrubber {
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.ab-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+.ab-now {
+  font-weight: 600;
+  color: var(--accent);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 360px;
+}
+input[type="range"].scrub {
+  width: 100%;
+  accent-color: var(--accent);
+  cursor: pointer;
+  height: 5px;
+}
+/* Layout */
+.layout {
+  max-width: 1240px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 270px minmax(0, 1fr);
+  gap: 32px;
+  padding: 28px 20px 80px;
+}
+@media (max-width: 940px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { position: static !important; }
+}
+.sidebar {
+  position: sticky;
+  top: 76px;
+  align-self: start;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  box-shadow: var(--shadow);
+}
+.side-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.hub-link {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+}
+.hub-link:hover { text-decoration: underline; }
+.side-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-muted);
+  font-weight: 700;
+  margin: 14px 0 8px;
+}
+.toc-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.toc-list a {
+  display: block;
+  padding: 7px 10px;
+  border-radius: 7px;
+  font-size: 13.5px;
+  color: var(--ink-muted);
+  text-decoration: none;
+  border-left: 3px solid transparent;
+  transition: all 0.15s;
+}
+.toc-list a:hover { background: var(--surface-alt); color: var(--ink); }
+.toc-list a.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-left-color: var(--accent);
+  font-weight: 600;
+}
+.progress-track {
+  height: 6px;
+  background: var(--surface-alt);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-top: 6px;
+}
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--accent);
+  transition: width 0.2s linear;
+}
+.domain-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.domain-nav a {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-muted);
+  text-decoration: none;
+  padding: 5px 8px;
+  border-radius: 6px;
+  background: var(--surface-alt);
+}
+.domain-nav a:hover { color: var(--accent); }
+/* Main Content */
+.hero {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px 30px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow);
+  position: relative;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+.badge-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.pill {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 99px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid var(--accent-border);
+}
+.pill.neutral {
+  background: var(--surface-alt);
+  color: var(--ink-muted);
+  border-color: var(--border);
+}
+h1 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 30px;
+  line-height: 1.22;
+  margin: 0 0 10px;
+  letter-spacing: -0.015em;
+}
+.tagline {
+  font-size: 17px;
+  color: var(--ink-muted);
+  margin: 0 0 14px;
+}
+.mental-model {
+  background: var(--surface-alt);
+  border-left: 3px solid var(--accent);
+  padding: 12px 16px;
+  border-radius: 0 8px 8px 0;
+  font-size: 14.5px;
+}
+.section-block {
+  margin-bottom: 34px;
+  scroll-margin-top: 84px;
+}
+.section-header {
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--border);
+}
+.section-obj {
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  font-weight: 700;
+}
+.section-header h2 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 23px;
+  margin: 4px 0 0;
+}
+/* Narrated Segment Cards */
+.seg {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid transparent;
+  border-radius: var(--radius);
+  padding: 18px 22px;
+  margin-bottom: 16px;
+  transition: background 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+}
+.seg.kind-callout {
+  border-left-color: var(--ink-muted);
+}
+.seg.is-speaking, .hero.is-speaking {
+  border-color: var(--accent-border);
+  border-left: 5px solid var(--accent);
+  box-shadow: 0 4px 22px rgba(201, 100, 66, 0.14);
+}
+.seg-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.seg-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--accent);
+}
+.seg-play-btn {
+  font-size: 11.5px;
+  color: var(--ink-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 2px 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.seg-play-btn:hover {
+  border-color: var(--accent-border);
+  color: var(--accent);
+}
+.seg.is-speaking .seg-play-btn, .hero.is-speaking .seg-play-btn {
+  color: var(--accent);
+  font-weight: 700;
+}
+.pulse-dot {
+  display: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: pulse 1.2s infinite ease-in-out;
+}
+.is-speaking .pulse-dot { display: inline-block; }
+@keyframes pulse {
+  0%, 100% { transform: scale(0.85); opacity: 0.6; }
+  50% { transform: scale(1.25); opacity: 1; }
+}
+.seg h3 {
+  font-size: 18px;
+  margin: 0 0 10px;
+  color: var(--ink);
+}
+/* Live Read-Along Synchronized Transcript */
+.read-along {
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 13px 16px;
+  margin: 10px 0 14px;
+  font-size: 16px;
+  line-height: 1.78;
+}
+.is-speaking .read-along {
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+}
+.read-along-tag {
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--ink-muted);
+  margin-bottom: 5px;
+}
+.is-speaking .read-along-tag {
+  color: var(--accent);
+}
+.sent {
+  border-radius: 5px;
+  padding: 2px 3px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.sent:hover {
+  background: var(--sent-bg);
+}
+.sent.active-sent {
+  background: var(--sent-bg);
+}
+.w {
+  border-radius: 4px;
+  padding: 1px 1.5px;
+  transition: background 0.08s ease, color 0.08s ease;
+}
+.sent.active-sent .w.w-future {
+  color: var(--word-future);
+}
+.sent.active-sent .w.w-past {
+  color: var(--word-past);
+}
+.w.w-now {
+  background: var(--word-bg);
+  color: var(--word-ink) !important;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(201, 100, 66, 0.25);
+}
+/* Reference Notes / Code / Tables */
+.ref-notes {
+  font-size: 15px;
+  color: var(--ink);
+}
+.ref-notes p { margin: 0 0 10px; }
+.ref-notes p:last-child { margin-bottom: 0; }
+.ref-notes ul, .ref-notes ol { margin: 6px 0 8px; padding-left: 22px; }
+.ref-notes li { margin-bottom: 5px; }
+.ref-notes code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.88em;
+  background: var(--surface-alt);
+  padding: 2px 5px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+.ref-notes pre {
+  background: var(--code-bg);
+  color: var(--code-ink);
+  padding: 14px 16px;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-size: 13.5px;
+  line-height: 1.5;
+  margin: 10px 0 4px;
+}
+.ref-notes pre code {
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: inherit;
+}
+.ref-notes table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  margin: 8px 0 4px;
+}
+.ref-notes th, .ref-notes td {
+  border: 1px solid var(--border);
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+.ref-notes th {
+  background: var(--surface-alt);
+  font-weight: 700;
+}
+/* Scenarios Quiz */
+.quiz-section {
+  margin-top: 42px;
+  scroll-margin-top: 84px;
+}
+.scenario-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px 24px;
+  margin-bottom: 18px;
+  box-shadow: var(--shadow);
+}
+.scenario-card h3 {
+  margin: 0 0 10px;
+  font-size: 17.5px;
+  color: var(--accent);
+}
+.scenario-prompt {
+  margin: 0 0 16px;
+  font-size: 15.5px;
+}
+.opt-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.opt-btn {
+  text-align: left;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  color: var(--ink);
+  padding: 11px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14.5px;
+  line-height: 1.45;
+  transition: all 0.15s;
+}
+.opt-btn:hover { border-color: var(--accent); }
+.opt-btn.correct { background: var(--ok-bg); border-color: var(--ok); color: var(--ink); font-weight: 600; }
+.opt-btn.wrong { background: var(--bad-bg); border-color: var(--bad); color: var(--ink); }
+.rationale {
+  display: none;
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  background: var(--surface-alt);
+  border-left: 4px solid var(--ok);
+  font-size: 14.5px;
+}
+.rationale.show { display: block; }
+</style>
+</head>
+<body>
+  <audio id="voiceAudio" src="audio.m4a" preload="metadata"></audio>
+
+  <header class="audio-bar">
+    <div class="audio-bar-inner">
+      <button id="playBtn" class="ab-btn primary" title="Play / Pause (Space)">&#9654; Play</button>
+      <button id="prevBtn" class="ab-btn" title="Previous block (Left Arrow)">&lsaquo; Prev</button>
+      <button id="nextBtn" class="ab-btn" title="Next block (Right Arrow)">Next &rsaquo;</button>
+      <div class="ab-scrubber">
+        <div class="ab-meta">
+          <span id="nowLabel" class="ab-now">Ready &mdash; click Play or any sentence</span>
+          <span id="timeLabel">0:00 / 0:00</span>
+        </div>
+        <input id="scrub" class="scrub" type="range" min="0" max="100" step="0.05" value="0" />
+      </div>
+      <button id="speedBtn" class="ab-btn" title="Playback speed">1x</button>
+      <button id="autoScrollBtn" class="ab-btn active" title="Auto-scroll to active sentence">Auto-Scroll: ON</button>
+      <button id="themeBtn" class="ab-btn" title="Toggle theme">Dark</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="side-top">
+        <a class="hub-link" href="../index.html">&larr; All 8 Domains</a>
+        <span class="pill">Weight 11%</span>
+      </div>
+      <div class="side-title">Listening Progress</div>
+      <div class="progress-track"><div id="progressFill" class="progress-fill"></div></div>
+      <div class="side-title">Domain 7 Sections</div>
+      <ul class="toc-list">
+        <li><a href="#top" class="active">Overview &amp; Mental Model</a></li><li><a href="#sec-1">Layered Runtime Guardrails, Filtering, and Hooks</a></li><li><a href="#sec-2">Sandboxing, Isolation Boundaries, and Network Controls</a></li><li><a href="#sec-3">Agentic Attack Surface, Lethal Trifecta, and Secure MCP</a></li><li><a href="#sec-4">Workload Identity Federation, Vaults, and Compliance Auditing</a></li><li><a href="#scenarios">Exam Practice Scenarios</a></li>
+      </ul>
+      <div class="domain-nav">
+        <a href="../006-cost-latency-optimization/index.html">&larr; Domain 6</a>
+        <a href="../008-agent-fleet-operations/index.html">Domain 8 &rarr;</a>
+      </div>
+    </aside>
+
+    <main id="top">
+      <section class="hero" data-seg-id="intro">
+        <div class="seg-top">
+          <div class="badge-row">
+            <span class="pill">CCDV-P Domain 7 of 8</span>
+            <span class="pill neutral">Exam Weight: 11%</span>
+            <span class="pill neutral">Voice: Kokoro Neural (af_heart)</span>
+          </div>
+          <button class="seg-play-btn" data-jump-seg="intro"><span class="pulse-dot"></span>&#9654; Play intro</button>
+        </div>
+        <h1>Runtime Guardrails and Production Security</h1>
+        <p class="tagline">Hardening tool-using Claude agents in production with deterministic guardrails, sandbox isolation, threat defense against untrusted input, and enterprise identity and audit controls.</p>
+        <div class="mental-model">
+          <strong>Staff Engineer Mental Model:</strong> Model behavior is never a security boundary. On the CCDV-P exam, whenever an agent touches private data, untrusted content, or irreversible tools, you assume prompt injection can eventually succeed and design deterministic controls outside the model—hooks, permission policies, OS or microVM sandboxes, egress proxies, short-lived federated identities, and vaulted secrets—to bound the blast radius.
+        </div>
+        <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="intro-s0" data-start="0.0" title="Click to jump here"><span class="w">Domain</span> <span class="w">7:</span> <span class="w">Runtime</span> <span class="w">Guardrails</span> <span class="w">and</span> <span class="w">Production</span> <span class="w">Security.</span></span> <span class="sent" data-sent-id="intro-s1" data-start="3.809" title="Click to jump here"><span class="w">Exam</span> <span class="w">weight:</span> <span class="w">11%.</span></span> <span class="sent" data-sent-id="intro-s2" data-start="5.827" title="Click to jump here"><span class="w">Hardening</span> <span class="w">tool-using</span> <span class="w">Claude</span> <span class="w">agents</span> <span class="w">in</span> <span class="w">production</span> <span class="w">with</span> <span class="w">deterministic</span> <span class="w">guardrails,</span> <span class="w">sandbox</span> <span class="w">isolation,</span> <span class="w">threat</span> <span class="w">defense</span> <span class="w">against</span> <span class="w">untrusted</span> <span class="w">input,</span> <span class="w">and</span> <span class="w">enterprise</span> <span class="w">identity</span> <span class="w">and</span> <span class="w">audit</span> <span class="w">controls.</span></span> <span class="sent" data-sent-id="intro-s3" data-start="17.551" title="Click to jump here"><span class="w">Model</span> <span class="w">behavior</span> <span class="w">is</span> <span class="w">never</span> <span class="w">a</span> <span class="w">security</span> <span class="w">boundary.</span></span> <span class="sent" data-sent-id="intro-s4" data-start="20.379" title="Click to jump here"><span class="w">On</span> <span class="w">the</span> <span class="w">CCDV-P</span> <span class="w">exam,</span> <span class="w">whenever</span> <span class="w">an</span> <span class="w">agent</span> <span class="w">touches</span> <span class="w">private</span> <span class="w">data,</span> <span class="w">untrusted</span> <span class="w">content,</span> <span class="w">or</span> <span class="w">irreversible</span> <span class="w">tools,</span> <span class="w">you</span> <span class="w">assume</span> <span class="w">prompt</span> <span class="w">injection</span> <span class="w">can</span> <span class="w">eventually</span> <span class="w">succeed</span> <span class="w">and</span> <span class="w">design</span> <span class="w">deterministic</span> <span class="w">controls</span> <span class="w">outside</span> <span class="w">the</span> <span class="w">model—hooks,</span> <span class="w">permission</span> <span class="w">policies,</span> <span class="w">OS</span> <span class="w">or</span> <span class="w">microVM</span> <span class="w">sandboxes,</span> <span class="w">egress</span> <span class="w">proxies,</span> <span class="w">short-lived</span> <span class="w">federated</span> <span class="w">identities,</span> <span class="w">and</span> <span class="w">vaulted</span> <span class="w">secrets—to</span> <span class="w">bound</span> <span class="w">the</span> <span class="w">blast</span> <span class="w">radius.</span></span></div></div>
+      </section>
+
+      
+        <section class="section-block" id="sec-1">
+          <div class="section-header">
+            <div class="section-obj">Runtime Guardrail Systems</div>
+            <h2>Layered Runtime Guardrails, Filtering, and Hooks</h2>
+          </div>
+          
+            <article class="seg kind-prose" data-seg-id="s1-1">
+              <div class="seg-top">
+                <span class="seg-label">KEY CONCEPT</span>
+                <button class="seg-play-btn" data-jump-seg="s1-1"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Risk-Profiled Layered Guardrails and Harmlessness Screens</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s1-1-s0" data-start="44.631" title="Click to jump here"><span class="w">Production</span> <span class="w">guardrails</span> <span class="w">should</span> <span class="w">match</span> <span class="w">your</span> <span class="w">agent&#x27;s</span> <span class="w">actual</span> <span class="w">risk</span> <span class="w">profile</span> <span class="w">through</span> <span class="w">layered</span> <span class="w">defenses,</span> <span class="w">not</span> <span class="w">a</span> <span class="w">single</span> <span class="w">prompt</span> <span class="w">instruction.</span></span> <span class="sent" data-sent-id="s1-1-s1" data-start="51.939" title="Click to jump here"><span class="w">Start</span> <span class="w">with</span> <span class="w">deterministic</span> <span class="w">input</span> <span class="w">validation</span> <span class="w">and</span> <span class="w">PII</span> <span class="w">redaction,</span> <span class="w">then</span> <span class="w">add</span> <span class="w">a</span> <span class="w">fast</span> <span class="w">harmlessness</span> <span class="w">screen</span> <span class="w">using</span> <span class="w">Claude</span> <span class="w">Haiku</span> <span class="w">five</span> <span class="w">point</span> <span class="w">five</span> <span class="w">with</span> <span class="w">structured</span> <span class="w">JSON</span> <span class="w">output</span> <span class="w">config.</span></span> <span class="sent" data-sent-id="s1-1-s2" data-start="63.641" title="Click to jump here"><span class="w">One</span> <span class="w">critical</span> <span class="w">detail:</span> <span class="w">if</span> <span class="w">the</span> <span class="w">screening</span> <span class="w">call</span> <span class="w">itself</span> <span class="w">returns</span> <span class="w">stop</span> <span class="w">reason</span> <span class="w">refusal,</span> <span class="w">treat</span> <span class="w">that</span> <span class="w">as</span> <span class="w">a</span> <span class="w">harmful</span> <span class="w">verdict</span> <span class="w">and</span> <span class="w">trigger</span> <span class="w">your</span> <span class="w">safety</span> <span class="w">fallback</span> <span class="w">rather</span> <span class="w">than</span> <span class="w">failing</span> <span class="w">open.</span></span></div></div>
+              <div class="ref-notes"><p>Production guardrail architectures scale to the agent's risk profile rather than relying on a single filter. A typical defense-in-depth stack layers deterministic <strong>input validation</strong> and <strong>PII redactors</strong> in front of lightweight <strong>harmlessness screens</strong>—for example, running <strong>Claude Haiku 5.5</strong> with <code>output_config</code> JSON schema constraints to return a structured boolean verdict (<code>is_harmful</code> or <code>injection_suspected</code>) before the main model acts.</p><p>Because classifier models run Anthropic's own safety classifiers, a screening call itself can return <code>stop_reason: "refusal"</code> with no parsed verdict. Always treat a refusal from a screening model as a <strong>harmful verdict</strong> and route to a safe fallback response.</p></div>
+            </article>
+            <article class="seg kind-table" data-seg-id="s1-2">
+              <div class="seg-top">
+                <span class="seg-label">ARCHITECTURE PATTERN</span>
+                <button class="seg-play-btn" data-jump-seg="s1-2"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Three Tiers of Hook-Based Policy Enforcement</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s1-2-s0" data-start="74.305" title="Click to jump here"><span class="w">You</span> <span class="w">have</span> <span class="w">three</span> <span class="w">distinct</span> <span class="w">hook</span> <span class="w">layers</span> <span class="w">across</span> <span class="w">the</span> <span class="w">Claude</span> <span class="w">ecosystem.</span></span> <span class="sent" data-sent-id="s1-2-s1" data-start="78.029" title="Click to jump here"><span class="w">Claude</span> <span class="w">Code</span> <span class="w">hooks</span> <span class="w">enforce</span> <span class="w">local</span> <span class="w">workspace</span> <span class="w">policies</span> <span class="w">like</span> <span class="w">PreToolUse</span> <span class="w">and</span> <span class="w">ConfigChange.</span></span> <span class="sent" data-sent-id="s1-2-s2" data-start="83.865" title="Click to jump here"><span class="w">Agent</span> <span class="w">SDK</span> <span class="w">hooks</span> <span class="w">run</span> <span class="w">in-process</span> <span class="w">callbacks</span> <span class="w">to</span> <span class="w">deny</span> <span class="w">or</span> <span class="w">modify</span> <span class="w">tool</span> <span class="w">inputs</span> <span class="w">deterministically.</span></span> <span class="sent" data-sent-id="s1-2-s3" data-start="90.576" title="Click to jump here"><span class="w">Finally,</span> <span class="w">Platform</span> <span class="w">Inference</span> <span class="w">Hooks</span> <span class="w">govern</span> <span class="w">every</span> <span class="w">Claude</span> <span class="w">Enterprise</span> <span class="w">surface</span> <span class="w">inline</span> <span class="w">before</span> <span class="w">inference</span> <span class="w">runs,</span> <span class="w">supporting</span> <span class="w">shadow</span> <span class="w">mode,</span> <span class="w">rollout</span> <span class="w">percentages,</span> <span class="w">and</span> <span class="w">circuit</span> <span class="w">breakers—though</span> <span class="w">they</span> <span class="w">only</span> <span class="w">allow</span> <span class="w">or</span> <span class="w">deny,</span> <span class="w">never</span> <span class="w">rewrite</span> <span class="w">prompts</span> <span class="w">or</span> <span class="w">inspect</span> <span class="w">raw</span> <span class="w">image</span> <span class="w">bytes.</span></span></div></div>
+              <div class="ref-notes"><table><thead><tr><th>Hook Layer</th><th>Scope &amp; Trigger Points</th><th>Enforcement Capabilities</th><th>Key Operational Nuance</th></tr></thead><tbody><tr><td><strong>Claude Code Hooks</strong></td><td>Local CLI/IDE settings: <code>PreToolUse</code>, <code>PostToolUse</code>, <code>ConfigChange</code></td><td>Shell commands or handlers that block tool calls, audit changes, or prevent mid-session config tampering</td><td>Run outside the Bash sandbox with user privileges; enforce org standards via managed settings</td></tr><tr><td><strong>Agent SDK Hooks</strong></td><td>In-process Python/TypeScript callbacks via <code>HookMatcher</code> on <code>PreToolUse</code>, <code>PostToolUse</code>, <code>PermissionRequest</code>, <code>Stop</code></td><td>Return <code>permissionDecision: "deny"</code>, mutate tool inputs, inject context, or gate on human approval</td><td>Tool-name matchers (e.g., <code>Write|Edit</code>) do not catch equivalent actions run via <code>Bash</code></td></tr><tr><td><strong>Platform Inference Hooks</strong></td><td>Claude Enterprise org-wide HTTPS webhook on <code>prompt</code> and (optionally) <code>tool_call</code> events</td><td>Inline <code>{"action": "allow"}</code> or <code>deny</code> with <code>deny_reason</code> before inference runs; signed via Standard Webhooks</td><td>Enterprise only (not Platform API, Bedrock, or GCP); cannot rewrite/redact prompts or inspect raw image bytes; supports shadow mode, rollout %, failure mode, and circuit breaker</td></tr></tbody></table></div>
+            </article>
+            <article class="seg kind-code" data-seg-id="s1-3">
+              <div class="seg-top">
+                <span class="seg-label">CODE PATTERN</span>
+                <button class="seg-play-btn" data-jump-seg="s1-3"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Deterministic Enforcement for Irreversible Actions in Agent SDK</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s1-3-s0" data-start="106.232" title="Click to jump here"><span class="w">For</span> <span class="w">irreversible</span> <span class="w">actions</span> <span class="w">like</span> <span class="w">writing</span> <span class="w">secrets</span> <span class="w">or</span> <span class="w">executing</span> <span class="w">destructive</span> <span class="w">commands,</span> <span class="w">enforce</span> <span class="w">deterministic</span> <span class="w">PreToolUse</span> <span class="w">hooks</span> <span class="w">in</span> <span class="w">the</span> <span class="w">Agent</span> <span class="w">SDK</span> <span class="w">that</span> <span class="w">return</span> <span class="w">permission</span> <span class="w">decision</span> <span class="w">deny.</span></span> <span class="sent" data-sent-id="s1-3-s1" data-start="118.191" title="Click to jump here"><span class="w">Notice</span> <span class="w">the</span> <span class="w">classic</span> <span class="w">production</span> <span class="w">trap</span> <span class="w">here:</span> <span class="w">matching</span> <span class="w">only</span> <span class="w">Write</span> <span class="w">and</span> <span class="w">Edit</span> <span class="w">tools</span> <span class="w">leaves</span> <span class="w">a</span> <span class="w">gap</span> <span class="w">if</span> <span class="w">the</span> <span class="w">agent</span> <span class="w">also</span> <span class="w">has</span> <span class="w">Bash</span> <span class="w">access.</span></span> <span class="sent" data-sent-id="s1-3-s2" data-start="126.117" title="Click to jump here"><span class="w">Always</span> <span class="w">pair</span> <span class="w">tool-level</span> <span class="w">hooks</span> <span class="w">with</span> <span class="w">OS-level</span> <span class="w">sandbox</span> <span class="w">restrictions</span> <span class="w">so</span> <span class="w">the</span> <span class="w">agent</span> <span class="w">cannot</span> <span class="w">route</span> <span class="w">around</span> <span class="w">your</span> <span class="w">matcher</span> <span class="w">through</span> <span class="w">a</span> <span class="w">shell</span> <span class="w">command.</span></span></div></div>
+              <div class="ref-notes"><pre><code>from claude_agent_sdk import ClaudeAgentOptions, HookMatcher
+
+async def block_sensitive_writes(input_data, tool_use_id, context):
+    file_path = input_data["tool_input"].get("file_path", "")
+    if file_path.split("/")[-1].lower() == ".env":
+        return {
+            "hookSpecificOutput": {
+                "hookEventName": input_data["hook_event_name"],
+                "permissionDecision": "deny",
+                "permissionDecisionReason": "Modifying .env files is prohibited."
+            }
+        }
+    return {}  # Defer to normal permission evaluation
+
+options = ClaudeAgentOptions(
+    hooks={
+        "PreToolUse": [HookMatcher(matcher="Write|Edit", hooks=[block_sensitive_writes])]
+    }
+)</code></pre><p><strong>Critical coverage gap:</strong> A <code>Write|Edit</code> matcher only intercepts those specific tools. If the agent has <code>Bash</code> enabled, it can still overwrite <code>.env</code> via shell redirection unless you also enforce OS-level sandbox filesystem rules or hook <code>Bash</code>.</p></div>
+            </article>
+            <article class="seg kind-callout" data-seg-id="s1-4">
+              <div class="seg-top">
+                <span class="seg-label">EXAM TRAP</span>
+                <button class="seg-play-btn" data-jump-seg="s1-4"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Refusal Handling, FP/FN Tuning, and Denied-Conversation Loops</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s1-4-s0" data-start="134.285" title="Click to jump here"><span class="w">Watch</span> <span class="w">out</span> <span class="w">for</span> <span class="w">three</span> <span class="w">exam</span> <span class="w">traps</span> <span class="w">around</span> <span class="w">runtime</span> <span class="w">guardrails.</span></span> <span class="sent" data-sent-id="s1-4-s1" data-start="137.903" title="Click to jump here"><span class="w">First,</span> <span class="w">never</span> <span class="w">feed</span> <span class="w">stop</span> <span class="w">reason</span> <span class="w">refusal</span> <span class="w">into</span> <span class="w">a</span> <span class="w">generic</span> <span class="w">retry</span> <span class="w">loop—treat</span> <span class="w">it</span> <span class="w">as</span> <span class="w">a</span> <span class="w">safety</span> <span class="w">class</span> <span class="w">with</span> <span class="w">a</span> <span class="w">dedicated</span> <span class="w">fallback.</span></span> <span class="sent" data-sent-id="s1-4-s2" data-start="145.445" title="Click to jump here"><span class="w">Second,</span> <span class="w">use</span> <span class="w">shadow</span> <span class="w">mode</span> <span class="w">and</span> <span class="w">staged</span> <span class="w">rollout</span> <span class="w">percentages</span> <span class="w">to</span> <span class="w">tune</span> <span class="w">false</span> <span class="w">positives</span> <span class="w">against</span> <span class="w">false</span> <span class="w">negatives</span> <span class="w">before</span> <span class="w">enforcing</span> <span class="w">hard</span> <span class="w">blocks.</span></span> <span class="sent" data-sent-id="s1-4-s3" data-start="153.905" title="Click to jump here"><span class="w">Third,</span> <span class="w">remember</span> <span class="w">that</span> <span class="w">Inference</span> <span class="w">Hooks</span> <span class="w">inspect</span> <span class="w">the</span> <span class="w">full</span> <span class="w">transcript,</span> <span class="w">so</span> <span class="w">after</span> <span class="w">a</span> <span class="w">denial</span> <span class="w">the</span> <span class="w">user</span> <span class="w">must</span> <span class="w">edit</span> <span class="w">or</span> <span class="w">rewind</span> <span class="w">the</span> <span class="w">offending</span> <span class="w">turn</span> <span class="w">or</span> <span class="w">every</span> <span class="w">follow-up</span> <span class="w">message</span> <span class="w">will</span> <span class="w">be</span> <span class="w">blocked</span> <span class="w">too.</span></span></div></div>
+              <div class="ref-notes"><ul><li><strong>Never blindly retry <code>stop_reason: "refusal"</code>:</strong> Safety refusals are a distinct failure class from 429 rate limits or <code>max_tokens</code> truncations. Retrying a refusal wastes tokens and repeats the block; route to a safety-handling path and throttle repeat offenders.</li><li><strong>Calibrate false positives vs. false negatives:</strong> Roll out inline guardrails (such as Inference Hooks) in <strong>shadow mode</strong> and incremental rollout percentages first to measure false-positive friction against false-negative leakage before switching to fail-closed blocking.</li><li><strong>Inference Hooks transcript loop:</strong> Because each Inference Hook request sends the entire conversation transcript, a denied message stays in history and causes every subsequent turn to fail until the user removes it (edit the message in claude.ai, run <code>/rewind</code> or <code>/clear</code> in Claude Code, or <code>@Claude !restart</code> in Slack).</li></ul></div>
+            </article>
+            <article class="seg kind-bullets" data-seg-id="s1-5">
+              <div class="seg-top">
+                <span class="seg-label">ARCHITECTURE PATTERN</span>
+                <button class="seg-play-btn" data-jump-seg="s1-5"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Approval Gates and Permission Policies</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s1-5-s0" data-start="164.783" title="Click to jump here"><span class="w">Approval</span> <span class="w">gates</span> <span class="w">let</span> <span class="w">you</span> <span class="w">keep</span> <span class="w">humans</span> <span class="w">in</span> <span class="w">the</span> <span class="w">loop</span> <span class="w">for</span> <span class="w">high-impact</span> <span class="w">actions</span> <span class="w">without</span> <span class="w">causing</span> <span class="w">prompt</span> <span class="w">fatigue</span> <span class="w">on</span> <span class="w">safe</span> <span class="w">reads.</span></span> <span class="sent" data-sent-id="s1-5-s1" data-start="171.515" title="Click to jump here"><span class="w">In</span> <span class="w">Managed</span> <span class="w">Agents,</span> <span class="w">server-executed</span> <span class="w">tools</span> <span class="w">support</span> <span class="w">always</span> <span class="w">allow,</span> <span class="w">always</span> <span class="w">ask,</span> <span class="w">and</span> <span class="w">auto</span> <span class="w">classifier</span> <span class="w">policies,</span> <span class="w">with</span> <span class="w">MCP</span> <span class="w">toolsets</span> <span class="w">safely</span> <span class="w">defaulting</span> <span class="w">to</span> <span class="w">always</span> <span class="w">ask.</span></span> <span class="sent" data-sent-id="s1-5-s2" data-start="182.449" title="Click to jump here"><span class="w">In</span> <span class="w">Claude</span> <span class="w">Code,</span> <span class="w">Auto</span> <span class="w">mode</span> <span class="w">uses</span> <span class="w">a</span> <span class="w">separate</span> <span class="w">classifier</span> <span class="w">while</span> <span class="w">still</span> <span class="w">respecting</span> <span class="w">explicit</span> <span class="w">deny</span> <span class="w">rules,</span> <span class="w">and</span> <span class="w">critical</span> <span class="w">path</span> <span class="w">removals</span> <span class="w">always</span> <span class="w">force</span> <span class="w">approval</span> <span class="w">even</span> <span class="w">when</span> <span class="w">an</span> <span class="w">allow</span> <span class="w">rule</span> <span class="w">matches.</span></span></div></div>
+              <div class="ref-notes"><ul><li><strong>Managed Agents permission policies:</strong> Apply to server-executed toolsets (prebuilt <code>agent_toolset_20260401</code> defaults to <code>always_allow</code>; MCP toolsets default to <code>always_ask</code>). Choose <code>always_allow</code>, <code>always_ask</code> (pauses session for human confirmation), or <code>auto</code> (server-side classifier allows, denies, or escalates to confirmation). Custom tools run in your own application and enforce their own gates.</li><li><strong>Claude Code permission modes:</strong> <em>Auto mode</em> routes actions through a separate classifier model while still honoring explicit <code>ask</code> and <code>deny</code> rules; <em>Manual mode</em> starts read-only and fails closed on unmatched commands; <em>Accept Edits mode</em> auto-approves in-directory edits and basic filesystem commands while still prompting on out-of-scope or network commands.</li><li><strong>Critical-path removal gate:</strong> In default permission mode, an <code>rm</code> or <code>rmdir</code> targeting the working directory or another critical path always requires explicit approval, even if a matching allow rule exists.</li></ul></div>
+            </article>
+        </section>
+        <section class="section-block" id="sec-2">
+          <div class="section-header">
+            <div class="section-obj">Runtime Guardrail Systems</div>
+            <h2>Sandboxing, Isolation Boundaries, and Network Controls</h2>
+          </div>
+          
+            <article class="seg kind-prose" data-seg-id="s2-1">
+              <div class="seg-top">
+                <span class="seg-label">KEY CONCEPT</span>
+                <button class="seg-play-btn" data-jump-seg="s2-1"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Granting Tool and Web Access Without Exposing Production</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s2-1-s0" data-start="194.221" title="Click to jump here"><span class="w">Good</span> <span class="w">sandboxing</span> <span class="w">lets</span> <span class="w">an</span> <span class="w">agent</span> <span class="w">run</span> <span class="w">shell</span> <span class="w">commands</span> <span class="w">and</span> <span class="w">search</span> <span class="w">the</span> <span class="w">web</span> <span class="w">without</span> <span class="w">ever</span> <span class="w">exposing</span> <span class="w">production</span> <span class="w">systems</span> <span class="w">or</span> <span class="w">raw</span> <span class="w">credentials.</span></span> <span class="sent" data-sent-id="s2-1-s1" data-start="202.233" title="Click to jump here"><span class="w">In</span> <span class="w">Claude</span> <span class="w">Managed</span> <span class="w">Agents,</span> <span class="w">the</span> <span class="w">agent</span> <span class="w">loop,</span> <span class="w">session</span> <span class="w">history,</span> <span class="w">and</span> <span class="w">vault</span> <span class="w">secrets</span> <span class="w">all</span> <span class="w">stay</span> <span class="w">outside</span> <span class="w">the</span> <span class="w">container</span> <span class="w">boundary.</span></span> <span class="sent" data-sent-id="s2-1-s2" data-start="209.264" title="Click to jump here"><span class="w">Bash</span> <span class="w">and</span> <span class="w">file</span> <span class="w">tools</span> <span class="w">run</span> <span class="w">in</span> <span class="w">an</span> <span class="w">isolated</span> <span class="w">per-session</span> <span class="w">Linux</span> <span class="w">container,</span> <span class="w">while</span> <span class="w">web</span> <span class="w">fetch</span> <span class="w">runs</span> <span class="w">server-side,</span> <span class="w">enforces</span> <span class="w">domain</span> <span class="w">allowlists,</span> <span class="w">and</span> <span class="w">only</span> <span class="w">opens</span> <span class="w">URLs</span> <span class="w">that</span> <span class="w">have</span> <span class="w">already</span> <span class="w">appeared</span> <span class="w">in</span> <span class="w">the</span> <span class="w">session.</span></span></div></div>
+              <div class="ref-notes"><p>Sandboxing separates what the agent can execute from the host infrastructure and secrets it must never touch. In <strong>Claude Managed Agents</strong>, Anthropic enforces this boundary by architecture: the agent loop, session history, and vault secrets live <strong>outside</strong> the sandbox on Anthropic's servers, while <code>bash</code> and file tools execute inside an isolated per-session Linux container with no shared filesystem state across sessions.</p><p>Web tools (<code>web_search</code> and <code>web_fetch</code>) run on Anthropic's servers and are bounded by both per-tool domain allowlists and the environment's <code>limited</code> networking host list. Furthermore, <code>web_fetch</code> only opens URLs that have already appeared in the session, blocking blind arbitrary-URL exfiltration.</p></div>
+            </article>
+            <article class="seg kind-table" data-seg-id="s2-2">
+              <div class="seg-top">
+                <span class="seg-label">ARCHITECTURE PATTERN</span>
+                <button class="seg-play-btn" data-jump-seg="s2-2"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Choosing an Isolation Technology for Agent Workloads</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s2-2-s0" data-start="221.464" title="Click to jump here"><span class="w">When</span> <span class="w">hosting</span> <span class="w">Claude</span> <span class="w">Code</span> <span class="w">or</span> <span class="w">the</span> <span class="w">Agent</span> <span class="w">SDK</span> <span class="w">yourself,</span> <span class="w">match</span> <span class="w">your</span> <span class="w">isolation</span> <span class="w">layer</span> <span class="w">to</span> <span class="w">your</span> <span class="w">threat</span> <span class="w">model.</span></span> <span class="sent" data-sent-id="s2-2-s1" data-start="227.684" title="Click to jump here"><span class="w">The</span> <span class="w">open-source</span> <span class="w">sandbox</span> <span class="w">runtime</span> <span class="w">gives</span> <span class="w">very</span> <span class="w">low</span> <span class="w">overhead</span> <span class="w">using</span> <span class="w">bubblewrap</span> <span class="w">or</span> <span class="w">Seatbelt,</span> <span class="w">while</span> <span class="w">hardened</span> <span class="w">Docker</span> <span class="w">containers</span> <span class="w">drop</span> <span class="w">all</span> <span class="w">capabilities</span> <span class="w">and</span> <span class="w">set</span> <span class="w">network</span> <span class="w">none.</span></span> <span class="sent" data-sent-id="s2-2-s2" data-start="237.979" title="Click to jump here"><span class="w">For</span> <span class="w">multi-tenant</span> <span class="w">workloads</span> <span class="w">running</span> <span class="w">untrusted</span> <span class="w">code,</span> <span class="w">step</span> <span class="w">up</span> <span class="w">to</span> <span class="w">gVisor</span> <span class="w">to</span> <span class="w">intercept</span> <span class="w">syscalls</span> <span class="w">in</span> <span class="w">userspace,</span> <span class="w">or</span> <span class="w">Firecracker</span> <span class="w">microVMs</span> <span class="w">that</span> <span class="w">boot</span> <span class="w">in</span> <span class="w">under</span> <span class="w">one</span> <span class="w">hundred</span> <span class="w">twenty-five</span> <span class="w">milliseconds</span> <span class="w">and</span> <span class="w">route</span> <span class="w">all</span> <span class="w">egress</span> <span class="w">over</span> <span class="w">vsock.</span></span></div></div>
+              <div class="ref-notes"><table><thead><tr><th>Technology</th><th>Mechanism</th><th>Isolation Strength &amp; Overhead</th><th>Best Fit</th></tr></thead><tbody><tr><td><strong>Sandbox Runtime</strong> (<code>@anthropic-ai/sandbox-runtime</code>)</td><td>OS primitives: <code>bubblewrap</code> + <code>socat</code> (Linux/WSL2) or Seatbelt (macOS) with built-in proxy</td><td>Good defaults, very low overhead; shares host kernel</td><td>Single-developer laptops and lightweight CI/CD runs</td></tr><tr><td><strong>Hardened Containers</strong> (Docker)</td><td>Linux namespaces with <code>--cap-drop ALL</code>, <code>--security-opt no-new-privileges</code>, <code>--read-only</code>, <code>--network none</code>, <code>--pids-limit</code>, non-root <code>--user</code></td><td>Setup-dependent, low overhead; shares host kernel</td><td>Standard production agent services with Unix-socket proxy egress</td></tr><tr><td><strong>gVisor</strong> (<code>runsc</code>)</td><td>Userspace kernel intercepting syscalls before reaching host kernel</td><td>Excellent isolation; ~0% CPU overhead, ~2x simple syscalls, 10–200x heavy file open/close</td><td>Multi-tenant workloads executing untrusted code where kernel escape is a top threat</td></tr><tr><td><strong>MicroVMs</strong> (Firecracker, QEMU)</td><td>Hardware CPU virtualization with dedicated guest kernel and <code>vsock</code> host proxy</td><td>Excellent isolation; Firecracker boots in &lt;125ms with &lt;5 MiB overhead, higher ops complexity</td><td>High-security multi-tenant execution of adversarial or customer-supplied code</td></tr></tbody></table></div>
+            </article>
+            <article class="seg kind-bullets" data-seg-id="s2-3">
+              <div class="seg-top">
+                <span class="seg-label">EXAM TRAP</span>
+                <button class="seg-play-btn" data-jump-seg="s2-3"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Claude Code Bash Sandbox Boundaries and Limitations</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s2-3-s0" data-start="252.803" title="Click to jump here"><span class="w">On</span> <span class="w">the</span> <span class="w">exam,</span> <span class="w">do</span> <span class="w">not</span> <span class="w">confuse</span> <span class="w">Claude</span> <span class="w">Code&#x27;s</span> <span class="w">built-in</span> <span class="w">Bash</span> <span class="w">sandbox</span> <span class="w">with</span> <span class="w">full-process</span> <span class="w">isolation.</span></span> <span class="sent" data-sent-id="s2-3-s1" data-start="258.511" title="Click to jump here"><span class="w">Built-in</span> <span class="w">tools</span> <span class="w">like</span> <span class="w">Read,</span> <span class="w">Write,</span> <span class="w">WebFetch,</span> <span class="w">hooks,</span> <span class="w">and</span> <span class="w">local</span> <span class="w">MCP</span> <span class="w">servers</span> <span class="w">run</span> <span class="w">outside</span> <span class="w">that</span> <span class="w">sandbox.</span></span> <span class="sent" data-sent-id="s2-3-s2" data-start="265.392" title="Click to jump here"><span class="w">For</span> <span class="w">managed</span> <span class="w">enterprise</span> <span class="w">deployments,</span> <span class="w">lock</span> <span class="w">down</span> <span class="w">escape</span> <span class="w">hatches</span> <span class="w">by</span> <span class="w">setting</span> <span class="w">allowUnsandboxedCommands</span> <span class="w">to</span> <span class="w">false</span> <span class="w">and</span> <span class="w">failIfUnavailable</span> <span class="w">to</span> <span class="w">true</span> <span class="w">so</span> <span class="w">Claude</span> <span class="w">exits</span> <span class="w">rather</span> <span class="w">than</span> <span class="w">silently</span> <span class="w">running</span> <span class="w">unsandboxed.</span></span> <span class="sent" data-sent-id="s2-3-s3" data-start="278.609" title="Click to jump here"><span class="w">And</span> <span class="w">remember</span> <span class="w">that</span> <span class="w">without</span> <span class="w">TLS</span> <span class="w">inspection,</span> <span class="w">hostname-only</span> <span class="w">proxies</span> <span class="w">can</span> <span class="w">still</span> <span class="w">be</span> <span class="w">bypassed</span> <span class="w">via</span> <span class="w">domain</span> <span class="w">fronting.</span></span></div></div>
+              <div class="ref-notes"><ul><li><strong>What runs outside the sandbox:</strong> Claude Code's built-in <code>/sandbox</code> wraps <code>Bash</code>, PowerShell, and Monitor commands—but built-in file/web tools (<code>Read</code>, <code>Edit</code>, <code>Write</code>, <code>WebFetch</code>, <code>WebSearch</code>), command hooks, local MCP servers, and mods run <strong>outside</strong> the sandbox. Putting a path in sandbox <code>denyRead</code> does not block the <code>Read</code> tool; wrap the entire Claude Code process in a container or VM for a unified boundary.</li><li><strong>Disable escape hatches in managed deployments:</strong> By default, Claude can ask to retry a failed command unsandboxed, and if sandbox dependencies are missing at startup Claude falls back to unsandboxed mode. Set <code>sandbox.allowUnsandboxedCommands: false</code> and <code>sandbox.failIfUnavailable: true</code> in managed settings to make sandboxing a hard gate.</li><li><strong>No TLS inspection by default:</strong> The built-in sandbox proxy enforces domain allowlists on the client-supplied hostname without terminating TLS, leaving a theoretical <strong>domain fronting</strong> vector unless you front egress with a TLS-terminating proxy.</li></ul></div>
+            </article>
+            <article class="seg kind-callout" data-seg-id="s2-4">
+              <div class="seg-top">
+                <span class="seg-label">ARCHITECTURE PATTERN</span>
+                <button class="seg-play-btn" data-jump-seg="s2-4"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>The Proxy Pattern for Zero-Exposure Egress and Credential Injection</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s2-4-s0" data-start="285.775" title="Click to jump here"><span class="w">The</span> <span class="w">gold-standard</span> <span class="w">production</span> <span class="w">pattern</span> <span class="w">is</span> <span class="w">running</span> <span class="w">the</span> <span class="w">agent</span> <span class="w">container</span> <span class="w">with</span> <span class="w">network</span> <span class="w">none</span> <span class="w">and</span> <span class="w">routing</span> <span class="w">all</span> <span class="w">egress</span> <span class="w">through</span> <span class="w">a</span> <span class="w">host-side</span> <span class="w">proxy</span> <span class="w">over</span> <span class="w">a</span> <span class="w">Unix</span> <span class="w">socket</span> <span class="w">or</span> <span class="w">vsock.</span></span> <span class="sent" data-sent-id="s2-4-s1" data-start="296.027" title="Click to jump here"><span class="w">The</span> <span class="w">proxy</span> <span class="w">enforces</span> <span class="w">strict</span> <span class="w">domain</span> <span class="w">allowlists,</span> <span class="w">logs</span> <span class="w">traffic,</span> <span class="w">and</span> <span class="w">injects</span> <span class="w">real</span> <span class="w">credentials—using</span> <span class="w">tools</span> <span class="w">like</span> <span class="w">Envoy&#x27;s</span> <span class="w">credential</span> <span class="w">injector—so</span> <span class="w">secrets</span> <span class="w">never</span> <span class="w">enter</span> <span class="w">the</span> <span class="w">sandbox.</span></span> <span class="sent" data-sent-id="s2-4-s2" data-start="307.537" title="Click to jump here"><span class="w">Remember</span> <span class="w">that</span> <span class="w">standard</span> <span class="w">HTTPS</span> <span class="w">proxy</span> <span class="w">variables</span> <span class="w">create</span> <span class="w">an</span> <span class="w">opaque</span> <span class="w">tunnel</span> <span class="w">unless</span> <span class="w">you</span> <span class="w">terminate</span> <span class="w">TLS</span> <span class="w">or</span> <span class="w">move</span> <span class="w">authenticated</span> <span class="w">calls</span> <span class="w">behind</span> <span class="w">an</span> <span class="w">external</span> <span class="w">MCP</span> <span class="w">server.</span></span></div></div>
+              <div class="ref-notes"><p>Run an egress proxy <strong>outside</strong> the agent's container or VM (reached via a mounted Unix socket or <code>vsock</code> while the container runs with <code>--network none</code>). The proxy enforces domain allowlists, logs every request, and injects real auth headers (for example, Envoy's <code>credential_injector</code> filter) so the agent never possesses raw secrets.</p><ul><li><code>ANTHROPIC_BASE_URL</code> routes Claude API sampling calls in plaintext HTTP to your local proxy for easy inspection and credential injection.</li><li><code>HTTP_PROXY</code> / <code>HTTPS_PROXY</code> routes system-wide traffic, but HTTPS creates an opaque CONNECT tunnel unless you run a TLS-terminating proxy with its CA installed in the container trust store—or expose external services through an MCP server / custom tool running outside the boundary.</li><li>Watch for runtimes that ignore proxy env vars (e.g., Node.js <code>fetch()</code> requires <code>NODE_USE_ENV_PROXY=1</code> in Node 24+, and Java Maven/Gradle ignore them); use <code>proxychains</code> or <code>iptables</code> transparent proxying when needed.</li></ul></div>
+            </article>
+            <article class="seg kind-bullets" data-seg-id="s2-5">
+              <div class="seg-top">
+                <span class="seg-label">SECURITY HARDENING</span>
+                <button class="seg-play-btn" data-jump-seg="s2-5"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Filesystem Isolation and Credential Hygiene</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s2-5-s0" data-start="319.353" title="Click to jump here"><span class="w">Even</span> <span class="w">a</span> <span class="w">read-only</span> <span class="w">mount</span> <span class="w">can</span> <span class="w">cause</span> <span class="w">a</span> <span class="w">major</span> <span class="w">breach</span> <span class="w">if</span> <span class="w">the</span> <span class="w">directory</span> <span class="w">contains</span> <span class="w">dot</span> <span class="w">env</span> <span class="w">files,</span> <span class="w">cloud</span> <span class="w">credentials,</span> <span class="w">kubeconfig,</span> <span class="w">or</span> <span class="w">private</span> <span class="w">keys.</span></span> <span class="sent" data-sent-id="s2-5-s1" data-start="328.411" title="Click to jump here"><span class="w">Always</span> <span class="w">sanitize</span> <span class="w">or</span> <span class="w">filter</span> <span class="w">workspaces</span> <span class="w">before</span> <span class="w">mounting</span> <span class="w">them</span> <span class="w">into</span> <span class="w">an</span> <span class="w">agent</span> <span class="w">container,</span> <span class="w">use</span> <span class="w">non-executable</span> <span class="w">tmpfs</span> <span class="w">mounts</span> <span class="w">for</span> <span class="w">temporary</span> <span class="w">scratch</span> <span class="w">space,</span> <span class="w">and</span> <span class="w">consider</span> <span class="w">overlay</span> <span class="w">filesystems</span> <span class="w">when</span> <span class="w">you</span> <span class="w">want</span> <span class="w">to</span> <span class="w">inspect</span> <span class="w">every</span> <span class="w">file</span> <span class="w">modification</span> <span class="w">before</span> <span class="w">committing</span> <span class="w">it</span> <span class="w">to</span> <span class="w">persistent</span> <span class="w">storage.</span></span></div></div>
+              <div class="ref-notes"><ul><li><strong>Mount code read-only (<code>:ro</code>)</strong> whenever an agent only analyzes code, and use ephemeral <code>tmpfs</code> mounts (<code>rw,noexec,nosuid,size=100m</code>) for scratch directories that vanish when the container exits.</li><li><strong>Use overlay filesystems</strong> when an agent must edit files but changes require human or automated review before persisting to the underlying repo.</li><li><strong>Sanitize before mounting:</strong> Even a read-only mount leaks secrets if the workspace contains <code>.env</code>, <code>~/.aws/credentials</code>, <code>~/.kube/config</code>, <code>~/.git-credentials</code>, <code>.npmrc</code>, or <code>*.pem</code> keys. Copy only required source files or apply <code>.dockerignore</code>-style filtering, and scrub inherited subprocess env vars (<code>CLAUDE_CODE_SUBPROCESS_ENV_SCRUB</code>).</li></ul></div>
+            </article>
+        </section>
+        <section class="section-block" id="sec-3">
+          <div class="section-header">
+            <div class="section-obj">Threat Defense and Adversarial Testing for Agentic Systems</div>
+            <h2>Agentic Attack Surface, Lethal Trifecta, and Secure MCP</h2>
+          </div>
+          
+            <article class="seg kind-prose" data-seg-id="s3-1">
+              <div class="seg-top">
+                <span class="seg-label">THREAT MODEL</span>
+                <button class="seg-play-btn" data-jump-seg="s3-1"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Prompt Injection, Tool &amp; Memory Poisoning, and Unsafe Autonomy</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s3-1-s0" data-start="346.604" title="Click to jump here"><span class="w">Tool-using</span> <span class="w">agents</span> <span class="w">face</span> <span class="w">four</span> <span class="w">distinct</span> <span class="w">classes</span> <span class="w">of</span> <span class="w">runtime</span> <span class="w">threats.</span></span> <span class="sent" data-sent-id="s3-1-s1" data-start="350.392" title="Click to jump here"><span class="w">Direct</span> <span class="w">and</span> <span class="w">indirect</span> <span class="w">prompt</span> <span class="w">injections</span> <span class="w">hijack</span> <span class="w">control</span> <span class="w">flow</span> <span class="w">through</span> <span class="w">user</span> <span class="w">inputs</span> <span class="w">or</span> <span class="w">third-party</span> <span class="w">data</span> <span class="w">like</span> <span class="w">tickets</span> <span class="w">and</span> <span class="w">webpages.</span></span> <span class="sent" data-sent-id="s3-1-s2" data-start="358.66" title="Click to jump here"><span class="w">Tool</span> <span class="w">poisoning</span> <span class="w">and</span> <span class="w">rug</span> <span class="w">pulls</span> <span class="w">hide</span> <span class="w">directives</span> <span class="w">inside</span> <span class="w">MCP</span> <span class="w">tool</span> <span class="w">descriptions,</span> <span class="w">even</span> <span class="w">steering</span> <span class="w">calls</span> <span class="w">to</span> <span class="w">other</span> <span class="w">servers.</span></span> <span class="sent" data-sent-id="s3-1-s3" data-start="366.416" title="Click to jump here"><span class="w">Shared</span> <span class="w">memory</span> <span class="w">stores</span> <span class="w">enable</span> <span class="w">persistent</span> <span class="w">memory</span> <span class="w">poisoning</span> <span class="w">across</span> <span class="w">sessions,</span> <span class="w">and</span> <span class="w">unsafe</span> <span class="w">autonomy</span> <span class="w">occurs</span> <span class="w">when</span> <span class="w">a</span> <span class="w">determined</span> <span class="w">agent</span> <span class="w">misuses</span> <span class="w">reachable</span> <span class="w">tools</span> <span class="w">just</span> <span class="w">to</span> <span class="w">get</span> <span class="w">past</span> <span class="w">an</span> <span class="w">obstacle.</span></span></div></div>
+              <div class="ref-notes"><p>Tool-using agents expand the traditional LLM threat surface across four distinct vectors:</p><ul><li><strong>Direct vs. Indirect Prompt Injection:</strong> In direct attacks, the end user is the adversary trying to bypass guardrails. In indirect attacks, a trusted user invokes an agent that reads malicious instructions hidden in emails, tickets, webpages, or OCR text.</li><li><strong>Tool Poisoning, Shadowing, and Rug Pulls:</strong> MCP tool names and descriptions are instructions the model reads. A malicious server can embed hidden directives that steer how the agent calls <em>other</em> servers' tools (shadowing) or silently mutate tool definitions after initial approval (rug pull).</li><li><strong>Memory Poisoning:</strong> In agents sharing a persistent memory store across sessions, a single injected payload can write persistent instructions into memory that hijack future sessions.</li><li><strong>Unsafe Autonomy:</strong> Even without an attacker, an overly capable agent trying to overcome an obstacle may misuse a reachable tool or credential in ways the operator never intended.</li></ul></div>
+            </article>
+            <article class="seg kind-callout" data-seg-id="s3-2">
+              <div class="seg-top">
+                <span class="seg-label">KEY CONCEPT</span>
+                <button class="seg-play-btn" data-jump-seg="s3-2"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>The Lethal Trifecta for AI Agents</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s3-2-s0" data-start="378.467" title="Click to jump here"><span class="w">Memorize</span> <span class="w">the</span> <span class="w">Lethal</span> <span class="w">Trifecta—it</span> <span class="w">is</span> <span class="w">a</span> <span class="w">centerpiece</span> <span class="w">of</span> <span class="w">Domain</span> <span class="w">seven.</span></span> <span class="sent" data-sent-id="s3-2-s1" data-start="382.831" title="Click to jump here"><span class="w">Whenever</span> <span class="w">an</span> <span class="w">agent</span> <span class="w">simultaneously</span> <span class="w">has</span> <span class="w">access</span> <span class="w">to</span> <span class="w">private</span> <span class="w">data,</span> <span class="w">processes</span> <span class="w">untrusted</span> <span class="w">input,</span> <span class="w">and</span> <span class="w">can</span> <span class="w">communicate</span> <span class="w">externally,</span> <span class="w">a</span> <span class="w">single</span> <span class="w">indirect</span> <span class="w">prompt</span> <span class="w">injection</span> <span class="w">can</span> <span class="w">silently</span> <span class="w">exfiltrate</span> <span class="w">your</span> <span class="w">data.</span></span> <span class="sent" data-sent-id="s3-2-s2" data-start="395.323" title="Click to jump here"><span class="w">Stronger</span> <span class="w">system</span> <span class="w">prompts</span> <span class="w">cannot</span> <span class="w">close</span> <span class="w">this</span> <span class="w">loop.</span></span> <span class="sent" data-sent-id="s3-2-s3" data-start="397.895" title="Click to jump here"><span class="w">You</span> <span class="w">must</span> <span class="w">break</span> <span class="w">or</span> <span class="w">deterministically</span> <span class="w">gate</span> <span class="w">at</span> <span class="w">least</span> <span class="w">one</span> <span class="w">leg</span> <span class="w">outside</span> <span class="w">the</span> <span class="w">model</span> <span class="w">through</span> <span class="w">least-privilege</span> <span class="w">data</span> <span class="w">scoping,</span> <span class="w">strict</span> <span class="w">recipient</span> <span class="w">or</span> <span class="w">domain</span> <span class="w">allowlists,</span> <span class="w">or</span> <span class="w">mandatory</span> <span class="w">human</span> <span class="w">approval.</span></span></div></div>
+              <div class="ref-notes"><p>An agent enters a critical data-exfiltration state whenever a single session simultaneously combines all three capabilities of the <strong>Lethal Trifecta</strong>:</p><ol><li><strong>Access to private data</strong> (CRM records, internal repos, secrets, customer PII)</li><li><strong>Exposure to untrusted input</strong> (inbound emails, support tickets, scraped web pages, external PRs)</li><li><strong>External communication capability</strong> (sending email, posting webhooks, unrestricted <code>curl</code>/<code>bash</code> egress, or calling external APIs)</li></ol><p><strong>Exam Rule:</strong> Prompt-level warnings cannot break the Lethal Trifecta. You must remove or deterministically gate at least one leg outside the model—for example, scoping CRM queries to the ticket's own account, enforcing recipient/domain allowlists, or requiring human approval before external sends.</p></div>
+            </article>
+            <article class="seg kind-bullets" data-seg-id="s3-3">
+              <div class="seg-top">
+                <span class="seg-label">DEFENSE IN DEPTH</span>
+                <button class="seg-play-btn" data-jump-seg="s3-3"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Hardening Pipelines Against Indirect Prompt Injection</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s3-3-s0" data-start="409.433" title="Click to jump here"><span class="w">To</span> <span class="w">harden</span> <span class="w">tool</span> <span class="w">pipelines</span> <span class="w">against</span> <span class="w">indirect</span> <span class="w">prompt</span> <span class="w">injection,</span> <span class="w">always</span> <span class="w">deliver</span> <span class="w">third-party</span> <span class="w">content</span> <span class="w">strictly</span> <span class="w">inside</span> <span class="w">tool</span> <span class="w">result</span> <span class="w">blocks,</span> <span class="w">never</span> <span class="w">in</span> <span class="w">system</span> <span class="w">or</span> <span class="w">user</span> <span class="w">text.</span></span> <span class="sent" data-sent-id="s3-3-s1" data-start="420.283" title="Click to jump here"><span class="w">JSON-encode</span> <span class="w">untrusted</span> <span class="w">strings</span> <span class="w">so</span> <span class="w">attackers</span> <span class="w">cannot</span> <span class="w">break</span> <span class="w">out</span> <span class="w">of</span> <span class="w">delimiters,</span> <span class="w">label</span> <span class="w">the</span> <span class="w">content&#x27;s</span> <span class="w">source,</span> <span class="w">and</span> <span class="w">never</span> <span class="w">put</span> <span class="w">your</span> <span class="w">own</span> <span class="w">developer</span> <span class="w">instructions</span> <span class="w">inside</span> <span class="w">a</span> <span class="w">tool</span> <span class="w">result.</span></span> <span class="sent" data-sent-id="s3-3-s2" data-start="430.599" title="Click to jump here"><span class="w">For</span> <span class="w">high-risk</span> <span class="w">tools,</span> <span class="w">pre-screen</span> <span class="w">raw</span> <span class="w">tool</span> <span class="w">outputs</span> <span class="w">with</span> <span class="w">a</span> <span class="w">lightweight</span> <span class="w">Claude</span> <span class="w">Haiku</span> <span class="w">five</span> <span class="w">point</span> <span class="w">five</span> <span class="w">classifier</span> <span class="w">before</span> <span class="w">returning</span> <span class="w">them</span> <span class="w">to</span> <span class="w">the</span> <span class="w">main</span> <span class="w">agent.</span></span></div></div>
+              <div class="ref-notes"><ul><li><strong>Isolate untrusted data in <code>tool_result</code> blocks:</strong> Never concatenate third-party content into <code>system</code> prompts or plain <code>user</code> text blocks. Claude is specifically trained to treat <code>tool_result</code> payloads with skepticism.</li><li><strong>JSON-encode payloads and label provenance:</strong> Wrap untrusted strings inside JSON objects (preventing tag/quote breakout) and explicitly state the source (e.g., <code>"source": "inbound_email"</code>) in tool descriptions or results.</li><li><strong>Never place your own instructions inside <code>tool_result</code>:</strong> Because Claude treats tool results as untrusted data, developer instructions placed there may be ignored or flagged; place developer guidance in a subsequent <code>user</code> turn or a mid-conversation system message.</li><li><strong>Screen tool outputs before ingestion:</strong> Pass raw tool outputs through a lightweight Claude Haiku 5.5 classifier with structured <code>output_config</code> (<code>injection_suspected: boolean</code>) and return an error or stripped summary if flagged—or if <code>stop_reason: "refusal"</code> occurs. Note that Anthropic's computer use and browser use tools also run built-in injection classifiers on screenshots and page text.</li></ul></div>
+            </article>
+            <article class="seg kind-table" data-seg-id="s3-4">
+              <div class="seg-top">
+                <span class="seg-label">SECURE MCP</span>
+                <button class="seg-play-btn" data-jump-seg="s3-4"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>MCP Authorization (OAuth 2.1) and Protocol Threat Mitigations</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s3-4-s0" data-start="439.855" title="Click to jump here"><span class="w">Securing</span> <span class="w">MCP</span> <span class="w">requires</span> <span class="w">strict</span> <span class="w">OAuth</span> <span class="w">two</span> <span class="w">point</span> <span class="w">one</span> <span class="w">hygiene.</span></span> <span class="sent" data-sent-id="s3-4-s1" data-start="444.048" title="Click to jump here"><span class="w">Remote</span> <span class="w">MCP</span> <span class="w">servers</span> <span class="w">act</span> <span class="w">as</span> <span class="w">OAuth</span> <span class="w">resource</span> <span class="w">servers:</span> <span class="w">they</span> <span class="w">publish</span> <span class="w">Protected</span> <span class="w">Resource</span> <span class="w">Metadata,</span> <span class="w">enforce</span> <span class="w">PKCE</span> <span class="w">with</span> <span class="w">S256,</span> <span class="w">and</span> <span class="w">bind</span> <span class="w">tokens</span> <span class="w">to</span> <span class="w">their</span> <span class="w">exact</span> <span class="w">URL</span> <span class="w">using</span> <span class="w">the</span> <span class="w">RFC</span> <span class="w">8707</span> <span class="w">resource</span> <span class="w">parameter.</span></span> <span class="sent" data-sent-id="s3-4-s2" data-start="460.551" title="Click to jump here"><span class="w">Never</span> <span class="w">allow</span> <span class="w">token</span> <span class="w">passthrough—servers</span> <span class="w">must</span> <span class="w">validate</span> <span class="w">audience</span> <span class="w">claims</span> <span class="w">for</span> <span class="w">themselves.</span></span> <span class="sent" data-sent-id="s3-4-s3" data-start="465.491" title="Click to jump here"><span class="w">If</span> <span class="w">you</span> <span class="w">run</span> <span class="w">an</span> <span class="w">MCP</span> <span class="w">proxy,</span> <span class="w">prevent</span> <span class="w">confused</span> <span class="w">deputy</span> <span class="w">attacks</span> <span class="w">by</span> <span class="w">enforcing</span> <span class="w">per-client</span> <span class="w">consent</span> <span class="w">before</span> <span class="w">redirecting</span> <span class="w">upstream,</span> <span class="w">and</span> <span class="w">treat</span> <span class="w">local</span> <span class="w">stdio</span> <span class="w">servers</span> <span class="w">as</span> <span class="w">untrusted</span> <span class="w">code.</span></span></div></div>
+              <div class="ref-notes"><table><thead><tr><th>MCP Threat / Requirement</th><th>Attack Mechanism</th><th>Required Mitigation</th></tr></thead><tbody><tr><td><strong>OAuth 2.1 Discovery &amp; Binding</strong></td><td>Token replay across servers or authorization code interception</td><td>Serve RFC 9728 Protected Resource Metadata (<code>/.well-known/oauth-protected-resource</code>), require PKCE (<code>S256</code>), bind tokens to exact MCP URL via RFC 8707 <code>resource</code>, validate RFC 9207 <code>iss</code>, and use <code>403 insufficient_scope</code> for step-up auth</td></tr><tr><td><strong>Token Passthrough (Forbidden)</strong></td><td>MCP server accepts tokens not issued for it and forwards them unmodified to downstream APIs</td><td>MCP servers <strong>MUST</strong> validate token audience (<code>aud</code>) for themselves and never forward upstream client tokens to downstream resource servers</td></tr><tr><td><strong>Confused Deputy (OAuth Proxy)</strong></td><td>MCP proxy uses a static 3P <code>client_id</code> + consent cookie; attacker registers a malicious client/<code>redirect_uri</code> and steals auth codes</td><td>Enforce per-client user consent registry at the MCP proxy <em>before</em> forwarding to the third-party authorization server (note: Dynamic Client Registration is deprecated in MCP <code>2026-07-28</code> in favor of Client ID Metadata Documents / pre-registration)</td></tr><tr><td><strong>Local <code>stdio</code> Server Compromise</strong></td><td>Malicious or overcollecting local MCP server reads host files/env vars or shadows other tools</td><td>Treat local servers as untrusted code; prefer remote HTTPS servers when possible, enforce org-wide Managed MCP allowlists, and contain local servers in sandboxes with minimal env vars</td></tr></tbody></table></div>
+            </article>
+            <article class="seg kind-bullets" data-seg-id="s3-5">
+              <div class="seg-top">
+                <span class="seg-label">FRAMEWORKS &amp; RED TEAMING</span>
+                <button class="seg-play-btn" data-jump-seg="s3-5"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Red-Team Exercise Design, OWASP LLM Top 10 (2025), and NIST AI RMF</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s3-5-s0" data-start="477.52" title="Click to jump here"><span class="w">Effective</span> <span class="w">red-teaming</span> <span class="w">tests</span> <span class="w">your</span> <span class="w">entire</span> <span class="w">harness,</span> <span class="w">not</span> <span class="w">just</span> <span class="w">the</span> <span class="w">model:</span> <span class="w">inject</span> <span class="w">poisoned</span> <span class="w">emails</span> <span class="w">and</span> <span class="w">tool</span> <span class="w">outputs</span> <span class="w">to</span> <span class="w">prove</span> <span class="w">your</span> <span class="w">deterministic</span> <span class="w">hooks</span> <span class="w">and</span> <span class="w">egress</span> <span class="w">controls</span> <span class="w">still</span> <span class="w">hold</span> <span class="w">even</span> <span class="w">when</span> <span class="w">the</span> <span class="w">model</span> <span class="w">is</span> <span class="w">fooled.</span></span> <span class="sent" data-sent-id="s3-5-s1" data-start="490.673" title="Click to jump here"><span class="w">Map</span> <span class="w">your</span> <span class="w">threat</span> <span class="w">model</span> <span class="w">to</span> <span class="w">the</span> <span class="w">2025</span> <span class="w">OWASP</span> <span class="w">Top</span> <span class="w">Ten</span> <span class="w">for</span> <span class="w">LLM</span> <span class="w">Applications—especially</span> <span class="w">Prompt</span> <span class="w">Injection,</span> <span class="w">Excessive</span> <span class="w">Agency,</span> <span class="w">Supply</span> <span class="w">Chain,</span> <span class="w">and</span> <span class="w">Sensitive</span> <span class="w">Information</span> <span class="w">Disclosure—and</span> <span class="w">organize</span> <span class="w">ongoing</span> <span class="w">governance</span> <span class="w">around</span> <span class="w">NIST</span> <span class="w">AI</span> <span class="w">RMF&#x27;s</span> <span class="w">Govern,</span> <span class="w">Map,</span> <span class="w">Measure,</span> <span class="w">and</span> <span class="w">Manage</span> <span class="w">functions</span> <span class="w">with</span> <span class="w">the</span> <span class="w">AI</span> <span class="w">600-1</span> <span class="w">Generative</span> <span class="w">AI</span> <span class="w">Profile.</span></span></div></div>
+              <div class="ref-notes"><ul><li><strong>Red-team exercise design:</strong> Test end-to-end agent workflows before launch using realistic poisoned documents, emails, and tool outputs. Verify both layers: that the model resists embedded instructions <em>and</em> that deterministic hooks, sandboxes, and approval gates block the exploit path when the model fails.</li><li><strong>OWASP Top 10 for LLM Applications (2025):</strong> Anchor threat models to <strong>LLM01</strong> (Prompt Injection), <strong>LLM02</strong> (Sensitive Information Disclosure), <strong>LLM03</strong> (Supply Chain—compromised MCP packages/dependencies), <strong>LLM04</strong> (Data and Model Poisoning), <strong>LLM05</strong> (Improper Output Handling), <strong>LLM06</strong> (Excessive Agency—over-privileged tools and unsafe autonomy), <strong>LLM07</strong> (System Prompt Leakage), <strong>LLM08</strong> (Vector &amp; Embedding Weaknesses), <strong>LLM09</strong> (Misinformation), and <strong>LLM10</strong> (Unbounded Consumption).</li><li><strong>NIST AI RMF 1.0 &amp; NIST AI 600-1 (GenAI Profile):</strong> Structure organizational risk governance across <strong>Govern, Map, Measure, and Manage</strong>—using AI 600-1 to address generative-specific risks such as data privacy, confabulation, information security, and human-AI configuration oversight.</li></ul></div>
+            </article>
+        </section>
+        <section class="section-block" id="sec-4">
+          <div class="section-header">
+            <div class="section-obj">Identity, Secrets, and Audit at Scale</div>
+            <h2>Workload Identity Federation, Vaults, and Compliance Auditing</h2>
+          </div>
+          
+            <article class="seg kind-prose" data-seg-id="s4-1">
+              <div class="seg-top">
+                <span class="seg-label">KEY CONCEPT</span>
+                <button class="seg-play-btn" data-jump-seg="s4-1"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Workload Identity Federation (WIF) Replacing Static API Keys</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s4-1-s0" data-start="513.496" title="Click to jump here"><span class="w">At</span> <span class="w">enterprise</span> <span class="w">scale,</span> <span class="w">replace</span> <span class="w">static</span> <span class="w">API</span> <span class="w">keys</span> <span class="w">with</span> <span class="w">Workload</span> <span class="w">Identity</span> <span class="w">Federation.</span></span> <span class="sent" data-sent-id="s4-1-s1" data-start="518.82" title="Click to jump here"><span class="w">Your</span> <span class="w">workload</span> <span class="w">presents</span> <span class="w">a</span> <span class="w">short-lived</span> <span class="w">OIDC</span> <span class="w">JWT</span> <span class="w">from</span> <span class="w">Kubernetes,</span> <span class="w">GitHub</span> <span class="w">Actions,</span> <span class="w">or</span> <span class="w">your</span> <span class="w">cloud</span> <span class="w">provider</span> <span class="w">to</span> <span class="w">Anthropic&#x27;s</span> <span class="w">OAuth</span> <span class="w">token</span> <span class="w">endpoint</span> <span class="w">using</span> <span class="w">the</span> <span class="w">RFC</span> <span class="w">7523</span> <span class="w">jwt-bearer</span> <span class="w">grant.</span></span> <span class="sent" data-sent-id="s4-1-s2" data-start="533.467" title="Click to jump here"><span class="w">Three</span> <span class="w">resources</span> <span class="w">wire</span> <span class="w">this</span> <span class="w">together:</span> <span class="w">a</span> <span class="w">non-human</span> <span class="w">service</span> <span class="w">account,</span> <span class="w">a</span> <span class="w">federation</span> <span class="w">issuer</span> <span class="w">with</span> <span class="w">its</span> <span class="w">JWKS</span> <span class="w">source,</span> <span class="w">and</span> <span class="w">a</span> <span class="w">federation</span> <span class="w">rule</span> <span class="w">that</span> <span class="w">evaluates</span> <span class="w">subject</span> <span class="w">prefixes,</span> <span class="w">claims,</span> <span class="w">or</span> <span class="w">CEL</span> <span class="w">conditions</span> <span class="w">before</span> <span class="w">minting</span> <span class="w">a</span> <span class="w">short-lived</span> <span class="w">access</span> <span class="w">token.</span></span></div></div>
+              <div class="ref-notes"><p><strong>Workload Identity Federation (WIF)</strong> eliminates long-lived <code>sk-ant-...</code> static API keys by letting workloads exchange short-lived OIDC JWTs from AWS, GCP, Azure Entra ID, Kubernetes, GitHub Actions, SPIFFE, or Okta for short-lived Anthropic access tokens (<code>sk-ant-oat01-...</code>) via RFC 7523 <code>jwt-bearer</code> at <code>POST /v1/oauth/token</code>.</p><p>You configure three Console resources: a <strong>Service Account</strong> (<code>svac_...</code>, a non-human principal scoped to specific workspaces), a <strong>Federation Issuer</strong> (<code>fdis_...</code>, with <code>discovery</code>, <code>explicit_url</code>, or <code>inline</code> JWKS for air-gapped clusters), and a <strong>Federation Rule</strong> (<code>fdrl_...</code>, matching <code>subject_prefix</code>, <code>audience</code>, exact <code>claims</code>, or CEL <code>condition</code> expressions to grant an OAuth scope like <code>workspace:developer</code> and a <code>token_lifetime_seconds</code> between 60 and 86,400).</p></div>
+            </article>
+            <article class="seg kind-callout" data-seg-id="s4-2">
+              <div class="seg-top">
+                <span class="seg-label">EXAM TRAP</span>
+                <button class="seg-play-btn" data-jump-seg="s4-2"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>WIF Credential Precedence, Refresh Windows, and jti_reused Failures</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s4-2-s0" data-start="549.741" title="Click to jump here"><span class="w">Three</span> <span class="w">WIF</span> <span class="w">operational</span> <span class="w">traps</span> <span class="w">show</span> <span class="w">up</span> <span class="w">frequently</span> <span class="w">in</span> <span class="w">production</span> <span class="w">incidents.</span></span> <span class="sent" data-sent-id="s4-2-s1" data-start="554.575" title="Click to jump here"><span class="w">First,</span> <span class="w">the</span> <span class="w">Anthropic</span> <span class="w">API</span> <span class="w">key</span> <span class="w">environment</span> <span class="w">variable</span> <span class="w">sits</span> <span class="w">above</span> <span class="w">federation</span> <span class="w">variables</span> <span class="w">in</span> <span class="w">the</span> <span class="w">five-tier</span> <span class="w">credential</span> <span class="w">precedence</span> <span class="w">order,</span> <span class="w">so</span> <span class="w">a</span> <span class="w">leftover</span> <span class="w">key</span> <span class="w">silently</span> <span class="w">overrides</span> <span class="w">WIF—always</span> <span class="w">check</span> <span class="w">ant</span> <span class="w">auth</span> <span class="w">status.</span></span> <span class="sent" data-sent-id="s4-2-s2" data-start="568.517" title="Click to jump here"><span class="w">Second,</span> <span class="w">the</span> <span class="w">SDK</span> <span class="w">refreshes</span> <span class="w">proactively</span> <span class="w">at</span> <span class="w">minus</span> <span class="w">one</span> <span class="w">hundred</span> <span class="w">twenty</span> <span class="w">seconds</span> <span class="w">and</span> <span class="w">mandatorily</span> <span class="w">at</span> <span class="w">minus</span> <span class="w">thirty</span> <span class="w">seconds.</span></span> <span class="sent" data-sent-id="s4-2-s3" data-start="576.295" title="Click to jump here"><span class="w">Third,</span> <span class="w">JWTs</span> <span class="w">with</span> <span class="w">a</span> <span class="w">J</span> <span class="w">T</span> <span class="w">I</span> <span class="w">claim</span> <span class="w">are</span> <span class="w">single-use</span> <span class="w">by</span> <span class="w">default,</span> <span class="w">so</span> <span class="w">unrotated</span> <span class="w">token</span> <span class="w">files</span> <span class="w">or</span> <span class="w">retries</span> <span class="w">trigger</span> <span class="w">J</span> <span class="w">T</span> <span class="w">I</span> <span class="w">reused</span> <span class="w">errors.</span></span></div></div>
+              <div class="ref-notes"><ul><li><strong>Leftover API key overrides WIF:</strong> The SDK resolves credentials in 5 tiers: (1) constructor args, (2) <code>ANTHROPIC_API_KEY</code> / <code>ANTHROPIC_AUTH_TOKEN</code>, (3) explicit <code>ANTHROPIC_PROFILE</code>, (4) federation env vars (<code>ANTHROPIC_FEDERATION_RULE_ID</code>, <code>ANTHROPIC_IDENTITY_TOKEN_FILE</code>, etc.), (5) implicit active profile. A forgotten <code>ANTHROPIC_API_KEY</code> silently wins over WIF—always verify with <code>ant auth status</code> during migration before deleting the static key.</li><li><strong>Token lifetime &amp; two-tier refresh:</strong> Minted token lifetime is <code>min(rule.token_lifetime_seconds, 2 * remaining_idp_jwt_lifetime)</code> (floor 60s). The SDK performs an <strong>advisory refresh</strong> at expiry minus 120s (keeps using cached token if endpoint fails) and a <strong>mandatory refresh</strong> at expiry minus 30s (fails on error).</li><li><strong>Single-use <code>jti</code> replay protection:</strong> By default, JWTs with a <code>jti</code> claim are single-use. If a retry loop or unrotated token file re-presents the same JWT, exchange fails with <code>jti_reused</code>. Rotate projected tokens well ahead of the refresh window; disabling <code>check_jti</code> removes replay protection for the entire issuer and is a last resort.</li></ul></div>
+            </article>
+            <article class="seg kind-bullets" data-seg-id="s4-3">
+              <div class="seg-top">
+                <span class="seg-label">SECRETS &amp; AGENT IDENTITY</span>
+                <button class="seg-play-btn" data-jump-seg="s4-3"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Managed Agents Vaults, Egress Swapping, and Per-Agent JWTs</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s4-3-s0" data-start="586.425" title="Click to jump here"><span class="w">For</span> <span class="w">third-party</span> <span class="w">credentials,</span> <span class="w">Managed</span> <span class="w">Agents</span> <span class="w">Vaults</span> <span class="w">keep</span> <span class="w">secrets</span> <span class="w">completely</span> <span class="w">out</span> <span class="w">of</span> <span class="w">the</span> <span class="w">sandbox.</span></span> <span class="sent" data-sent-id="s4-3-s1" data-start="592.005" title="Click to jump here"><span class="w">MCP</span> <span class="w">OAuth</span> <span class="w">credentials</span> <span class="w">are</span> <span class="w">injected</span> <span class="w">server-side</span> <span class="w">with</span> <span class="w">automatic</span> <span class="w">refresh,</span> <span class="w">while</span> <span class="w">environment</span> <span class="w">variable</span> <span class="w">credentials</span> <span class="w">appear</span> <span class="w">in</span> <span class="w">the</span> <span class="w">sandbox</span> <span class="w">as</span> <span class="w">opaque</span> <span class="w">placeholders</span> <span class="w">that</span> <span class="w">the</span> <span class="w">egress</span> <span class="w">gateway</span> <span class="w">swaps</span> <span class="w">into</span> <span class="w">headers</span> <span class="w">only</span> <span class="w">for</span> <span class="w">allowlisted</span> <span class="w">hosts.</span></span> <span class="sent" data-sent-id="s4-3-s2" data-start="607.143" title="Click to jump here"><span class="w">In</span> <span class="w">self-hosted</span> <span class="w">deployments,</span> <span class="w">you</span> <span class="w">can</span> <span class="w">back</span> <span class="w">vaults</span> <span class="w">with</span> <span class="w">AWS,</span> <span class="w">GCP,</span> <span class="w">Azure,</span> <span class="w">or</span> <span class="w">HashiCorp</span> <span class="w">secret</span> <span class="w">managers</span> <span class="w">and</span> <span class="w">sign</span> <span class="w">short-lived</span> <span class="w">per-agent</span> <span class="w">JWTs</span> <span class="w">so</span> <span class="w">MCP</span> <span class="w">gateways</span> <span class="w">enforce</span> <span class="w">least-privilege</span> <span class="w">access</span> <span class="w">per</span> <span class="w">agent</span> <span class="w">ID.</span></span></div></div>
+              <div class="ref-notes"><ul><li><strong>Managed Agents Vaults (<code>vlt_...</code>):</strong> Register per-user credentials once (write-only fields never returned by the API) and attach a vault ID per session. Supports <strong>MCP credentials</strong> (<code>mcp_oauth</code> with automatic token refresh, or <code>static_bearer</code> keyed by <code>mcp_server_url</code>) and <strong>environment variable credentials</strong> (<code>environment_variable</code>) where the sandbox only sees an opaque placeholder (<code>cma_ph_...</code>) that the egress gateway swaps for the real secret in the <code>Authorization</code> header only on allowlisted hosts.</li><li><strong>External Secret Managers:</strong> Self-hosted Managed Agents can store vault secrets in AWS Secrets Manager, Google Cloud Secret Manager, Azure Key Vault, or HashiCorp Vault via a <code>secret_store</code> prefix, keeping only references in the database. Note that vaults are workspace-scoped; delete the vault or credential to revoke access.</li><li><strong>Cryptographic Agent Identity:</strong> Self-hosted Managed Agents can sign short-lived per-agent JWTs (<code>typ: agent+jwt</code>, <code>token_use: agent</code>, <code>RS256</code>, default 5-minute max <code>exp</code>) sent to MCP gateways via <code>Authorization: Bearer</code> or <code>Agent-Identity-Token</code>. Gateways authorize on <code>agent_id</code> and—when SSO is active—can inspect <code>actor_sub</code> (remembering <code>actor_sub</code> identifies the session creator, not human approval of a specific tool call, and is absent for tool listings and subagents).</li></ul></div>
+            </article>
+            <article class="seg kind-table" data-seg-id="s4-4">
+              <div class="seg-top">
+                <span class="seg-label">GOVERNANCE &amp; AUDIT</span>
+                <button class="seg-play-btn" data-jump-seg="s4-4"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Selecting the Right Enterprise Security &amp; Audit Mechanism</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s4-4-s0" data-start="622.756" title="Click to jump here"><span class="w">Know</span> <span class="w">when</span> <span class="w">to</span> <span class="w">choose</span> <span class="w">each</span> <span class="w">enterprise</span> <span class="w">governance</span> <span class="w">mechanism.</span></span> <span class="sent" data-sent-id="s4-4-s1" data-start="626.032" title="Click to jump here"><span class="w">Use</span> <span class="w">Inference</span> <span class="w">Hooks</span> <span class="w">for</span> <span class="w">inline,</span> <span class="w">pre-inference</span> <span class="w">prevention</span> <span class="w">when</span> <span class="w">you</span> <span class="w">must</span> <span class="w">stop</span> <span class="w">sensitive</span> <span class="w">data</span> <span class="w">before</span> <span class="w">it</span> <span class="w">reaches</span> <span class="w">the</span> <span class="w">model.</span></span> <span class="sent" data-sent-id="s4-4-s2" data-start="632.721" title="Click to jump here"><span class="w">Use</span> <span class="w">the</span> <span class="w">Compliance</span> <span class="w">API</span> <span class="w">for</span> <span class="w">post-hoc</span> <span class="w">audit,</span> <span class="w">content</span> <span class="w">deletion,</span> <span class="w">and</span> <span class="w">full</span> <span class="w">session</span> <span class="w">transcript</span> <span class="w">export—remembering</span> <span class="w">that</span> <span class="w">an</span> <span class="w">Admin</span> <span class="w">API</span> <span class="w">key</span> <span class="w">only</span> <span class="w">reads</span> <span class="w">the</span> <span class="w">Activity</span> <span class="w">Feed,</span> <span class="w">while</span> <span class="w">a</span> <span class="w">Compliance</span> <span class="w">Access</span> <span class="w">Key</span> <span class="w">reaches</span> <span class="w">every</span> <span class="w">endpoint</span> <span class="w">under</span> <span class="w">a</span> <span class="w">shared</span> <span class="w">six</span> <span class="w">hundred</span> <span class="w">requests</span> <span class="w">per</span> <span class="w">minute</span> <span class="w">limit.</span></span> <span class="sent" data-sent-id="s4-4-s3" data-start="650.077" title="Click to jump here"><span class="w">Use</span> <span class="w">OpenTelemetry</span> <span class="w">for</span> <span class="w">live</span> <span class="w">operational</span> <span class="w">telemetry</span> <span class="w">and</span> <span class="w">the</span> <span class="w">Analytics</span> <span class="w">API</span> <span class="w">for</span> <span class="w">FinOps</span> <span class="w">aggregation.</span></span></div></div>
+              <div class="ref-notes"><table><thead><tr><th>Mechanism</th><th>Timing &amp; Direction</th><th>Primary Purpose</th><th>Auth &amp; Key Limits</th></tr></thead><tbody><tr><td><strong>Inference Hooks</strong></td><td>Inline, pre-inference (Anthropic calls your HTTPS server)</td><td>Real-time DLP blocking, working-hours/model policy enforcement, push transcript archival</td><td>Claude Enterprise only; <code>organization:manage</code> role; no prompt rewriting or raw image inspection</td></tr><tr><td><strong>Compliance API</strong> (<code>/v1/compliance/*</code>)</td><td>Post-hoc pull (You call Anthropic API)</td><td>Audit Activity Feed, retrieve/delete chats, files, projects, local &amp; remote session transcripts, org settings, and Security Posture</td><td><strong>Compliance Access Key</strong> reaches all endpoints; <strong>Admin API Key</strong> reaches Activity Feed only; shared 600 RPM limit per parent org</td></tr><tr><td><strong>OpenTelemetry Logging</strong></td><td>Real-time stream to your collector</td><td>Per-event operational telemetry (tokens, cost, host metadata) for Claude Code and Cowork</td><td>Best for operational monitoring; Anthropic recommends Compliance API for retrieving full session transcripts</td></tr><tr><td><strong>Analytics API</strong></td><td>Post-hoc aggregated pull</td><td>FinOps, IT usage, and cost aggregation across Enterprise or Claude Code</td><td>Separate keys/provisioning; aggregated metrics, not per-event security audit records</td></tr></tbody></table></div>
+            </article>
+            <article class="seg kind-bullets" data-seg-id="s4-5">
+              <div class="seg-top">
+                <span class="seg-label">SECURITY POSTURE</span>
+                <button class="seg-play-btn" data-jump-seg="s4-5"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Auditing Security Posture Events and SIEM Integration</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s4-5-s0" data-start="657.221" title="Click to jump here"><span class="w">Finally,</span> <span class="w">integrate</span> <span class="w">Security</span> <span class="w">Posture</span> <span class="w">from</span> <span class="w">the</span> <span class="w">Compliance</span> <span class="w">API</span> <span class="w">into</span> <span class="w">your</span> <span class="w">SIEM</span> <span class="w">using</span> <span class="w">OCSF</span> <span class="w">mapping</span> <span class="w">to</span> <span class="w">detect</span> <span class="w">configuration</span> <span class="w">drift.</span></span> <span class="sent" data-sent-id="s4-5-s1" data-start="665.617" title="Click to jump here"><span class="w">Controls</span> <span class="w">are</span> <span class="w">automatic,</span> <span class="w">manual,</span> <span class="w">or</span> <span class="w">information-only,</span> <span class="w">and</span> <span class="w">admins</span> <span class="w">can</span> <span class="w">record</span> <span class="w">attestations</span> <span class="w">with</span> <span class="w">a</span> <span class="w">default</span> <span class="w">ninety-day</span> <span class="w">review</span> <span class="w">date.</span></span> <span class="sent" data-sent-id="s4-5-s2" data-start="673.928" title="Click to jump here"><span class="w">Pay</span> <span class="w">close</span> <span class="w">attention</span> <span class="w">to</span> <span class="w">accepted</span> <span class="w">risk</span> <span class="w">attestations,</span> <span class="w">because</span> <span class="w">they</span> <span class="w">report</span> <span class="w">as</span> <span class="w">passed</span> <span class="w">even</span> <span class="w">when</span> <span class="w">the</span> <span class="w">control</span> <span class="w">is</span> <span class="w">off.</span></span> <span class="sent" data-sent-id="s4-5-s3" data-start="680.553" title="Click to jump here"><span class="w">Also</span> <span class="w">remember</span> <span class="w">that</span> <span class="w">Activity</span> <span class="w">Feed</span> <span class="w">records</span> <span class="w">persist</span> <span class="w">for</span> <span class="w">six</span> <span class="w">years</span> <span class="w">and</span> <span class="w">are</span> <span class="w">not</span> <span class="w">shortened</span> <span class="w">or</span> <span class="w">encrypted</span> <span class="w">by</span> <span class="w">CMEK</span> <span class="w">or</span> <span class="w">ZDR.</span></span></div></div>
+              <div class="ref-notes"><ul><li><strong>Three control kinds:</strong> The Compliance API exposes Security Center controls as <strong>Automatic</strong> (e.g., <code>sso_enabled</code>), <strong>Manual</strong> (e.g., <code>oauth_conditional_access</code> in an external IdP), or <strong>Information-only</strong> (e.g., <code>allowed_invite_domains</code>, rated <code>descriptive</code>).</li><li><strong>Attestations &amp; drift:</strong> Admins attest controls as <code>completed</code>, <code>accepted_risk</code>, or <code>control_failed</code> (default 90-day <code>review_date</code>). An <code>accepted_risk</code> attestation causes a control to report <code>passed</code> even though the underlying control is not in place—ingest Security Posture events from the Activity Feed into your SIEM (normalized to <strong>OCSF</strong>) to alert on risky changes and expiring risk acceptances.</li><li><strong>Retention &amp; privacy caveats:</strong> Activity Feed records (including actor user ID, email, IP, and user agent) are retained for <strong>6 years</strong> even after user or org deletion. CMEK, ZDR, and HIPAA plans do not encrypt or shorten retention of attestation metadata, and attestation comments are never returned by the API or Activity Feed (and cannot be saved when CMEK or ZDR restricts them).</li></ul></div>
+            </article>
+        </section>
+
+      <section class="quiz-section" id="scenarios">
+        <div class="section-header">
+          <div class="section-obj">CCDV-P Scenario Practice</div>
+          <h2>Production Scenario Questions</h2>
+        </div>
+        
+        <div class="scenario-card" data-correct="B">
+          <h3>Scenario 1: Closing the Lethal Trifecta in an Autonomous Procurement Agent</h3>
+          <p class="scenario-prompt">An enterprise deploys a Claude Managed Agent that reads inbound vendor PDF invoices from an external inbox, queries an internal ERP database for purchase orders and bank routing details, and uses an MCP email/webhook tool to notify accounts payable or request vendor clarification. During pre-launch red-teaming, an adversarial invoice embeds hidden instructions that cause the agent to query another vendor&#x27;s bank details from the ERP and send them to an external attacker address via the email tool. The engineering team has already wrapped the invoice text in XML tags and added a strict system prompt forbidding data exfiltration. Which combination of changes most directly closes the exploit path?</p>
+          <div class="opt-list"><button class="opt-btn" data-key="A"><strong>A.</strong> Move the invoice text into the system prompt with explicit untrusted-data delimiters, and switch the agent to a higher-effort reasoning model so it better detects hidden instructions.</button><button class="opt-btn" data-key="B"><strong>B.</strong> Scope the ERP tool deterministically to the single vendor ID tied to the active invoice, enforce a recipient domain allowlist or always_ask approval policy on the outbound email MCP tool, and place invoice payloads as JSON-encoded tool_result blocks.</button><button class="opt-btn" data-key="C"><strong>C.</strong> Enable Compliance API Activity Feed ingestion into the company SIEM and configure a PostToolUse hook to log every outbound email recipient and payload for forensic review.</button><button class="opt-btn" data-key="D"><strong>D.</strong> Configure a PreToolUse hook that regex-strips phrases like &#x27;ignore previous instructions&#x27; from inbound invoices before passing them to the agent.</button></div>
+          <div class="rationale">
+            <strong>Answer: B</strong> &mdash; The agent exhibits the Lethal Trifecta (private ERP data + untrusted vendor invoices + external email communication). Prompt-level warnings cannot be relied on as a security boundary. Option B breaks the exploit deterministically outside the model by enforcing least-privilege data scoping on the ERP tool, gating external communication with recipient allowlisting or an always_ask confirmation policy, and following Anthropic&#x27;s indirect prompt injection hardening (JSON-encoded tool_result blocks). Option A makes injection worse by placing untrusted data in the system prompt; Option C only detects exfiltration after the fact; Option D relies on brittle keyword filtering that is trivially bypassed.
+          </div>
+        </div>
+        <div class="scenario-card" data-correct="A">
+          <h3>Scenario 2: Debugging a Workload Identity Federation Migration on Kubernetes</h3>
+          <p class="scenario-prompt">A platform team migrates a Kubernetes agent fleet from static workspace API keys to Workload Identity Federation (WIF). They configure the federation issuer, service account, and federation rule, mount projected OIDC service-account tokens at /var/run/secrets/anthropic.com/token, and inject ANTHROPIC_FEDERATION_RULE_ID, ANTHROPIC_ORGANIZATION_ID, ANTHROPIC_SERVICE_ACCOUNT_ID, and ANTHROPIC_IDENTITY_TOKEN_FILE into the pods. Initially, usage logs show requests are still authenticating via the old static API key. After removing the static key from the deployment manifest, pods authenticate successfully at startup, but 50 minutes later fail token refresh with jti_reused in the Claude Console authentication history. What explains both issues and what is the cleanest fix?</p>
+          <div class="opt-list"><button class="opt-btn" data-key="A"><strong>A.</strong> ANTHROPIC_API_KEY takes precedence over WIF environment variables, and the projected Kubernetes token was not rotated before the SDK&#x27;s refresh window—unset ANTHROPIC_API_KEY everywhere (verifying with ant auth status) and configure the Kubernetes projected token expiration so kubelet rotates the token file well before the minted Anthropic token&#x27;s refresh window.</button><button class="opt-btn" data-key="B"><strong>B.</strong> WIF requires explicit constructor credentials rather than environment variables, and jti_reused means the federation rule&#x27;s token_lifetime_seconds is too short—hardcode WorkloadIdentityCredentials in Python and raise token_lifetime_seconds to 86400.</button><button class="opt-btn" data-key="C"><strong>C.</strong> The SDK caches the static API key in memory until the pod restarts, and jti_reused is caused by advisory refresh colliding with mandatory refresh—disable check_jti on the federation issuer immediately.</button><button class="opt-btn" data-key="D"><strong>D.</strong> The service account is missing membership in the default workspace, causing fallback to the static key and replay rejections—add the service account to the default workspace and switch the JWKS source from discovery to inline.</button></div>
+          <div class="rationale">
+            <strong>Answer: A</strong> &mdash; In the SDK&#x27;s 5-tier credential precedence, ANTHROPIC_API_KEY sits above federation environment variables, so any leftover key silently overrides WIF (verified via ant auth status). Once the static key was removed, the SDK reread ANTHROPIC_IDENTITY_TOKEN_FILE at its advisory/mandatory refresh window (120s/30s before expiry), but because the projected JWT had not rotated yet, it re-submitted the same single-use jti claim and failed with jti_reused. Rotating the projected token well within the minted token&#x27;s lifetime fixes the root cause without weakening security. Option B is wrong because zero-argument env resolution is the recommended production pattern and longer lifetime does not solve an unrotated JWT; Option C unnecessarily disables replay protection for the entire issuer; Option D is wrong because every service account is implicitly a member of the default workspace.
+          </div>
+        </div>
+        <div class="scenario-card" data-correct="B">
+          <h3>Scenario 3: Designing Enterprise DLP Prevention and Compliance Auditing</h3>
+          <p class="scenario-prompt">A regulated financial services company running Claude Enterprise across claude.ai and Claude Code needs three security capabilities: (1) block employees from sending regulated account numbers to Claude before inference runs, without deploying endpoint agents on laptops; (2) automatically redact account numbers from prompts inline so users&#x27; chats continue uninterrupted; and (3) retain a 6-year audit trail of all user activity, Security Posture attestation changes, and full local/remote session transcripts (including uploaded non-text files) in their SIEM. A staff engineer proposes enabling Platform Inference Hooks and using an Admin API key against the Compliance API. Which assessment of this proposal is most accurate?</p>
+          <div class="opt-list"><button class="opt-btn" data-key="A"><strong>A.</strong> The proposal satisfies all three requirements as designed, provided the Inference Hooks server returns a redacted prompt body in its JSON verdict and the Admin API key has the read:compliance_activities scope.</button><button class="opt-btn" data-key="B"><strong>B.</strong> Platform Inference Hooks satisfy requirement 1 (inline allow/deny with no client install, rolled out via shadow mode), but cannot satisfy requirement 2 because verdicts only allow or deny without rewriting prompts (and raw image bytes are not inspected); for requirement 3, they must provision a Compliance Access Key rather than an Admin API key, because Admin API keys only reach the Activity Feed and cannot retrieve session transcripts, files, or Security Posture current results.</button><button class="opt-btn" data-key="C"><strong>C.</strong> Platform Inference Hooks cannot govern Claude Code CLI sessions, so the company must replace Inference Hooks with OpenTelemetry logging for inline DLP blocking and use CSV audit log exports for the 6-year SIEM archive.</button><button class="opt-btn" data-key="D"><strong>D.</strong> The Compliance API can perform inline DLP redaction before inference if called with a Compliance Access Key, making Platform Inference Hooks redundant once the 600 RPM rate limit is accounted for.</button></div>
+          <div class="rationale">
+            <strong>Answer: B</strong> &mdash; Platform Inference Hooks run server-side across all Claude Enterprise products (including claude.ai and Claude Code) with zero client installation, making them ideal for requirement 1 (inline DLP allow/deny). However, Inference Hooks explicitly do not support rewriting or redacting prompts and do not send raw image/file bytes—so requirement 2 cannot be met by Inference Hooks alone (and users must edit or rewind denied turns to continue). For requirement 3, the Compliance API requires a Compliance Access Key to access session transcripts, files, and Security Posture results; an Admin API key only accesses the Activity Feed. Option A invents prompt rewriting for Inference Hooks; Option C falsely claims Inference Hooks exclude Claude Code and confuses OTel telemetry with inline blocking; Option D confuses post-hoc Compliance API auditing with inline enforcement.
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+<script>
+const TIMELINE = {"duration":688.233,"segments":[{"id":"intro","section":"Overview","start":0.0,"end":43.931,"sentences":[{"id":"intro-s0","start":0.0,"end":3.669,"words":[{"t":"Domain","s":0.0,"e":0.447},{"t":"7:","s":0.447,"e":0.723},{"t":"Runtime","s":0.723,"e":1.245},{"t":"Guardrails","s":1.245,"e":1.991},{"t":"and","s":1.991,"e":2.215},{"t":"Production","s":2.215,"e":2.961},{"t":"Security.","s":2.961,"e":3.669}]},{"id":"intro-s1","start":3.809,"end":5.687,"words":[{"t":"Exam","s":3.809,"e":4.287},{"t":"weight:","s":4.287,"e":5.268},{"t":"11%.","s":5.268,"e":5.687}]},{"id":"intro-s2","start":5.827,"end":17.411,"words":[{"t":"Hardening","s":5.827,"e":6.462},{"t":"tool-using","s":6.462,"e":7.098},{"t":"Claude","s":7.098,"e":7.521},{"t":"agents","s":7.521,"e":7.945},{"t":"in","s":7.945,"e":8.086},{"t":"production","s":8.086,"e":8.792},{"t":"with","s":8.792,"e":9.074},{"t":"deterministic","s":9.074,"e":9.992},{"t":"guardrails,","s":9.992,"e":10.853},{"t":"sandbox","s":10.853,"e":11.347},{"t":"isolation,","s":11.347,"e":12.138},{"t":"threat","s":12.138,"e":12.561},{"t":"defense","s":12.561,"e":13.056},{"t":"against","s":13.056,"e":13.55},{"t":"untrusted","s":13.55,"e":14.185},{"t":"input,","s":14.185,"e":14.693},{"t":"and","s":14.693,"e":14.905},{"t":"enterprise","s":14.905,"e":15.611},{"t":"identity","s":15.611,"e":16.176},{"t":"and","s":16.176,"e":16.387},{"t":"audit","s":16.387,"e":16.74},{"t":"controls.","s":16.74,"e":17.411}]},{"id":"intro-s3","start":17.551,"end":20.239,"words":[{"t":"Model","s":17.551,"e":17.896},{"t":"behavior","s":17.896,"e":18.447},{"t":"is","s":18.447,"e":18.585},{"t":"never","s":18.585,"e":18.929},{"t":"a","s":18.929,"e":19.033},{"t":"security","s":19.033,"e":19.584},{"t":"boundary.","s":19.584,"e":20.239}]},{"id":"intro-s4","start":20.379,"end":43.931,"words":[{"t":"On","s":20.379,"e":20.528},{"t":"the","s":20.528,"e":20.752},{"t":"CCDV-P","s":20.752,"e":21.126},{"t":"exam,","s":21.126,"e":21.589},{"t":"whenever","s":21.589,"e":22.187},{"t":"an","s":22.187,"e":22.336},{"t":"agent","s":22.336,"e":22.71},{"t":"touches","s":22.71,"e":23.232},{"t":"private","s":23.232,"e":23.755},{"t":"data,","s":23.755,"e":24.218},{"t":"untrusted","s":24.218,"e":24.891},{"t":"content,","s":24.891,"e":25.578},{"t":"or","s":25.578,"e":25.727},{"t":"irreversible","s":25.727,"e":26.624},{"t":"tools,","s":26.624,"e":27.161},{"t":"you","s":27.161,"e":27.386},{"t":"assume","s":27.386,"e":27.834},{"t":"prompt","s":27.834,"e":28.282},{"t":"injection","s":28.282,"e":28.954},{"t":"can","s":28.954,"e":29.178},{"t":"eventually","s":29.178,"e":29.925},{"t":"succeed","s":29.925,"e":30.448},{"t":"and","s":30.448,"e":30.672},{"t":"design","s":30.672,"e":31.12},{"t":"deterministic","s":31.12,"e":32.092},{"t":"controls","s":32.092,"e":32.689},{"t":"outside","s":32.689,"e":33.212},{"t":"the","s":33.212,"e":33.436},{"t":"model\u2014hooks,","s":33.436,"e":34.347},{"t":"permission","s":34.347,"e":35.094},{"t":"policies,","s":35.094,"e":35.856},{"t":"OS","s":35.856,"e":36.006},{"t":"or","s":36.006,"e":36.155},{"t":"microVM","s":36.155,"e":36.678},{"t":"sandboxes,","s":36.678,"e":37.515},{"t":"egress","s":37.515,"e":37.963},{"t":"proxies,","s":37.963,"e":38.65},{"t":"short-lived","s":38.65,"e":39.397},{"t":"federated","s":39.397,"e":40.069},{"t":"identities,","s":40.069,"e":40.98},{"t":"and","s":40.98,"e":41.205},{"t":"vaulted","s":41.205,"e":41.727},{"t":"secrets\u2014to","s":41.727,"e":42.4},{"t":"bound","s":42.4,"e":42.773},{"t":"the","s":42.773,"e":42.997},{"t":"blast","s":42.997,"e":43.371},{"t":"radius.","s":43.371,"e":43.931}]}]},{"id":"s1-1","section":"Layered Runtime Guardrails, Filtering, and Hooks","start":44.631,"end":73.945,"sentences":[{"id":"s1-1-s0","start":44.631,"end":51.799,"words":[{"t":"Production","s":44.631,"e":45.276},{"t":"guardrails","s":45.276,"e":45.92},{"t":"should","s":45.92,"e":46.307},{"t":"match","s":46.307,"e":46.629},{"t":"your","s":46.629,"e":46.887},{"t":"agent's","s":46.887,"e":47.274},{"t":"actual","s":47.274,"e":47.661},{"t":"risk","s":47.661,"e":47.918},{"t":"profile","s":47.918,"e":48.37},{"t":"through","s":48.37,"e":48.821},{"t":"layered","s":48.821,"e":49.272},{"t":"defenses,","s":49.272,"e":49.93},{"t":"not","s":49.93,"e":50.123},{"t":"a","s":50.123,"e":50.22},{"t":"single","s":50.22,"e":50.606},{"t":"prompt","s":50.606,"e":50.993},{"t":"instruction.","s":50.993,"e":51.799}]},{"id":"s1-1-s1","start":51.939,"end":63.501,"words":[{"t":"Start","s":51.939,"e":52.337},{"t":"with","s":52.337,"e":52.656},{"t":"deterministic","s":52.656,"e":53.691},{"t":"input","s":53.691,"e":54.089},{"t":"validation","s":54.089,"e":54.885},{"t":"and","s":54.885,"e":55.124},{"t":"PII","s":55.124,"e":55.363},{"t":"redaction,","s":55.363,"e":56.255},{"t":"then","s":56.255,"e":56.573},{"t":"add","s":56.573,"e":56.812},{"t":"a","s":56.812,"e":56.932},{"t":"fast","s":56.932,"e":57.25},{"t":"harmlessness","s":57.25,"e":58.206},{"t":"screen","s":58.206,"e":58.684},{"t":"using","s":58.684,"e":59.082},{"t":"Claude","s":59.082,"e":59.559},{"t":"Haiku","s":59.559,"e":59.958},{"t":"five","s":59.958,"e":60.276},{"t":"point","s":60.276,"e":60.674},{"t":"five","s":60.674,"e":60.993},{"t":"with","s":60.993,"e":61.311},{"t":"structured","s":61.311,"e":62.108},{"t":"JSON","s":62.108,"e":62.426},{"t":"output","s":62.426,"e":62.904},{"t":"config.","s":62.904,"e":63.501}]},{"id":"s1-1-s2","start":63.641,"end":73.945,"words":[{"t":"One","s":63.641,"e":63.852},{"t":"critical","s":63.852,"e":64.415},{"t":"detail:","s":64.415,"e":64.992},{"t":"if","s":64.992,"e":65.133},{"t":"the","s":65.133,"e":65.344},{"t":"screening","s":65.344,"e":65.978},{"t":"call","s":65.978,"e":66.259},{"t":"itself","s":66.259,"e":66.682},{"t":"returns","s":66.682,"e":67.174},{"t":"stop","s":67.174,"e":67.456},{"t":"reason","s":67.456,"e":67.878},{"t":"refusal,","s":67.878,"e":68.526},{"t":"treat","s":68.526,"e":68.877},{"t":"that","s":68.877,"e":69.159},{"t":"as","s":69.159,"e":69.3},{"t":"a","s":69.3,"e":69.405},{"t":"harmful","s":69.405,"e":69.898},{"t":"verdict","s":69.898,"e":70.391},{"t":"and","s":70.391,"e":70.602},{"t":"trigger","s":70.602,"e":71.095},{"t":"your","s":71.095,"e":71.376},{"t":"safety","s":71.376,"e":71.798},{"t":"fallback","s":71.798,"e":72.361},{"t":"rather","s":72.361,"e":72.784},{"t":"than","s":72.784,"e":73.065},{"t":"failing","s":73.065,"e":73.558},{"t":"open.","s":73.558,"e":73.945}]}]},{"id":"s1-2","section":"Layered Runtime Guardrails, Filtering, and Hooks","start":74.305,"end":105.872,"sentences":[{"id":"s1-2-s0","start":74.305,"end":77.889,"words":[{"t":"You","s":74.305,"e":74.499},{"t":"have","s":74.499,"e":74.757},{"t":"three","s":74.757,"e":75.08},{"t":"distinct","s":75.08,"e":75.597},{"t":"hook","s":75.597,"e":75.855},{"t":"layers","s":75.855,"e":76.242},{"t":"across","s":76.242,"e":76.63},{"t":"the","s":76.63,"e":76.823},{"t":"Claude","s":76.823,"e":77.211},{"t":"ecosystem.","s":77.211,"e":77.889}]},{"id":"s1-2-s1","start":78.029,"end":83.725,"words":[{"t":"Claude","s":78.029,"e":78.488},{"t":"Code","s":78.488,"e":78.794},{"t":"hooks","s":78.794,"e":79.176},{"t":"enforce","s":79.176,"e":79.711},{"t":"local","s":79.711,"e":80.093},{"t":"workspace","s":80.093,"e":80.781},{"t":"policies","s":80.781,"e":81.393},{"t":"like","s":81.393,"e":81.699},{"t":"PreToolUse","s":81.699,"e":82.463},{"t":"and","s":82.463,"e":82.693},{"t":"ConfigChange.","s":82.693,"e":83.725}]},{"id":"s1-2-s2","start":83.865,"end":90.436,"words":[{"t":"Agent","s":83.865,"e":84.294},{"t":"SDK","s":84.294,"e":84.552},{"t":"hooks","s":84.552,"e":84.982},{"t":"run","s":84.982,"e":85.239},{"t":"in-process","s":85.239,"e":86.012},{"t":"callbacks","s":86.012,"e":86.785},{"t":"to","s":86.785,"e":86.957},{"t":"deny","s":86.957,"e":87.301},{"t":"or","s":87.301,"e":87.473},{"t":"modify","s":87.473,"e":87.988},{"t":"tool","s":87.988,"e":88.332},{"t":"inputs","s":88.332,"e":88.847},{"t":"deterministically.","s":88.847,"e":90.436}]},{"id":"s1-2-s3","start":90.576,"end":105.872,"words":[{"t":"Finally,","s":90.576,"e":91.208},{"t":"Platform","s":91.208,"e":91.758},{"t":"Inference","s":91.758,"e":92.377},{"t":"Hooks","s":92.377,"e":92.721},{"t":"govern","s":92.721,"e":93.133},{"t":"every","s":93.133,"e":93.477},{"t":"Claude","s":93.477,"e":93.89},{"t":"Enterprise","s":93.89,"e":94.577},{"t":"surface","s":94.577,"e":95.058},{"t":"inline","s":95.058,"e":95.471},{"t":"before","s":95.471,"e":95.883},{"t":"inference","s":95.883,"e":96.502},{"t":"runs,","s":96.502,"e":96.928},{"t":"supporting","s":96.928,"e":97.616},{"t":"shadow","s":97.616,"e":98.028},{"t":"mode,","s":98.028,"e":98.454},{"t":"rollout","s":98.454,"e":98.936},{"t":"percentages,","s":98.936,"e":99.843},{"t":"and","s":99.843,"e":100.049},{"t":"circuit","s":100.049,"e":100.53},{"t":"breakers\u2014though","s":100.53,"e":101.493},{"t":"they","s":101.493,"e":101.768},{"t":"only","s":101.768,"e":102.043},{"t":"allow","s":102.043,"e":102.387},{"t":"or","s":102.387,"e":102.524},{"t":"deny,","s":102.524,"e":102.95},{"t":"never","s":102.95,"e":103.294},{"t":"rewrite","s":103.294,"e":103.775},{"t":"prompts","s":103.775,"e":104.256},{"t":"or","s":104.256,"e":104.394},{"t":"inspect","s":104.394,"e":104.875},{"t":"raw","s":104.875,"e":105.081},{"t":"image","s":105.081,"e":105.425},{"t":"bytes.","s":105.425,"e":105.872}]}]},{"id":"s1-3","section":"Layered Runtime Guardrails, Filtering, and Hooks","start":106.232,"end":133.925,"sentences":[{"id":"s1-3-s0","start":106.232,"end":118.051,"words":[{"t":"For","s":106.232,"e":106.463},{"t":"irreversible","s":106.463,"e":107.385},{"t":"actions","s":107.385,"e":107.924},{"t":"like","s":107.924,"e":108.231},{"t":"writing","s":108.231,"e":108.77},{"t":"secrets","s":108.77,"e":109.308},{"t":"or","s":109.308,"e":109.462},{"t":"executing","s":109.462,"e":110.154},{"t":"destructive","s":110.154,"e":111.0},{"t":"commands,","s":111.0,"e":111.784},{"t":"enforce","s":111.784,"e":112.322},{"t":"deterministic","s":112.322,"e":113.322},{"t":"PreToolUse","s":113.322,"e":114.091},{"t":"hooks","s":114.091,"e":114.475},{"t":"in","s":114.475,"e":114.629},{"t":"the","s":114.629,"e":114.86},{"t":"Agent","s":114.86,"e":115.244},{"t":"SDK","s":115.244,"e":115.475},{"t":"that","s":115.475,"e":115.783},{"t":"return","s":115.783,"e":116.244},{"t":"permission","s":116.244,"e":117.013},{"t":"decision","s":117.013,"e":117.628},{"t":"deny.","s":117.628,"e":118.051}]},{"id":"s1-3-s1","start":118.191,"end":125.977,"words":[{"t":"Notice","s":118.191,"e":118.639},{"t":"the","s":118.639,"e":118.863},{"t":"classic","s":118.863,"e":119.387},{"t":"production","s":119.387,"e":120.134},{"t":"trap","s":120.134,"e":120.433},{"t":"here:","s":120.433,"e":120.896},{"t":"matching","s":120.896,"e":121.494},{"t":"only","s":121.494,"e":121.793},{"t":"Write","s":121.793,"e":122.166},{"t":"and","s":122.166,"e":122.39},{"t":"Edit","s":122.39,"e":122.689},{"t":"tools","s":122.689,"e":123.063},{"t":"leaves","s":123.063,"e":123.511},{"t":"a","s":123.511,"e":123.623},{"t":"gap","s":123.623,"e":123.847},{"t":"if","s":123.847,"e":123.997},{"t":"the","s":123.997,"e":124.221},{"t":"agent","s":124.221,"e":124.595},{"t":"also","s":124.595,"e":124.894},{"t":"has","s":124.894,"e":125.118},{"t":"Bash","s":125.118,"e":125.417},{"t":"access.","s":125.417,"e":125.977}]},{"id":"s1-3-s2","start":126.117,"end":133.925,"words":[{"t":"Always","s":126.117,"e":126.528},{"t":"pair","s":126.528,"e":126.802},{"t":"tool-level","s":126.802,"e":127.418},{"t":"hooks","s":127.418,"e":127.761},{"t":"with","s":127.761,"e":128.035},{"t":"OS-level","s":128.035,"e":128.514},{"t":"sandbox","s":128.514,"e":128.994},{"t":"restrictions","s":128.994,"e":129.816},{"t":"so","s":129.816,"e":129.953},{"t":"the","s":129.953,"e":130.158},{"t":"agent","s":130.158,"e":130.5},{"t":"cannot","s":130.5,"e":130.911},{"t":"route","s":130.911,"e":131.254},{"t":"around","s":131.254,"e":131.665},{"t":"your","s":131.665,"e":131.939},{"t":"matcher","s":131.939,"e":132.418},{"t":"through","s":132.418,"e":132.898},{"t":"a","s":132.898,"e":133.0},{"t":"shell","s":133.0,"e":133.343},{"t":"command.","s":133.343,"e":133.925}]}]},{"id":"s1-4","section":"Layered Runtime Guardrails, Filtering, and Hooks","start":134.285,"end":164.423,"sentences":[{"id":"s1-4-s0","start":134.285,"end":137.763,"words":[{"t":"Watch","s":134.285,"e":134.636},{"t":"out","s":134.636,"e":134.847},{"t":"for","s":134.847,"e":135.058},{"t":"three","s":135.058,"e":135.409},{"t":"exam","s":135.409,"e":135.69},{"t":"traps","s":135.69,"e":136.042},{"t":"around","s":136.042,"e":136.463},{"t":"runtime","s":136.463,"e":136.955},{"t":"guardrails.","s":136.955,"e":137.763}]},{"id":"s1-4-s1","start":137.903,"end":145.305,"words":[{"t":"First,","s":137.903,"e":138.435},{"t":"never","s":138.435,"e":138.804},{"t":"feed","s":138.804,"e":139.1},{"t":"stop","s":139.1,"e":139.395},{"t":"reason","s":139.395,"e":139.838},{"t":"refusal","s":139.838,"e":140.356},{"t":"into","s":140.356,"e":140.651},{"t":"a","s":140.651,"e":140.762},{"t":"generic","s":140.762,"e":141.279},{"t":"retry","s":141.279,"e":141.648},{"t":"loop\u2014treat","s":141.648,"e":142.313},{"t":"it","s":142.313,"e":142.461},{"t":"as","s":142.461,"e":142.609},{"t":"a","s":142.609,"e":142.719},{"t":"safety","s":142.719,"e":143.163},{"t":"class","s":143.163,"e":143.532},{"t":"with","s":143.532,"e":143.828},{"t":"a","s":143.828,"e":143.938},{"t":"dedicated","s":143.938,"e":144.603},{"t":"fallback.","s":144.603,"e":145.305}]},{"id":"s1-4-s2","start":145.445,"end":153.765,"words":[{"t":"Second,","s":145.445,"e":146.035},{"t":"use","s":146.035,"e":146.25},{"t":"shadow","s":146.25,"e":146.682},{"t":"mode","s":146.682,"e":146.969},{"t":"and","s":146.969,"e":147.185},{"t":"staged","s":147.185,"e":147.617},{"t":"rollout","s":147.617,"e":148.12},{"t":"percentages","s":148.12,"e":148.911},{"t":"to","s":148.911,"e":149.055},{"t":"tune","s":149.055,"e":149.343},{"t":"false","s":149.343,"e":149.702},{"t":"positives","s":149.702,"e":150.349},{"t":"against","s":150.349,"e":150.853},{"t":"false","s":150.853,"e":151.212},{"t":"negatives","s":151.212,"e":151.859},{"t":"before","s":151.859,"e":152.291},{"t":"enforcing","s":152.291,"e":152.938},{"t":"hard","s":152.938,"e":153.226},{"t":"blocks.","s":153.226,"e":153.765}]},{"id":"s1-4-s3","start":153.905,"end":164.423,"words":[{"t":"Third,","s":153.905,"e":154.402},{"t":"remember","s":154.402,"e":154.954},{"t":"that","s":154.954,"e":155.23},{"t":"Inference","s":155.23,"e":155.851},{"t":"Hooks","s":155.851,"e":156.196},{"t":"inspect","s":156.196,"e":156.679},{"t":"the","s":156.679,"e":156.886},{"t":"full","s":156.886,"e":157.163},{"t":"transcript,","s":157.163,"e":158.005},{"t":"so","s":158.005,"e":158.143},{"t":"after","s":158.143,"e":158.488},{"t":"a","s":158.488,"e":158.591},{"t":"denial","s":158.591,"e":159.005},{"t":"the","s":159.005,"e":159.212},{"t":"user","s":159.212,"e":159.488},{"t":"must","s":159.488,"e":159.764},{"t":"edit","s":159.764,"e":160.041},{"t":"or","s":160.041,"e":160.179},{"t":"rewind","s":160.179,"e":160.593},{"t":"the","s":160.593,"e":160.8},{"t":"offending","s":160.8,"e":161.421},{"t":"turn","s":161.421,"e":161.697},{"t":"or","s":161.697,"e":161.835},{"t":"every","s":161.835,"e":162.18},{"t":"follow-up","s":162.18,"e":162.732},{"t":"message","s":162.732,"e":163.215},{"t":"will","s":163.215,"e":163.491},{"t":"be","s":163.491,"e":163.629},{"t":"blocked","s":163.629,"e":164.112},{"t":"too.","s":164.112,"e":164.423}]}]},{"id":"s1-5","section":"Layered Runtime Guardrails, Filtering, and Hooks","start":164.783,"end":193.521,"sentences":[{"id":"s1-5-s0","start":164.783,"end":171.375,"words":[{"t":"Approval","s":164.783,"e":165.324},{"t":"gates","s":165.324,"e":165.662},{"t":"let","s":165.662,"e":165.865},{"t":"you","s":165.865,"e":166.068},{"t":"keep","s":166.068,"e":166.338},{"t":"humans","s":166.338,"e":166.744},{"t":"in","s":166.744,"e":166.879},{"t":"the","s":166.879,"e":167.082},{"t":"loop","s":167.082,"e":167.352},{"t":"for","s":167.352,"e":167.555},{"t":"high-impact","s":167.555,"e":168.231},{"t":"actions","s":168.231,"e":168.704},{"t":"without","s":168.704,"e":169.178},{"t":"causing","s":169.178,"e":169.651},{"t":"prompt","s":169.651,"e":170.057},{"t":"fatigue","s":170.057,"e":170.53},{"t":"on","s":170.53,"e":170.665},{"t":"safe","s":170.665,"e":170.936},{"t":"reads.","s":170.936,"e":171.375}]},{"id":"s1-5-s1","start":171.515,"end":182.309,"words":[{"t":"In","s":171.515,"e":171.671},{"t":"Managed","s":171.671,"e":172.217},{"t":"Agents,","s":172.217,"e":172.857},{"t":"server-executed","s":172.857,"e":173.95},{"t":"tools","s":173.95,"e":174.34},{"t":"support","s":174.34,"e":174.887},{"t":"always","s":174.887,"e":175.355},{"t":"allow,","s":175.355,"e":175.917},{"t":"always","s":175.917,"e":176.385},{"t":"ask,","s":176.385,"e":176.791},{"t":"and","s":176.791,"e":177.025},{"t":"auto","s":177.025,"e":177.337},{"t":"classifier","s":177.337,"e":178.118},{"t":"policies,","s":178.118,"e":178.914},{"t":"with","s":178.914,"e":179.226},{"t":"MCP","s":179.226,"e":179.46},{"t":"toolsets","s":179.46,"e":180.085},{"t":"safely","s":180.085,"e":180.553},{"t":"defaulting","s":180.553,"e":181.333},{"t":"to","s":181.333,"e":181.489},{"t":"always","s":181.489,"e":181.958},{"t":"ask.","s":181.958,"e":182.309}]},{"id":"s1-5-s2","start":182.449,"end":193.521,"words":[{"t":"In","s":182.449,"e":182.592},{"t":"Claude","s":182.592,"e":183.023},{"t":"Code,","s":183.023,"e":183.467},{"t":"Auto","s":183.467,"e":183.754},{"t":"mode","s":183.754,"e":184.041},{"t":"uses","s":184.041,"e":184.328},{"t":"a","s":184.328,"e":184.435},{"t":"separate","s":184.435,"e":185.009},{"t":"classifier","s":185.009,"e":185.726},{"t":"while","s":185.726,"e":186.085},{"t":"still","s":186.085,"e":186.443},{"t":"respecting","s":186.443,"e":187.16},{"t":"explicit","s":187.16,"e":187.734},{"t":"deny","s":187.734,"e":188.021},{"t":"rules,","s":188.021,"e":188.537},{"t":"and","s":188.537,"e":188.752},{"t":"critical","s":188.752,"e":189.326},{"t":"path","s":189.326,"e":189.613},{"t":"removals","s":189.613,"e":190.186},{"t":"always","s":190.186,"e":190.617},{"t":"force","s":190.617,"e":190.975},{"t":"approval","s":190.975,"e":191.549},{"t":"even","s":191.549,"e":191.836},{"t":"when","s":191.836,"e":192.123},{"t":"an","s":192.123,"e":192.266},{"t":"allow","s":192.266,"e":192.625},{"t":"rule","s":192.625,"e":192.911},{"t":"matches.","s":192.911,"e":193.521}]}]},{"id":"s2-1","section":"Sandboxing, Isolation Boundaries, and Network Controls","start":194.221,"end":221.104,"sentences":[{"id":"s2-1-s0","start":194.221,"end":202.093,"words":[{"t":"Good","s":194.221,"e":194.509},{"t":"sandboxing","s":194.509,"e":195.227},{"t":"lets","s":195.227,"e":195.515},{"t":"an","s":195.515,"e":195.659},{"t":"agent","s":195.659,"e":196.018},{"t":"run","s":196.018,"e":196.234},{"t":"shell","s":196.234,"e":196.593},{"t":"commands","s":196.593,"e":197.169},{"t":"and","s":197.169,"e":197.384},{"t":"search","s":197.384,"e":197.816},{"t":"the","s":197.816,"e":198.031},{"t":"web","s":198.031,"e":198.247},{"t":"without","s":198.247,"e":198.75},{"t":"ever","s":198.75,"e":199.038},{"t":"exposing","s":199.038,"e":199.613},{"t":"production","s":199.613,"e":200.332},{"t":"systems","s":200.332,"e":200.835},{"t":"or","s":200.835,"e":200.979},{"t":"raw","s":200.979,"e":201.194},{"t":"credentials.","s":201.194,"e":202.093}]},{"id":"s2-1-s1","start":202.233,"end":209.124,"words":[{"t":"In","s":202.233,"e":202.365},{"t":"Claude","s":202.365,"e":202.763},{"t":"Managed","s":202.763,"e":203.226},{"t":"Agents,","s":203.226,"e":203.769},{"t":"the","s":203.769,"e":203.967},{"t":"agent","s":203.967,"e":204.298},{"t":"loop,","s":204.298,"e":204.709},{"t":"session","s":204.709,"e":205.172},{"t":"history,","s":205.172,"e":205.781},{"t":"and","s":205.781,"e":205.98},{"t":"vault","s":205.98,"e":206.311},{"t":"secrets","s":206.311,"e":206.774},{"t":"all","s":206.774,"e":206.973},{"t":"stay","s":206.973,"e":207.237},{"t":"outside","s":207.237,"e":207.701},{"t":"the","s":207.701,"e":207.899},{"t":"container","s":207.899,"e":208.495},{"t":"boundary.","s":208.495,"e":209.124}]},{"id":"s2-1-s2","start":209.264,"end":221.104,"words":[{"t":"Bash","s":209.264,"e":209.551},{"t":"and","s":209.551,"e":209.766},{"t":"file","s":209.766,"e":210.053},{"t":"tools","s":210.053,"e":210.411},{"t":"run","s":210.411,"e":210.627},{"t":"in","s":210.627,"e":210.77},{"t":"an","s":210.77,"e":210.913},{"t":"isolated","s":210.913,"e":211.487},{"t":"per-session","s":211.487,"e":212.204},{"t":"Linux","s":212.204,"e":212.563},{"t":"container,","s":212.563,"e":213.366},{"t":"while","s":213.366,"e":213.725},{"t":"web","s":213.725,"e":213.94},{"t":"fetch","s":213.94,"e":214.298},{"t":"runs","s":214.298,"e":214.585},{"t":"server-side,","s":214.585,"e":215.46},{"t":"enforces","s":215.46,"e":216.034},{"t":"domain","s":216.034,"e":216.464},{"t":"allowlists,","s":216.464,"e":217.339},{"t":"and","s":217.339,"e":217.554},{"t":"only","s":217.554,"e":217.841},{"t":"opens","s":217.841,"e":218.2},{"t":"URLs","s":218.2,"e":218.486},{"t":"that","s":218.486,"e":218.773},{"t":"have","s":218.773,"e":219.06},{"t":"already","s":219.06,"e":219.562},{"t":"appeared","s":219.562,"e":220.136},{"t":"in","s":220.136,"e":220.279},{"t":"the","s":220.279,"e":220.494},{"t":"session.","s":220.494,"e":221.104}]}]},{"id":"s2-2","section":"Sandboxing, Isolation Boundaries, and Network Controls","start":221.464,"end":252.443,"sentences":[{"id":"s2-2-s0","start":221.464,"end":227.544,"words":[{"t":"When","s":221.464,"e":221.748},{"t":"hosting","s":221.748,"e":222.244},{"t":"Claude","s":222.244,"e":222.67},{"t":"Code","s":222.67,"e":222.954},{"t":"or","s":222.954,"e":223.096},{"t":"the","s":223.096,"e":223.309},{"t":"Agent","s":223.309,"e":223.663},{"t":"SDK","s":223.663,"e":223.876},{"t":"yourself,","s":223.876,"e":224.6},{"t":"match","s":224.6,"e":224.955},{"t":"your","s":224.955,"e":225.238},{"t":"isolation","s":225.238,"e":225.877},{"t":"layer","s":225.877,"e":226.232},{"t":"to","s":226.232,"e":226.373},{"t":"your","s":226.373,"e":226.657},{"t":"threat","s":226.657,"e":227.083},{"t":"model.","s":227.083,"e":227.544}]},{"id":"s2-2-s1","start":227.684,"end":237.839,"words":[{"t":"The","s":227.684,"e":227.901},{"t":"open-source","s":227.901,"e":228.622},{"t":"sandbox","s":228.622,"e":229.127},{"t":"runtime","s":229.127,"e":229.633},{"t":"gives","s":229.633,"e":229.994},{"t":"very","s":229.994,"e":230.282},{"t":"low","s":230.282,"e":230.499},{"t":"overhead","s":230.499,"e":231.076},{"t":"using","s":231.076,"e":231.437},{"t":"bubblewrap","s":231.437,"e":232.159},{"t":"or","s":232.159,"e":232.303},{"t":"Seatbelt,","s":232.303,"e":233.039},{"t":"while","s":233.039,"e":233.4},{"t":"hardened","s":233.4,"e":233.978},{"t":"Docker","s":233.978,"e":234.411},{"t":"containers","s":234.411,"e":235.132},{"t":"drop","s":235.132,"e":235.421},{"t":"all","s":235.421,"e":235.638},{"t":"capabilities","s":235.638,"e":236.504},{"t":"and","s":236.504,"e":236.72},{"t":"set","s":236.72,"e":236.937},{"t":"network","s":236.937,"e":237.442},{"t":"none.","s":237.442,"e":237.839}]},{"id":"s2-2-s2","start":237.979,"end":252.443,"words":[{"t":"For","s":237.979,"e":238.211},{"t":"multi-tenant","s":238.211,"e":239.062},{"t":"workloads","s":239.062,"e":239.759},{"t":"running","s":239.759,"e":240.301},{"t":"untrusted","s":240.301,"e":240.997},{"t":"code,","s":240.997,"e":241.477},{"t":"step","s":241.477,"e":241.787},{"t":"up","s":241.787,"e":241.941},{"t":"to","s":241.941,"e":242.096},{"t":"gVisor","s":242.096,"e":242.56},{"t":"to","s":242.56,"e":242.715},{"t":"intercept","s":242.715,"e":243.412},{"t":"syscalls","s":243.412,"e":244.031},{"t":"in","s":244.031,"e":244.186},{"t":"userspace,","s":244.186,"e":245.052},{"t":"or","s":245.052,"e":245.207},{"t":"Firecracker","s":245.207,"e":246.058},{"t":"microVMs","s":246.058,"e":246.678},{"t":"that","s":246.678,"e":246.987},{"t":"boot","s":246.987,"e":247.297},{"t":"in","s":247.297,"e":247.451},{"t":"under","s":247.451,"e":247.838},{"t":"one","s":247.838,"e":248.071},{"t":"hundred","s":248.071,"e":248.612},{"t":"twenty-five","s":248.612,"e":249.386},{"t":"milliseconds","s":249.386,"e":250.315},{"t":"and","s":250.315,"e":250.547},{"t":"route","s":250.547,"e":250.934},{"t":"all","s":250.934,"e":251.166},{"t":"egress","s":251.166,"e":251.63},{"t":"over","s":251.63,"e":251.94},{"t":"vsock.","s":251.94,"e":252.443}]}]},{"id":"s2-3","section":"Sandboxing, Isolation Boundaries, and Network Controls","start":252.803,"end":285.415,"sentences":[{"id":"s2-3-s0","start":252.803,"end":258.371,"words":[{"t":"On","s":252.803,"e":252.946},{"t":"the","s":252.946,"e":253.161},{"t":"exam,","s":253.161,"e":253.606},{"t":"do","s":253.606,"e":253.749},{"t":"not","s":253.749,"e":253.964},{"t":"confuse","s":253.964,"e":254.466},{"t":"Claude","s":254.466,"e":254.895},{"t":"Code's","s":254.895,"e":255.254},{"t":"built-in","s":255.254,"e":255.755},{"t":"Bash","s":255.755,"e":256.042},{"t":"sandbox","s":256.042,"e":256.544},{"t":"with","s":256.544,"e":256.83},{"t":"full-process","s":256.83,"e":257.619},{"t":"isolation.","s":257.619,"e":258.371}]},{"id":"s2-3-s1","start":258.511,"end":265.252,"words":[{"t":"Built-in","s":258.511,"e":259.052},{"t":"tools","s":259.052,"e":259.438},{"t":"like","s":259.438,"e":259.746},{"t":"Read,","s":259.746,"e":260.225},{"t":"Write,","s":260.225,"e":260.781},{"t":"WebFetch,","s":260.781,"e":261.569},{"t":"hooks,","s":261.569,"e":262.125},{"t":"and","s":262.125,"e":262.356},{"t":"local","s":262.356,"e":262.742},{"t":"MCP","s":262.742,"e":262.974},{"t":"servers","s":262.974,"e":263.515},{"t":"run","s":263.515,"e":263.746},{"t":"outside","s":263.746,"e":264.287},{"t":"that","s":264.287,"e":264.596},{"t":"sandbox.","s":264.596,"e":265.252}]},{"id":"s2-3-s2","start":265.392,"end":278.469,"words":[{"t":"For","s":265.392,"e":265.622},{"t":"managed","s":265.622,"e":266.158},{"t":"enterprise","s":266.158,"e":266.924},{"t":"deployments,","s":266.924,"e":267.935},{"t":"lock","s":267.935,"e":268.242},{"t":"down","s":268.242,"e":268.548},{"t":"escape","s":268.548,"e":269.008},{"t":"hatches","s":269.008,"e":269.544},{"t":"by","s":269.544,"e":269.697},{"t":"setting","s":269.697,"e":270.234},{"t":"allowUnsandboxedCommands","s":270.234,"e":272.072},{"t":"to","s":272.072,"e":272.225},{"t":"false","s":272.225,"e":272.608},{"t":"and","s":272.608,"e":272.838},{"t":"failIfUnavailable","s":272.838,"e":274.141},{"t":"to","s":274.141,"e":274.294},{"t":"true","s":274.294,"e":274.6},{"t":"so","s":274.6,"e":274.754},{"t":"Claude","s":274.754,"e":275.213},{"t":"exits","s":275.213,"e":275.596},{"t":"rather","s":275.596,"e":276.056},{"t":"than","s":276.056,"e":276.362},{"t":"silently","s":276.362,"e":276.975},{"t":"running","s":276.975,"e":277.511},{"t":"unsandboxed.","s":277.511,"e":278.469}]},{"id":"s2-3-s3","start":278.609,"end":285.415,"words":[{"t":"And","s":278.609,"e":278.829},{"t":"remember","s":278.829,"e":279.417},{"t":"that","s":279.417,"e":279.71},{"t":"without","s":279.71,"e":280.224},{"t":"TLS","s":280.224,"e":280.444},{"t":"inspection,","s":280.444,"e":281.34},{"t":"hostname-only","s":281.34,"e":282.221},{"t":"proxies","s":282.221,"e":282.735},{"t":"can","s":282.735,"e":282.955},{"t":"still","s":282.955,"e":283.323},{"t":"be","s":283.323,"e":283.469},{"t":"bypassed","s":283.469,"e":284.057},{"t":"via","s":284.057,"e":284.277},{"t":"domain","s":284.277,"e":284.718},{"t":"fronting.","s":284.718,"e":285.415}]}]},{"id":"s2-4","section":"Sandboxing, Isolation Boundaries, and Network Controls","start":285.775,"end":318.993,"sentences":[{"id":"s2-4-s0","start":285.775,"end":295.887,"words":[{"t":"The","s":285.775,"e":285.996},{"t":"gold-standard","s":285.996,"e":286.878},{"t":"production","s":286.878,"e":287.614},{"t":"pattern","s":287.614,"e":288.128},{"t":"is","s":288.128,"e":288.275},{"t":"running","s":288.275,"e":288.79},{"t":"the","s":288.79,"e":289.011},{"t":"agent","s":289.011,"e":289.379},{"t":"container","s":289.379,"e":290.04},{"t":"with","s":290.04,"e":290.335},{"t":"network","s":290.335,"e":290.849},{"t":"none","s":290.849,"e":291.144},{"t":"and","s":291.144,"e":291.364},{"t":"routing","s":291.364,"e":291.879},{"t":"all","s":291.879,"e":292.1},{"t":"egress","s":292.1,"e":292.541},{"t":"through","s":292.541,"e":293.056},{"t":"a","s":293.056,"e":293.166},{"t":"host-side","s":293.166,"e":293.754},{"t":"proxy","s":293.754,"e":294.122},{"t":"over","s":294.122,"e":294.416},{"t":"a","s":294.416,"e":294.526},{"t":"Unix","s":294.526,"e":294.821},{"t":"socket","s":294.821,"e":295.262},{"t":"or","s":295.262,"e":295.409},{"t":"vsock.","s":295.409,"e":295.887}]},{"id":"s2-4-s1","start":296.027,"end":307.397,"words":[{"t":"The","s":296.027,"e":296.259},{"t":"proxy","s":296.259,"e":296.646},{"t":"enforces","s":296.646,"e":297.265},{"t":"strict","s":297.265,"e":297.73},{"t":"domain","s":297.73,"e":298.194},{"t":"allowlists,","s":298.194,"e":299.138},{"t":"logs","s":299.138,"e":299.448},{"t":"traffic,","s":299.448,"e":300.16},{"t":"and","s":300.16,"e":300.392},{"t":"injects","s":300.392,"e":300.934},{"t":"real","s":300.934,"e":301.244},{"t":"credentials\u2014using","s":301.244,"e":302.482},{"t":"tools","s":302.482,"e":302.869},{"t":"like","s":302.869,"e":303.179},{"t":"Envoy's","s":303.179,"e":303.643},{"t":"credential","s":303.643,"e":304.417},{"t":"injector\u2014so","s":304.417,"e":305.191},{"t":"secrets","s":305.191,"e":305.733},{"t":"never","s":305.733,"e":306.12},{"t":"enter","s":306.12,"e":306.507},{"t":"the","s":306.507,"e":306.739},{"t":"sandbox.","s":306.739,"e":307.397}]},{"id":"s2-4-s2","start":307.537,"end":318.993,"words":[{"t":"Remember","s":307.537,"e":308.239},{"t":"that","s":308.239,"e":308.59},{"t":"standard","s":308.59,"e":309.293},{"t":"HTTPS","s":309.293,"e":309.732},{"t":"proxy","s":309.732,"e":310.171},{"t":"variables","s":310.171,"e":310.961},{"t":"create","s":310.961,"e":311.487},{"t":"an","s":311.487,"e":311.663},{"t":"opaque","s":311.663,"e":312.19},{"t":"tunnel","s":312.19,"e":312.716},{"t":"unless","s":312.716,"e":313.243},{"t":"you","s":313.243,"e":313.506},{"t":"terminate","s":313.506,"e":314.296},{"t":"TLS","s":314.296,"e":314.56},{"t":"or","s":314.56,"e":314.735},{"t":"move","s":314.735,"e":315.087},{"t":"authenticated","s":315.087,"e":316.228},{"t":"calls","s":316.228,"e":316.667},{"t":"behind","s":316.667,"e":317.193},{"t":"an","s":317.193,"e":317.369},{"t":"external","s":317.369,"e":318.071},{"t":"MCP","s":318.071,"e":318.335},{"t":"server.","s":318.335,"e":318.993}]}]},{"id":"s2-5","section":"Sandboxing, Isolation Boundaries, and Network Controls","start":319.353,"end":345.904,"sentences":[{"id":"s2-5-s0","start":319.353,"end":328.271,"words":[{"t":"Even","s":319.353,"e":319.653},{"t":"a","s":319.653,"e":319.765},{"t":"read-only","s":319.765,"e":320.364},{"t":"mount","s":320.364,"e":320.738},{"t":"can","s":320.738,"e":320.963},{"t":"cause","s":320.963,"e":321.337},{"t":"a","s":321.337,"e":321.45},{"t":"major","s":321.45,"e":321.824},{"t":"breach","s":321.824,"e":322.273},{"t":"if","s":322.273,"e":322.423},{"t":"the","s":322.423,"e":322.648},{"t":"directory","s":322.648,"e":323.322},{"t":"contains","s":323.322,"e":323.921},{"t":"dot","s":323.921,"e":324.145},{"t":"env","s":324.145,"e":324.37},{"t":"files,","s":324.37,"e":324.909},{"t":"cloud","s":324.909,"e":325.283},{"t":"credentials,","s":325.283,"e":326.272},{"t":"kubeconfig,","s":326.272,"e":327.185},{"t":"or","s":327.185,"e":327.335},{"t":"private","s":327.335,"e":327.859},{"t":"keys.","s":327.859,"e":328.271}]},{"id":"s2-5-s1","start":328.411,"end":345.904,"words":[{"t":"Always","s":328.411,"e":328.86},{"t":"sanitize","s":328.86,"e":329.458},{"t":"or","s":329.458,"e":329.608},{"t":"filter","s":329.608,"e":330.056},{"t":"workspaces","s":330.056,"e":330.804},{"t":"before","s":330.804,"e":331.253},{"t":"mounting","s":331.253,"e":331.851},{"t":"them","s":331.851,"e":332.15},{"t":"into","s":332.15,"e":332.45},{"t":"an","s":332.45,"e":332.599},{"t":"agent","s":332.599,"e":332.973},{"t":"container,","s":332.973,"e":333.811},{"t":"use","s":333.811,"e":334.035},{"t":"non-executable","s":334.035,"e":335.007},{"t":"tmpfs","s":335.007,"e":335.381},{"t":"mounts","s":335.381,"e":335.83},{"t":"for","s":335.83,"e":336.054},{"t":"temporary","s":336.054,"e":336.727},{"t":"scratch","s":336.727,"e":337.251},{"t":"space,","s":337.251,"e":337.789},{"t":"and","s":337.789,"e":338.014},{"t":"consider","s":338.014,"e":338.612},{"t":"overlay","s":338.612,"e":339.136},{"t":"filesystems","s":339.136,"e":339.958},{"t":"when","s":339.958,"e":340.257},{"t":"you","s":340.257,"e":340.482},{"t":"want","s":340.482,"e":340.781},{"t":"to","s":340.781,"e":340.931},{"t":"inspect","s":340.931,"e":341.454},{"t":"every","s":341.454,"e":341.828},{"t":"file","s":341.828,"e":342.127},{"t":"modification","s":342.127,"e":343.025},{"t":"before","s":343.025,"e":343.473},{"t":"committing","s":343.473,"e":344.221},{"t":"it","s":344.221,"e":344.371},{"t":"to","s":344.371,"e":344.52},{"t":"persistent","s":344.52,"e":345.268},{"t":"storage.","s":345.268,"e":345.904}]}]},{"id":"s3-1","section":"Agentic Attack Surface, Lethal Trifecta, and Secure MCP","start":346.604,"end":378.107,"sentences":[{"id":"s3-1-s0","start":346.604,"end":350.252,"words":[{"t":"Tool-using","s":346.604,"e":347.196},{"t":"agents","s":347.196,"e":347.59},{"t":"face","s":347.59,"e":347.853},{"t":"four","s":347.853,"e":348.116},{"t":"distinct","s":348.116,"e":348.642},{"t":"classes","s":348.642,"e":349.102},{"t":"of","s":349.102,"e":349.233},{"t":"runtime","s":349.233,"e":349.693},{"t":"threats.","s":349.693,"e":350.252}]},{"id":"s3-1-s1","start":350.392,"end":358.52,"words":[{"t":"Direct","s":350.392,"e":350.85},{"t":"and","s":350.85,"e":351.079},{"t":"indirect","s":351.079,"e":351.689},{"t":"prompt","s":351.689,"e":352.147},{"t":"injections","s":352.147,"e":352.911},{"t":"hijack","s":352.911,"e":353.368},{"t":"control","s":353.368,"e":353.903},{"t":"flow","s":353.903,"e":354.208},{"t":"through","s":354.208,"e":354.742},{"t":"user","s":354.742,"e":355.047},{"t":"inputs","s":355.047,"e":355.505},{"t":"or","s":355.505,"e":355.658},{"t":"third-party","s":355.658,"e":356.421},{"t":"data","s":356.421,"e":356.726},{"t":"like","s":356.726,"e":357.032},{"t":"tickets","s":357.032,"e":357.566},{"t":"and","s":357.566,"e":357.795},{"t":"webpages.","s":357.795,"e":358.52}]},{"id":"s3-1-s2","start":358.66,"end":366.276,"words":[{"t":"Tool","s":358.66,"e":358.972},{"t":"poisoning","s":358.972,"e":359.673},{"t":"and","s":359.673,"e":359.907},{"t":"rug","s":359.907,"e":360.141},{"t":"pulls","s":360.141,"e":360.531},{"t":"hide","s":360.531,"e":360.843},{"t":"directives","s":360.843,"e":361.622},{"t":"inside","s":361.622,"e":362.09},{"t":"MCP","s":362.09,"e":362.324},{"t":"tool","s":362.324,"e":362.636},{"t":"descriptions,","s":362.636,"e":363.743},{"t":"even","s":363.743,"e":364.054},{"t":"steering","s":364.054,"e":364.678},{"t":"calls","s":364.678,"e":365.068},{"t":"to","s":365.068,"e":365.224},{"t":"other","s":365.224,"e":365.613},{"t":"servers.","s":365.613,"e":366.276}]},{"id":"s3-1-s3","start":366.416,"end":378.107,"words":[{"t":"Shared","s":366.416,"e":366.871},{"t":"memory","s":366.871,"e":367.326},{"t":"stores","s":367.326,"e":367.781},{"t":"enable","s":367.781,"e":368.236},{"t":"persistent","s":368.236,"e":368.994},{"t":"memory","s":368.994,"e":369.449},{"t":"poisoning","s":369.449,"e":370.131},{"t":"across","s":370.131,"e":370.586},{"t":"sessions,","s":370.586,"e":371.359},{"t":"and","s":371.359,"e":371.587},{"t":"unsafe","s":371.587,"e":372.042},{"t":"autonomy","s":372.042,"e":372.648},{"t":"occurs","s":372.648,"e":373.103},{"t":"when","s":373.103,"e":373.406},{"t":"a","s":373.406,"e":373.52},{"t":"determined","s":373.52,"e":374.278},{"t":"agent","s":374.278,"e":374.657},{"t":"misuses","s":374.657,"e":375.188},{"t":"reachable","s":375.188,"e":375.87},{"t":"tools","s":375.87,"e":376.249},{"t":"just","s":376.249,"e":376.553},{"t":"to","s":376.553,"e":376.704},{"t":"get","s":376.704,"e":376.932},{"t":"past","s":376.932,"e":377.235},{"t":"an","s":377.235,"e":377.387},{"t":"obstacle.","s":377.387,"e":378.107}]}]},{"id":"s3-2","section":"Agentic Attack Surface, Lethal Trifecta, and Secure MCP","start":378.467,"end":409.073,"sentences":[{"id":"s3-2-s0","start":378.467,"end":382.691,"words":[{"t":"Memorize","s":378.467,"e":379.07},{"t":"the","s":379.07,"e":379.297},{"t":"Lethal","s":379.297,"e":379.749},{"t":"Trifecta\u2014it","s":379.749,"e":380.504},{"t":"is","s":380.504,"e":380.654},{"t":"a","s":380.654,"e":380.768},{"t":"centerpiece","s":380.768,"e":381.597},{"t":"of","s":381.597,"e":381.748},{"t":"Domain","s":381.748,"e":382.201},{"t":"seven.","s":382.201,"e":382.691}]},{"id":"s3-2-s1","start":382.831,"end":395.183,"words":[{"t":"Whenever","s":382.831,"e":383.417},{"t":"an","s":383.417,"e":383.564},{"t":"agent","s":383.564,"e":383.93},{"t":"simultaneously","s":383.93,"e":384.956},{"t":"has","s":384.956,"e":385.175},{"t":"access","s":385.175,"e":385.615},{"t":"to","s":385.615,"e":385.761},{"t":"private","s":385.761,"e":386.274},{"t":"data,","s":386.274,"e":386.729},{"t":"processes","s":386.729,"e":387.388},{"t":"untrusted","s":387.388,"e":388.047},{"t":"input,","s":388.047,"e":388.575},{"t":"and","s":388.575,"e":388.795},{"t":"can","s":388.795,"e":389.014},{"t":"communicate","s":389.014,"e":389.82},{"t":"externally,","s":389.82,"e":390.714},{"t":"a","s":390.714,"e":390.824},{"t":"single","s":390.824,"e":391.263},{"t":"indirect","s":391.263,"e":391.85},{"t":"prompt","s":391.85,"e":392.289},{"t":"injection","s":392.289,"e":392.949},{"t":"can","s":392.949,"e":393.168},{"t":"silently","s":393.168,"e":393.754},{"t":"exfiltrate","s":393.754,"e":394.487},{"t":"your","s":394.487,"e":394.78},{"t":"data.","s":394.78,"e":395.183}]},{"id":"s3-2-s2","start":395.323,"end":397.755,"words":[{"t":"Stronger","s":395.323,"e":395.792},{"t":"system","s":395.792,"e":396.143},{"t":"prompts","s":396.143,"e":396.554},{"t":"cannot","s":396.554,"e":396.905},{"t":"close","s":396.905,"e":397.198},{"t":"this","s":397.198,"e":397.433},{"t":"loop.","s":397.433,"e":397.755}]},{"id":"s3-2-s3","start":397.895,"end":409.073,"words":[{"t":"You","s":397.895,"e":398.107},{"t":"must","s":398.107,"e":398.391},{"t":"break","s":398.391,"e":398.744},{"t":"or","s":398.744,"e":398.886},{"t":"deterministically","s":398.886,"e":400.09},{"t":"gate","s":400.09,"e":400.373},{"t":"at","s":400.373,"e":400.514},{"t":"least","s":400.514,"e":400.868},{"t":"one","s":400.868,"e":401.081},{"t":"leg","s":401.081,"e":401.293},{"t":"outside","s":401.293,"e":401.789},{"t":"the","s":401.789,"e":402.001},{"t":"model","s":402.001,"e":402.355},{"t":"through","s":402.355,"e":402.85},{"t":"least-privilege","s":402.85,"e":403.841},{"t":"data","s":403.841,"e":404.125},{"t":"scoping,","s":404.125,"e":404.776},{"t":"strict","s":404.776,"e":405.201},{"t":"recipient","s":405.201,"e":405.838},{"t":"or","s":405.838,"e":405.979},{"t":"domain","s":405.979,"e":406.404},{"t":"allowlists,","s":406.404,"e":407.268},{"t":"or","s":407.268,"e":407.409},{"t":"mandatory","s":407.409,"e":408.047},{"t":"human","s":408.047,"e":408.4},{"t":"approval.","s":408.4,"e":409.073}]}]},{"id":"s3-3","section":"Agentic Attack Surface, Lethal Trifecta, and Secure MCP","start":409.433,"end":439.495,"sentences":[{"id":"s3-3-s0","start":409.433,"end":420.143,"words":[{"t":"To","s":409.433,"e":409.586},{"t":"harden","s":409.586,"e":410.045},{"t":"tool","s":410.045,"e":410.352},{"t":"pipelines","s":410.352,"e":411.041},{"t":"against","s":411.041,"e":411.577},{"t":"indirect","s":411.577,"e":412.189},{"t":"prompt","s":412.189,"e":412.648},{"t":"injection,","s":412.648,"e":413.506},{"t":"always","s":413.506,"e":413.965},{"t":"deliver","s":413.965,"e":414.501},{"t":"third-party","s":414.501,"e":415.266},{"t":"content","s":415.266,"e":415.802},{"t":"strictly","s":415.802,"e":416.415},{"t":"inside","s":416.415,"e":416.874},{"t":"tool","s":416.874,"e":417.18},{"t":"result","s":417.18,"e":417.64},{"t":"blocks,","s":417.64,"e":418.267},{"t":"never","s":418.267,"e":418.65},{"t":"in","s":418.65,"e":418.803},{"t":"system","s":418.803,"e":419.263},{"t":"or","s":419.263,"e":419.416},{"t":"user","s":419.416,"e":419.722},{"t":"text.","s":419.722,"e":420.143}]},{"id":"s3-3-s1","start":420.283,"end":430.459,"words":[{"t":"JSON-encode","s":420.283,"e":420.973},{"t":"untrusted","s":420.973,"e":421.595},{"t":"strings","s":421.595,"e":422.078},{"t":"so","s":422.078,"e":422.216},{"t":"attackers","s":422.216,"e":422.837},{"t":"cannot","s":422.837,"e":423.252},{"t":"break","s":423.252,"e":423.597},{"t":"out","s":423.597,"e":423.804},{"t":"of","s":423.804,"e":423.942},{"t":"delimiters,","s":423.942,"e":424.784},{"t":"label","s":424.784,"e":425.129},{"t":"the","s":425.129,"e":425.336},{"t":"content's","s":425.336,"e":425.889},{"t":"source,","s":425.889,"e":426.455},{"t":"and","s":426.455,"e":426.662},{"t":"never","s":426.662,"e":427.007},{"t":"put","s":427.007,"e":427.214},{"t":"your","s":427.214,"e":427.49},{"t":"own","s":427.49,"e":427.698},{"t":"developer","s":427.698,"e":428.319},{"t":"instructions","s":428.319,"e":429.147},{"t":"inside","s":429.147,"e":429.562},{"t":"a","s":429.562,"e":429.665},{"t":"tool","s":429.665,"e":429.941},{"t":"result.","s":429.941,"e":430.459}]},{"id":"s3-3-s2","start":430.599,"end":439.495,"words":[{"t":"For","s":430.599,"e":430.81},{"t":"high-risk","s":430.81,"e":431.374},{"t":"tools,","s":431.374,"e":431.882},{"t":"pre-screen","s":431.882,"e":432.516},{"t":"raw","s":432.516,"e":432.728},{"t":"tool","s":432.728,"e":433.01},{"t":"outputs","s":433.01,"e":433.503},{"t":"with","s":433.503,"e":433.785},{"t":"a","s":433.785,"e":433.891},{"t":"lightweight","s":433.891,"e":434.666},{"t":"Claude","s":434.666,"e":435.089},{"t":"Haiku","s":435.089,"e":435.442},{"t":"five","s":435.442,"e":435.724},{"t":"point","s":435.724,"e":436.076},{"t":"five","s":436.076,"e":436.358},{"t":"classifier","s":436.358,"e":437.063},{"t":"before","s":437.063,"e":437.486},{"t":"returning","s":437.486,"e":438.12},{"t":"them","s":438.12,"e":438.402},{"t":"to","s":438.402,"e":438.543},{"t":"the","s":438.543,"e":438.755},{"t":"main","s":438.755,"e":439.037},{"t":"agent.","s":439.037,"e":439.495}]}]},{"id":"s3-4","section":"Agentic Attack Surface, Lethal Trifecta, and Secure MCP","start":439.855,"end":477.16,"sentences":[{"id":"s3-4-s0","start":439.855,"end":443.908,"words":[{"t":"Securing","s":439.855,"e":440.51},{"t":"MCP","s":440.51,"e":440.756},{"t":"requires","s":440.756,"e":441.411},{"t":"strict","s":441.411,"e":441.902},{"t":"OAuth","s":441.902,"e":442.311},{"t":"two","s":442.311,"e":442.557},{"t":"point","s":442.557,"e":442.966},{"t":"one","s":442.966,"e":443.212},{"t":"hygiene.","s":443.212,"e":443.908}]},{"id":"s3-4-s1","start":444.048,"end":460.411,"words":[{"t":"Remote","s":444.048,"e":444.646},{"t":"MCP","s":444.646,"e":444.945},{"t":"servers","s":444.945,"e":445.643},{"t":"act","s":445.643,"e":445.943},{"t":"as","s":445.943,"e":446.142},{"t":"OAuth","s":446.142,"e":446.641},{"t":"resource","s":446.641,"e":447.438},{"t":"servers:","s":447.438,"e":448.356},{"t":"they","s":448.356,"e":448.754},{"t":"publish","s":448.754,"e":449.452},{"t":"Protected","s":449.452,"e":450.35},{"t":"Resource","s":450.35,"e":451.148},{"t":"Metadata,","s":451.148,"e":452.165},{"t":"enforce","s":452.165,"e":452.863},{"t":"PKCE","s":452.863,"e":453.262},{"t":"with","s":453.262,"e":453.66},{"t":"S256,","s":453.66,"e":454.279},{"t":"and","s":454.279,"e":454.578},{"t":"bind","s":454.578,"e":454.977},{"t":"tokens","s":454.977,"e":455.575},{"t":"to","s":455.575,"e":455.774},{"t":"their","s":455.774,"e":456.273},{"t":"exact","s":456.273,"e":456.771},{"t":"URL","s":456.771,"e":457.071},{"t":"using","s":457.071,"e":457.569},{"t":"the","s":457.569,"e":457.868},{"t":"RFC","s":457.868,"e":458.167},{"t":"8707","s":458.167,"e":458.566},{"t":"resource","s":458.566,"e":459.364},{"t":"parameter.","s":459.364,"e":460.411}]},{"id":"s3-4-s2","start":460.551,"end":465.351,"words":[{"t":"Never","s":460.551,"e":460.878},{"t":"allow","s":460.878,"e":461.204},{"t":"token","s":461.204,"e":461.531},{"t":"passthrough\u2014servers","s":461.531,"e":462.706},{"t":"must","s":462.706,"e":462.967},{"t":"validate","s":462.967,"e":463.49},{"t":"audience","s":463.49,"e":464.012},{"t":"claims","s":464.012,"e":464.404},{"t":"for","s":464.404,"e":464.6},{"t":"themselves.","s":464.6,"e":465.351}]},{"id":"s3-4-s3","start":465.491,"end":477.16,"words":[{"t":"If","s":465.491,"e":465.653},{"t":"you","s":465.653,"e":465.896},{"t":"run","s":465.896,"e":466.14},{"t":"an","s":466.14,"e":466.302},{"t":"MCP","s":466.302,"e":466.545},{"t":"proxy,","s":466.545,"e":467.129},{"t":"prevent","s":467.129,"e":467.697},{"t":"confused","s":467.697,"e":468.345},{"t":"deputy","s":468.345,"e":468.832},{"t":"attacks","s":468.832,"e":469.4},{"t":"by","s":469.4,"e":469.562},{"t":"enforcing","s":469.562,"e":470.292},{"t":"per-client","s":470.292,"e":471.021},{"t":"consent","s":471.021,"e":471.589},{"t":"before","s":471.589,"e":472.076},{"t":"redirecting","s":472.076,"e":472.968},{"t":"upstream,","s":472.968,"e":473.795},{"t":"and","s":473.795,"e":474.038},{"t":"treat","s":474.038,"e":474.443},{"t":"local","s":474.443,"e":474.849},{"t":"stdio","s":474.849,"e":475.254},{"t":"servers","s":475.254,"e":475.822},{"t":"as","s":475.822,"e":475.984},{"t":"untrusted","s":475.984,"e":476.714},{"t":"code.","s":476.714,"e":477.16}]}]},{"id":"s3-5","section":"Agentic Attack Surface, Lethal Trifecta, and Secure MCP","start":477.52,"end":512.796,"sentences":[{"id":"s3-5-s0","start":477.52,"end":490.533,"words":[{"t":"Effective","s":477.52,"e":478.19},{"t":"red-teaming","s":478.19,"e":478.934},{"t":"tests","s":478.934,"e":479.306},{"t":"your","s":479.306,"e":479.603},{"t":"entire","s":479.603,"e":480.05},{"t":"harness,","s":480.05,"e":480.734},{"t":"not","s":480.734,"e":480.957},{"t":"just","s":480.957,"e":481.255},{"t":"the","s":481.255,"e":481.478},{"t":"model:","s":481.478,"e":482.014},{"t":"inject","s":482.014,"e":482.46},{"t":"poisoned","s":482.46,"e":483.056},{"t":"emails","s":483.056,"e":483.502},{"t":"and","s":483.502,"e":483.725},{"t":"tool","s":483.725,"e":484.023},{"t":"outputs","s":484.023,"e":484.544},{"t":"to","s":484.544,"e":484.692},{"t":"prove","s":484.692,"e":485.064},{"t":"your","s":485.064,"e":485.362},{"t":"deterministic","s":485.362,"e":486.329},{"t":"hooks","s":486.329,"e":486.701},{"t":"and","s":486.701,"e":486.924},{"t":"egress","s":486.924,"e":487.371},{"t":"controls","s":487.371,"e":487.966},{"t":"still","s":487.966,"e":488.338},{"t":"hold","s":488.338,"e":488.636},{"t":"even","s":488.636,"e":488.933},{"t":"when","s":488.933,"e":489.231},{"t":"the","s":489.231,"e":489.454},{"t":"model","s":489.454,"e":489.826},{"t":"is","s":489.826,"e":489.975},{"t":"fooled.","s":489.975,"e":490.533}]},{"id":"s3-5-s1","start":490.673,"end":512.796,"words":[{"t":"Map","s":490.673,"e":490.924},{"t":"your","s":490.924,"e":491.258},{"t":"threat","s":491.258,"e":491.76},{"t":"model","s":491.76,"e":492.177},{"t":"to","s":492.177,"e":492.345},{"t":"the","s":492.345,"e":492.595},{"t":"2025","s":492.595,"e":492.93},{"t":"OWASP","s":492.93,"e":493.347},{"t":"Top","s":493.347,"e":493.598},{"t":"Ten","s":493.598,"e":493.849},{"t":"for","s":493.849,"e":494.1},{"t":"LLM","s":494.1,"e":494.35},{"t":"Applications\u2014especially","s":494.35,"e":496.189},{"t":"Prompt","s":496.189,"e":496.691},{"t":"Injection,","s":496.691,"e":497.627},{"t":"Excessive","s":497.627,"e":498.379},{"t":"Agency,","s":498.379,"e":499.064},{"t":"Supply","s":499.064,"e":499.566},{"t":"Chain,","s":499.566,"e":500.167},{"t":"and","s":500.167,"e":500.418},{"t":"Sensitive","s":500.418,"e":501.17},{"t":"Information","s":501.17,"e":502.09},{"t":"Disclosure\u2014and","s":502.09,"e":503.176},{"t":"organize","s":503.176,"e":503.845},{"t":"ongoing","s":503.845,"e":504.43},{"t":"governance","s":504.43,"e":505.266},{"t":"around","s":505.266,"e":505.767},{"t":"NIST","s":505.767,"e":506.101},{"t":"AI","s":506.101,"e":506.269},{"t":"RMF's","s":506.269,"e":506.603},{"t":"Govern,","s":506.603,"e":507.288},{"t":"Map,","s":507.288,"e":507.723},{"t":"Measure,","s":507.723,"e":508.492},{"t":"and","s":508.492,"e":508.742},{"t":"Manage","s":508.742,"e":509.244},{"t":"functions","s":509.244,"e":509.996},{"t":"with","s":509.996,"e":510.33},{"t":"the","s":510.33,"e":510.581},{"t":"AI","s":510.581,"e":510.748},{"t":"600-1","s":510.748,"e":511.083},{"t":"Generative","s":511.083,"e":511.918},{"t":"AI","s":511.918,"e":512.086},{"t":"Profile.","s":512.086,"e":512.796}]}]},{"id":"s4-1","section":"Workload Identity Federation, Vaults, and Compliance Auditing","start":513.496,"end":549.381,"sentences":[{"id":"s4-1-s0","start":513.496,"end":518.68,"words":[{"t":"At","s":513.496,"e":513.643},{"t":"enterprise","s":513.643,"e":514.376},{"t":"scale,","s":514.376,"e":514.904},{"t":"replace","s":514.904,"e":515.417},{"t":"static","s":515.417,"e":515.857},{"t":"API","s":515.857,"e":516.077},{"t":"keys","s":516.077,"e":516.37},{"t":"with","s":516.37,"e":516.664},{"t":"Workload","s":516.664,"e":517.25},{"t":"Identity","s":517.25,"e":517.837},{"t":"Federation.","s":517.837,"e":518.68}]},{"id":"s4-1-s1","start":518.82,"end":533.327,"words":[{"t":"Your","s":518.82,"e":519.208},{"t":"workload","s":519.208,"e":519.985},{"t":"presents","s":519.985,"e":520.762},{"t":"a","s":520.762,"e":520.908},{"t":"short-lived","s":520.908,"e":521.879},{"t":"OIDC","s":521.879,"e":522.267},{"t":"JWT","s":522.267,"e":522.558},{"t":"from","s":522.558,"e":522.947},{"t":"Kubernetes,","s":522.947,"e":524.131},{"t":"GitHub","s":524.131,"e":524.714},{"t":"Actions,","s":524.714,"e":525.607},{"t":"or","s":525.607,"e":525.802},{"t":"your","s":525.802,"e":526.19},{"t":"cloud","s":526.19,"e":526.676},{"t":"provider","s":526.676,"e":527.452},{"t":"to","s":527.452,"e":527.647},{"t":"Anthropic's","s":527.647,"e":528.618},{"t":"OAuth","s":528.618,"e":529.103},{"t":"token","s":529.103,"e":529.589},{"t":"endpoint","s":529.589,"e":530.365},{"t":"using","s":530.365,"e":530.851},{"t":"the","s":530.851,"e":531.142},{"t":"RFC","s":531.142,"e":531.434},{"t":"7523","s":531.434,"e":531.822},{"t":"jwt-bearer","s":531.822,"e":532.696},{"t":"grant.","s":532.696,"e":533.327}]},{"id":"s4-1-s2","start":533.467,"end":549.381,"words":[{"t":"Three","s":533.467,"e":533.858},{"t":"resources","s":533.858,"e":534.562},{"t":"wire","s":534.562,"e":534.875},{"t":"this","s":534.875,"e":535.187},{"t":"together:","s":535.187,"e":535.985},{"t":"a","s":535.985,"e":536.102},{"t":"non-human","s":536.102,"e":536.728},{"t":"service","s":536.728,"e":537.275},{"t":"account,","s":537.275,"e":537.995},{"t":"a","s":537.995,"e":538.112},{"t":"federation","s":538.112,"e":538.894},{"t":"issuer","s":538.894,"e":539.363},{"t":"with","s":539.363,"e":539.676},{"t":"its","s":539.676,"e":539.911},{"t":"JWKS","s":539.911,"e":540.224},{"t":"source,","s":540.224,"e":540.865},{"t":"and","s":540.865,"e":541.099},{"t":"a","s":541.099,"e":541.217},{"t":"federation","s":541.217,"e":541.999},{"t":"rule","s":541.999,"e":542.312},{"t":"that","s":542.312,"e":542.624},{"t":"evaluates","s":542.624,"e":543.328},{"t":"subject","s":543.328,"e":543.876},{"t":"prefixes,","s":543.876,"e":544.673},{"t":"claims,","s":544.673,"e":545.315},{"t":"or","s":545.315,"e":545.471},{"t":"CEL","s":545.471,"e":545.706},{"t":"conditions","s":545.706,"e":546.488},{"t":"before","s":546.488,"e":546.957},{"t":"minting","s":546.957,"e":547.504},{"t":"a","s":547.504,"e":547.621},{"t":"short-lived","s":547.621,"e":548.403},{"t":"access","s":548.403,"e":548.873},{"t":"token.","s":548.873,"e":549.381}]}]},{"id":"s4-2","section":"Workload Identity Federation, Vaults, and Compliance Auditing","start":549.741,"end":586.065,"sentences":[{"id":"s4-2-s0","start":549.741,"end":554.435,"words":[{"t":"Three","s":549.741,"e":550.117},{"t":"WIF","s":550.117,"e":550.342},{"t":"operational","s":550.342,"e":551.168},{"t":"traps","s":551.168,"e":551.543},{"t":"show","s":551.543,"e":551.844},{"t":"up","s":551.844,"e":551.994},{"t":"frequently","s":551.994,"e":552.745},{"t":"in","s":552.745,"e":552.895},{"t":"production","s":552.895,"e":553.646},{"t":"incidents.","s":553.646,"e":554.435}]},{"id":"s4-2-s1","start":554.575,"end":568.377,"words":[{"t":"First,","s":554.575,"e":555.151},{"t":"the","s":555.151,"e":555.392},{"t":"Anthropic","s":555.392,"e":556.112},{"t":"API","s":556.112,"e":556.352},{"t":"key","s":556.352,"e":556.592},{"t":"environment","s":556.592,"e":557.473},{"t":"variable","s":557.473,"e":558.114},{"t":"sits","s":558.114,"e":558.434},{"t":"above","s":558.434,"e":558.834},{"t":"federation","s":558.834,"e":559.635},{"t":"variables","s":559.635,"e":560.355},{"t":"in","s":560.355,"e":560.515},{"t":"the","s":560.515,"e":560.755},{"t":"five-tier","s":560.755,"e":561.396},{"t":"credential","s":561.396,"e":562.197},{"t":"precedence","s":562.197,"e":562.997},{"t":"order,","s":562.997,"e":563.574},{"t":"so","s":563.574,"e":563.734},{"t":"a","s":563.734,"e":563.854},{"t":"leftover","s":563.854,"e":564.494},{"t":"key","s":564.494,"e":564.734},{"t":"silently","s":564.734,"e":565.375},{"t":"overrides","s":565.375,"e":566.095},{"t":"WIF\u2014always","s":566.095,"e":566.816},{"t":"check","s":566.816,"e":567.216},{"t":"ant","s":567.216,"e":567.456},{"t":"auth","s":567.456,"e":567.777},{"t":"status.","s":567.777,"e":568.377}]},{"id":"s4-2-s2","start":568.517,"end":576.155,"words":[{"t":"Second,","s":568.517,"e":569.145},{"t":"the","s":569.145,"e":569.375},{"t":"SDK","s":569.375,"e":569.605},{"t":"refreshes","s":569.605,"e":570.294},{"t":"proactively","s":570.294,"e":571.137},{"t":"at","s":571.137,"e":571.29},{"t":"minus","s":571.29,"e":571.673},{"t":"one","s":571.673,"e":571.903},{"t":"hundred","s":571.903,"e":572.439},{"t":"twenty","s":572.439,"e":572.899},{"t":"seconds","s":572.899,"e":573.435},{"t":"and","s":573.435,"e":573.665},{"t":"mandatorily","s":573.665,"e":574.508},{"t":"at","s":574.508,"e":574.661},{"t":"minus","s":574.661,"e":575.044},{"t":"thirty","s":575.044,"e":575.504},{"t":"seconds.","s":575.504,"e":576.155}]},{"id":"s4-2-s3","start":576.295,"end":586.065,"words":[{"t":"Third,","s":576.295,"e":576.969},{"t":"JWTs","s":576.969,"e":577.343},{"t":"with","s":577.343,"e":577.717},{"t":"a","s":577.717,"e":577.858},{"t":"J","s":577.858,"e":577.998},{"t":"T","s":577.998,"e":578.139},{"t":"I","s":578.139,"e":578.279},{"t":"claim","s":578.279,"e":578.747},{"t":"are","s":578.747,"e":579.028},{"t":"single-use","s":579.028,"e":579.87},{"t":"by","s":579.87,"e":580.057},{"t":"default,","s":580.057,"e":580.918},{"t":"so","s":580.918,"e":581.105},{"t":"unrotated","s":581.105,"e":581.947},{"t":"token","s":581.947,"e":582.415},{"t":"files","s":582.415,"e":582.883},{"t":"or","s":582.883,"e":583.07},{"t":"retries","s":583.07,"e":583.725},{"t":"trigger","s":583.725,"e":584.381},{"t":"J","s":584.381,"e":584.521},{"t":"T","s":584.521,"e":584.661},{"t":"I","s":584.661,"e":584.802},{"t":"reused","s":584.802,"e":585.363},{"t":"errors.","s":585.363,"e":586.065}]}]},{"id":"s4-3","section":"Workload Identity Federation, Vaults, and Compliance Auditing","start":586.425,"end":622.396,"sentences":[{"id":"s4-3-s0","start":586.425,"end":591.865,"words":[{"t":"For","s":586.425,"e":586.622},{"t":"third-party","s":586.622,"e":587.28},{"t":"credentials,","s":587.28,"e":588.148},{"t":"Managed","s":588.148,"e":588.609},{"t":"Agents","s":588.609,"e":589.004},{"t":"Vaults","s":589.004,"e":589.398},{"t":"keep","s":589.398,"e":589.661},{"t":"secrets","s":589.661,"e":590.122},{"t":"completely","s":590.122,"e":590.78},{"t":"out","s":590.78,"e":590.977},{"t":"of","s":590.977,"e":591.109},{"t":"the","s":591.109,"e":591.306},{"t":"sandbox.","s":591.306,"e":591.865}]},{"id":"s4-3-s1","start":592.005,"end":607.003,"words":[{"t":"MCP","s":592.005,"e":592.235},{"t":"OAuth","s":592.235,"e":592.618},{"t":"credentials","s":592.618,"e":593.461},{"t":"are","s":593.461,"e":593.691},{"t":"injected","s":593.691,"e":594.304},{"t":"server-side","s":594.304,"e":595.071},{"t":"with","s":595.071,"e":595.377},{"t":"automatic","s":595.377,"e":596.067},{"t":"refresh,","s":596.067,"e":596.772},{"t":"while","s":596.772,"e":597.155},{"t":"environment","s":597.155,"e":597.998},{"t":"variable","s":597.998,"e":598.611},{"t":"credentials","s":598.611,"e":599.454},{"t":"appear","s":599.454,"e":599.914},{"t":"in","s":599.914,"e":600.067},{"t":"the","s":600.067,"e":600.297},{"t":"sandbox","s":600.297,"e":600.834},{"t":"as","s":600.834,"e":600.987},{"t":"opaque","s":600.987,"e":601.447},{"t":"placeholders","s":601.447,"e":602.366},{"t":"that","s":602.366,"e":602.673},{"t":"the","s":602.673,"e":602.903},{"t":"egress","s":602.903,"e":603.363},{"t":"gateway","s":603.363,"e":603.899},{"t":"swaps","s":603.899,"e":604.282},{"t":"into","s":604.282,"e":604.589},{"t":"headers","s":604.589,"e":605.125},{"t":"only","s":605.125,"e":605.432},{"t":"for","s":605.432,"e":605.662},{"t":"allowlisted","s":605.662,"e":606.505},{"t":"hosts.","s":606.505,"e":607.003}]},{"id":"s4-3-s2","start":607.143,"end":622.396,"words":[{"t":"In","s":607.143,"e":607.324},{"t":"self-hosted","s":607.324,"e":608.231},{"t":"deployments,","s":608.231,"e":609.427},{"t":"you","s":609.427,"e":609.699},{"t":"can","s":609.699,"e":609.971},{"t":"back","s":609.971,"e":610.333},{"t":"vaults","s":610.333,"e":610.877},{"t":"with","s":610.877,"e":611.239},{"t":"AWS,","s":611.239,"e":611.711},{"t":"GCP,","s":611.711,"e":612.182},{"t":"Azure,","s":612.182,"e":612.835},{"t":"or","s":612.835,"e":613.016},{"t":"HashiCorp","s":613.016,"e":613.831},{"t":"secret","s":613.831,"e":614.375},{"t":"managers","s":614.375,"e":615.1},{"t":"and","s":615.1,"e":615.372},{"t":"sign","s":615.372,"e":615.735},{"t":"short-lived","s":615.735,"e":616.641},{"t":"per-agent","s":616.641,"e":617.366},{"t":"JWTs","s":617.366,"e":617.729},{"t":"so","s":617.729,"e":617.91},{"t":"MCP","s":617.91,"e":618.182},{"t":"gateways","s":618.182,"e":618.907},{"t":"enforce","s":618.907,"e":619.541},{"t":"least-privilege","s":619.541,"e":620.81},{"t":"access","s":620.81,"e":621.354},{"t":"per","s":621.354,"e":621.626},{"t":"agent","s":621.626,"e":622.079},{"t":"ID.","s":622.079,"e":622.396}]}]},{"id":"s4-4","section":"Workload Identity Federation, Vaults, and Compliance Auditing","start":622.756,"end":656.861,"sentences":[{"id":"s4-4-s0","start":622.756,"end":625.892,"words":[{"t":"Know","s":622.756,"e":623.004},{"t":"when","s":623.004,"e":623.253},{"t":"to","s":623.253,"e":623.377},{"t":"choose","s":623.377,"e":623.75},{"t":"each","s":623.75,"e":623.998},{"t":"enterprise","s":623.998,"e":624.619},{"t":"governance","s":624.619,"e":625.24},{"t":"mechanism.","s":625.24,"e":625.892}]},{"id":"s4-4-s1","start":626.032,"end":632.581,"words":[{"t":"Use","s":626.032,"e":626.223},{"t":"Inference","s":626.223,"e":626.797},{"t":"Hooks","s":626.797,"e":627.116},{"t":"for","s":627.116,"e":627.307},{"t":"inline,","s":627.307,"e":627.83},{"t":"pre-inference","s":627.83,"e":628.595},{"t":"prevention","s":628.595,"e":629.233},{"t":"when","s":629.233,"e":629.488},{"t":"you","s":629.488,"e":629.68},{"t":"must","s":629.68,"e":629.935},{"t":"stop","s":629.935,"e":630.19},{"t":"sensitive","s":630.19,"e":630.764},{"t":"data","s":630.764,"e":631.019},{"t":"before","s":631.019,"e":631.401},{"t":"it","s":631.401,"e":631.529},{"t":"reaches","s":631.529,"e":631.975},{"t":"the","s":631.975,"e":632.167},{"t":"model.","s":632.167,"e":632.581}]},{"id":"s4-4-s2","start":632.721,"end":649.937,"words":[{"t":"Use","s":632.721,"e":632.946},{"t":"the","s":632.946,"e":633.172},{"t":"Compliance","s":633.172,"e":633.923},{"t":"API","s":633.923,"e":634.149},{"t":"for","s":634.149,"e":634.374},{"t":"post-hoc","s":634.374,"e":634.9},{"t":"audit,","s":634.9,"e":635.441},{"t":"content","s":635.441,"e":635.967},{"t":"deletion,","s":635.967,"e":636.734},{"t":"and","s":636.734,"e":636.959},{"t":"full","s":636.959,"e":637.26},{"t":"session","s":637.26,"e":637.786},{"t":"transcript","s":637.786,"e":638.537},{"t":"export\u2014remembering","s":638.537,"e":639.815},{"t":"that","s":639.815,"e":640.115},{"t":"an","s":640.115,"e":640.266},{"t":"Admin","s":640.266,"e":640.641},{"t":"API","s":640.641,"e":640.867},{"t":"key","s":640.867,"e":641.092},{"t":"only","s":641.092,"e":641.393},{"t":"reads","s":641.393,"e":641.769},{"t":"the","s":641.769,"e":641.994},{"t":"Activity","s":641.994,"e":642.595},{"t":"Feed,","s":642.595,"e":643.061},{"t":"while","s":643.061,"e":643.437},{"t":"a","s":643.437,"e":643.55},{"t":"Compliance","s":643.55,"e":644.301},{"t":"Access","s":644.301,"e":644.752},{"t":"Key","s":644.752,"e":644.977},{"t":"reaches","s":644.977,"e":645.503},{"t":"every","s":645.503,"e":645.879},{"t":"endpoint","s":645.879,"e":646.48},{"t":"under","s":646.48,"e":646.856},{"t":"a","s":646.856,"e":646.969},{"t":"shared","s":646.969,"e":647.42},{"t":"six","s":647.42,"e":647.645},{"t":"hundred","s":647.645,"e":648.171},{"t":"requests","s":648.171,"e":648.772},{"t":"per","s":648.772,"e":648.998},{"t":"minute","s":648.998,"e":649.449},{"t":"limit.","s":649.449,"e":649.937}]},{"id":"s4-4-s3","start":650.077,"end":656.861,"words":[{"t":"Use","s":650.077,"e":650.324},{"t":"OpenTelemetry","s":650.324,"e":651.393},{"t":"for","s":651.393,"e":651.639},{"t":"live","s":651.639,"e":651.968},{"t":"operational","s":651.968,"e":652.873},{"t":"telemetry","s":652.873,"e":653.613},{"t":"and","s":653.613,"e":653.86},{"t":"the","s":653.86,"e":654.106},{"t":"Analytics","s":654.106,"e":654.846},{"t":"API","s":654.846,"e":655.093},{"t":"for","s":655.093,"e":655.34},{"t":"FinOps","s":655.34,"e":655.833},{"t":"aggregation.","s":655.833,"e":656.861}]}]},{"id":"s4-5","section":"Workload Identity Federation, Vaults, and Compliance Auditing","start":657.221,"end":688.233,"sentences":[{"id":"s4-5-s0","start":657.221,"end":665.477,"words":[{"t":"Finally,","s":657.221,"e":657.92},{"t":"integrate","s":657.92,"e":658.603},{"t":"Security","s":658.603,"e":659.211},{"t":"Posture","s":659.211,"e":659.743},{"t":"from","s":659.743,"e":660.046},{"t":"the","s":660.046,"e":660.274},{"t":"Compliance","s":660.274,"e":661.034},{"t":"API","s":661.034,"e":661.262},{"t":"into","s":661.262,"e":661.565},{"t":"your","s":661.565,"e":661.869},{"t":"SIEM","s":661.869,"e":662.173},{"t":"using","s":662.173,"e":662.553},{"t":"OCSF","s":662.553,"e":662.857},{"t":"mapping","s":662.857,"e":663.388},{"t":"to","s":663.388,"e":663.54},{"t":"detect","s":663.54,"e":663.996},{"t":"configuration","s":663.996,"e":664.983},{"t":"drift.","s":664.983,"e":665.477}]},{"id":"s4-5-s1","start":665.617,"end":673.788,"words":[{"t":"Controls","s":665.617,"e":666.198},{"t":"are","s":666.198,"e":666.415},{"t":"automatic,","s":666.415,"e":667.228},{"t":"manual,","s":667.228,"e":667.823},{"t":"or","s":667.823,"e":667.968},{"t":"information-only,","s":667.968,"e":669.216},{"t":"and","s":669.216,"e":669.434},{"t":"admins","s":669.434,"e":669.869},{"t":"can","s":669.869,"e":670.087},{"t":"record","s":670.087,"e":670.523},{"t":"attestations","s":670.523,"e":671.393},{"t":"with","s":671.393,"e":671.684},{"t":"a","s":671.684,"e":671.792},{"t":"default","s":671.792,"e":672.3},{"t":"ninety-day","s":672.3,"e":672.953},{"t":"review","s":672.953,"e":673.389},{"t":"date.","s":673.389,"e":673.788}]},{"id":"s4-5-s2","start":673.928,"end":680.413,"words":[{"t":"Pay","s":673.928,"e":674.133},{"t":"close","s":674.133,"e":674.476},{"t":"attention","s":674.476,"e":675.092},{"t":"to","s":675.092,"e":675.229},{"t":"accepted","s":675.229,"e":675.777},{"t":"risk","s":675.777,"e":676.051},{"t":"attestations,","s":676.051,"e":677.023},{"t":"because","s":677.023,"e":677.503},{"t":"they","s":677.503,"e":677.777},{"t":"report","s":677.777,"e":678.187},{"t":"as","s":678.187,"e":678.324},{"t":"passed","s":678.324,"e":678.735},{"t":"even","s":678.735,"e":679.009},{"t":"when","s":679.009,"e":679.283},{"t":"the","s":679.283,"e":679.489},{"t":"control","s":679.489,"e":679.968},{"t":"is","s":679.968,"e":680.105},{"t":"off.","s":680.105,"e":680.413}]},{"id":"s4-5-s3","start":680.553,"end":688.233,"words":[{"t":"Also","s":680.553,"e":680.878},{"t":"remember","s":680.878,"e":681.528},{"t":"that","s":681.528,"e":681.853},{"t":"Activity","s":681.853,"e":682.503},{"t":"Feed","s":682.503,"e":682.829},{"t":"records","s":682.829,"e":683.397},{"t":"persist","s":683.397,"e":683.966},{"t":"for","s":683.966,"e":684.21},{"t":"six","s":684.21,"e":684.454},{"t":"years","s":684.454,"e":684.86},{"t":"and","s":684.86,"e":685.104},{"t":"are","s":685.104,"e":685.348},{"t":"not","s":685.348,"e":685.592},{"t":"shortened","s":685.592,"e":686.323},{"t":"or","s":686.323,"e":686.486},{"t":"encrypted","s":686.486,"e":687.217},{"t":"by","s":687.217,"e":687.38},{"t":"CMEK","s":687.38,"e":687.705},{"t":"or","s":687.705,"e":687.867},{"t":"ZDR.","s":687.867,"e":688.233}]}]}]};
+
+(function() {
+  const audio = document.getElementById('voiceAudio');
+  const playBtn = document.getElementById('playBtn');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const scrub = document.getElementById('scrub');
+  const speedBtn = document.getElementById('speedBtn');
+  const autoScrollBtn = document.getElementById('autoScrollBtn');
+  const themeBtn = document.getElementById('themeBtn');
+  const nowLabel = document.getElementById('nowLabel');
+  const timeLabel = document.getElementById('timeLabel');
+  const progressFill = document.getElementById('progressFill');
+
+  const speeds = [0.85, 1.0, 1.15, 1.25, 1.5, 1.75, 2.0];
+  let speedIdx = 1;
+  let autoScroll = true;
+  let activeSegId = null;
+  let activeSentId = null;
+  let activeWordEl = null;
+  let rafId = null;
+
+  const segMap = new Map();
+  const flatSents = [];
+  TIMELINE.segments.forEach((seg, segIdx) => {
+    segMap.set(seg.id, { ...seg, idx: segIdx });
+    (seg.sentences || []).forEach(sent => {
+      flatSents.push({ ...sent, segId: seg.id, segIdx, section: seg.section });
+    });
+  });
+
+  function fmt(sec) {
+    if (!isFinite(sec) || sec < 0) sec = 0;
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  }
+
+  function setPlayUI(playing) {
+    playBtn.innerHTML = playing ? '&#10074;&#10074; Pause' : '&#9654; Play';
+  }
+
+  function findSentenceAt(t) {
+    // Binary search for fast 60fps lookup
+    let lo = 0, hi = flatSents.length - 1, best = null;
+    while (lo <= hi) {
+      const mid = (lo + hi) >> 1;
+      const s = flatSents[mid];
+      if (t >= s.start && t <= s.end) return s;
+      if (t < s.start) hi = mid - 1;
+      else { best = s; lo = mid + 1; }
+    }
+    return best || flatSents[0] || null;
+  }
+
+  function updateHighlights(t) {
+    const sent = findSentenceAt(t);
+    if (!sent) return;
+
+    // 1. Highlight parent block
+    if (activeSegId !== sent.segId) {
+      document.querySelectorAll('.is-speaking').forEach(el => el.classList.remove('is-speaking'));
+      const segEl = document.querySelector(`[data-seg-id="${sent.segId}"]`);
+      if (segEl) segEl.classList.add('is-speaking');
+      activeSegId = sent.segId;
+      nowLabel.textContent = `${sent.section} (${sent.segIdx + 1}/${TIMELINE.segments.length})`;
+
+      const secEl = segEl ? segEl.closest('.section-block') : null;
+      document.querySelectorAll('.toc-list a').forEach(a => a.classList.remove('active'));
+      if (secEl) {
+        const link = document.querySelector(`.toc-list a[href="#${secEl.id}"]`);
+        if (link) link.classList.add('active');
+      } else {
+        const first = document.querySelector('.toc-list a[href="#top"]');
+        if (first) first.classList.add('active');
+      }
+    }
+
+    // 2. Highlight active sentence
+    if (activeSentId !== sent.id) {
+      document.querySelectorAll('.sent.active-sent').forEach(el => {
+        el.classList.remove('active-sent');
+        el.querySelectorAll('.w').forEach(w => w.classList.remove('w-past', 'w-now', 'w-future'));
+      });
+      const sentEl = document.querySelector(`[data-sent-id="${sent.id}"]`);
+      if (sentEl) {
+        sentEl.classList.add('active-sent');
+        if (autoScroll && !audio.paused) {
+          sentEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+      activeSentId = sent.id;
+      activeWordEl = null;
+    }
+
+    // 3. Karaoke word-by-word highlighting inside active sentence
+    const sentEl = document.querySelector(`[data-sent-id="${sent.id}"]`);
+    if (sentEl) {
+      const wordSpans = sentEl.querySelectorAll('.w');
+      const words = sent.words || [];
+      for (let i = 0; i < words.length && i < wordSpans.length; i++) {
+        const w = words[i];
+        const sp = wordSpans[i];
+        if (t >= w.s && t <= w.e) {
+          if (activeWordEl !== sp) {
+            sp.classList.remove('w-past', 'w-future');
+            sp.classList.add('w-now');
+            activeWordEl = sp;
+          }
+        } else if (t > w.e) {
+          sp.classList.remove('w-now', 'w-future');
+          sp.classList.add('w-past');
+        } else {
+          sp.classList.remove('w-now', 'w-past');
+          sp.classList.add('w-future');
+        }
+      }
+    }
+  }
+
+  function syncUI() {
+    const t = audio.currentTime || 0;
+    const dur = audio.duration || TIMELINE.duration || 1;
+    scrub.max = dur;
+    scrub.value = t;
+    timeLabel.textContent = `${fmt(t)} / ${fmt(dur)}`;
+    progressFill.style.width = `${Math.min(100, (t / dur) * 100)}%`;
+    updateHighlights(t);
+  }
+
+  function tick() {
+    syncUI();
+    if (!audio.paused && !audio.ended) {
+      rafId = requestAnimationFrame(tick);
+    }
+  }
+
+  function jumpToTime(t, autoPlay = true) {
+    audio.currentTime = Math.max(0, t + 0.005);
+    syncUI();
+    if (autoPlay) audio.play().catch(() => {});
+  }
+
+  // Click any sentence to jump directly to that exact sentence!
+  document.querySelectorAll('.sent[data-start]').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      jumpToTime(parseFloat(el.dataset.start), true);
+    });
+  });
+
+  // Click block Play button to jump to start of block
+  document.querySelectorAll('.seg-play-btn[data-jump-seg]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const seg = segMap.get(btn.dataset.jumpSeg);
+      if (seg) jumpToTime(seg.start, true);
+    });
+  });
+
+  playBtn.addEventListener('click', () => {
+    if (audio.paused) audio.play().catch(() => {});
+    else audio.pause();
+  });
+
+  prevBtn.addEventListener('click', () => {
+    const cur = findSentenceAt(audio.currentTime || 0);
+    const segIdx = cur ? Math.max(0, cur.segIdx - 1) : 0;
+    jumpToTime(TIMELINE.segments[segIdx].start, !audio.paused);
+  });
+
+  nextBtn.addEventListener('click', () => {
+    const cur = findSentenceAt(audio.currentTime || 0);
+    const segIdx = cur ? Math.min(TIMELINE.segments.length - 1, cur.segIdx + 1) : 0;
+    jumpToTime(TIMELINE.segments[segIdx].start, !audio.paused);
+  });
+
+  scrub.addEventListener('input', () => {
+    audio.currentTime = parseFloat(scrub.value);
+    syncUI();
+  });
+
+  function applySpeed(idx) {
+    speedIdx = ((idx % speeds.length) + speeds.length) % speeds.length;
+    const rate = speeds[speedIdx];
+    audio.preservesPitch = true;
+    audio.webkitPreservesPitch = true;
+    audio.defaultPlaybackRate = rate;
+    audio.playbackRate = rate;
+    speedBtn.textContent = `${rate}x`;
+    try { localStorage.setItem('ccdvp-speed', String(speedIdx)); } catch {}
+    syncUI();
+  }
+
+  speedBtn.addEventListener('click', () => applySpeed(speedIdx + 1));
+  try {
+    const savedSpeed = parseInt(localStorage.getItem('ccdvp-speed'), 10);
+    if (!isNaN(savedSpeed) && savedSpeed >= 0 && savedSpeed < speeds.length) {
+      applySpeed(savedSpeed);
+    } else {
+      applySpeed(1);
+    }
+  } catch { applySpeed(1); }
+
+  autoScrollBtn.addEventListener('click', () => {
+    autoScroll = !autoScroll;
+    autoScrollBtn.classList.toggle('active', autoScroll);
+    autoScrollBtn.textContent = autoScroll ? 'Auto-Scroll: ON' : 'Auto-Scroll: OFF';
+  });
+
+  themeBtn.addEventListener('click', () => {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    themeBtn.textContent = isDark ? 'Dark' : 'Light';
+    try { localStorage.setItem('ccdvp-theme', isDark ? 'light' : 'dark'); } catch {}
+  });
+  try {
+    if (localStorage.getItem('ccdvp-theme') === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      themeBtn.textContent = 'Light';
+    }
+  } catch {}
+
+  audio.addEventListener('play', () => { setPlayUI(true); tick(); });
+  audio.addEventListener('pause', () => { setPlayUI(false); if (rafId) cancelAnimationFrame(rafId); });
+  audio.addEventListener('ended', () => { setPlayUI(false); if (rafId) cancelAnimationFrame(rafId); });
+  audio.addEventListener('timeupdate', syncUI);
+  audio.addEventListener('seeked', syncUI);
+  audio.addEventListener('ratechange', syncUI);
+  audio.addEventListener('loadedmetadata', () => {
+    audio.playbackRate = speeds[speedIdx];
+    syncUI();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    if (e.code === 'Space') { e.preventDefault(); playBtn.click(); }
+    else if (e.code === 'ArrowRight') { e.preventDefault(); nextBtn.click(); }
+    else if (e.code === 'ArrowLeft') { e.preventDefault(); prevBtn.click(); }
+  });
+
+  document.querySelectorAll('.scenario-card').forEach(card => {
+    const correct = card.dataset.correct;
+    const rat = card.querySelector('.rationale');
+    card.querySelectorAll('.opt-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        card.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('correct', 'wrong'));
+        if (btn.dataset.key === correct) {
+          btn.classList.add('correct');
+        } else {
+          btn.classList.add('wrong');
+          const rightBtn = card.querySelector(`.opt-btn[data-key="${correct}"]`);
+          if (rightBtn) rightBtn.classList.add('correct');
+        }
+        rat.classList.add('show');
+      });
+    });
+  });
+
+  syncUI();
+})();
+
+</script>
+</body>
+</html>

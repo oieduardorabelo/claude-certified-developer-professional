@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Domain 4: Advanced Debugging and Incident Response — CCDV-P Study Guide</title>
+<style>
+:root {
+  --bg: #FAF8F5;
+  --surface: #FFFFFF;
+  --surface-alt: #F3EFE8;
+  --ink: #1A1915;
+  --ink-muted: #5C5850;
+  --border: #E5DFD5;
+  --accent: #C96442;
+  --accent-soft: #FDF3EC;
+  --accent-border: #E6A98F;
+  --sent-bg: rgba(201, 100, 66, 0.11);
+  --word-bg: #F7C97E;
+  --word-ink: #1A1915;
+  --word-past: #1A1915;
+  --word-future: #6D685F;
+  --code-bg: #1E1D1A;
+  --code-ink: #F4F0E8;
+  --ok: #2D7A4F;
+  --ok-bg: #EAF6EF;
+  --bad: #B83A3A;
+  --bad-bg: #FCEEEE;
+  --shadow: 0 2px 12px rgba(26, 25, 21, 0.06);
+  --radius: 12px;
+}
+[data-theme="dark"] {
+  --bg: #141311;
+  --surface: #1D1C19;
+  --surface-alt: #25231F;
+  --ink: #F2EEE6;
+  --ink-muted: #A9A295;
+  --border: #322F2A;
+  --accent: #E07A56;
+  --accent-soft: #2A1E18;
+  --accent-border: #8A452C;
+  --sent-bg: rgba(224, 122, 86, 0.16);
+  --word-bg: #C96442;
+  --word-ink: #FFFFFF;
+  --word-past: #F2EEE6;
+  --word-future: #9E978B;
+  --code-bg: #0E0D0C;
+  --code-ink: #EFEAE0;
+  --ok: #52B788;
+  --ok-bg: #172B21;
+  --bad: #E06C6C;
+  --bad-bg: #2E1919;
+  --shadow: 0 2px 16px rgba(0, 0, 0, 0.35);
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+  line-height: 1.68;
+  font-size: 16px;
+}
+/* Sticky Audio Bar */
+.audio-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  padding: 10px 20px;
+}
+.audio-bar-inner {
+  max-width: 1240px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.ab-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  background: var(--surface-alt);
+  color: var(--ink);
+  border-radius: 8px;
+  height: 36px;
+  padding: 0 11px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.ab-btn:hover { border-color: var(--accent); color: var(--accent); }
+.ab-btn.primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+  min-width: 96px;
+  gap: 6px;
+}
+.ab-btn.primary:hover { filter: brightness(1.06); color: #fff; }
+.ab-btn.active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.ab-scrubber {
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.ab-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+.ab-now {
+  font-weight: 600;
+  color: var(--accent);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 360px;
+}
+input[type="range"].scrub {
+  width: 100%;
+  accent-color: var(--accent);
+  cursor: pointer;
+  height: 5px;
+}
+/* Layout */
+.layout {
+  max-width: 1240px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 270px minmax(0, 1fr);
+  gap: 32px;
+  padding: 28px 20px 80px;
+}
+@media (max-width: 940px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { position: static !important; }
+}
+.sidebar {
+  position: sticky;
+  top: 76px;
+  align-self: start;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  box-shadow: var(--shadow);
+}
+.side-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.hub-link {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+}
+.hub-link:hover { text-decoration: underline; }
+.side-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-muted);
+  font-weight: 700;
+  margin: 14px 0 8px;
+}
+.toc-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.toc-list a {
+  display: block;
+  padding: 7px 10px;
+  border-radius: 7px;
+  font-size: 13.5px;
+  color: var(--ink-muted);
+  text-decoration: none;
+  border-left: 3px solid transparent;
+  transition: all 0.15s;
+}
+.toc-list a:hover { background: var(--surface-alt); color: var(--ink); }
+.toc-list a.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-left-color: var(--accent);
+  font-weight: 600;
+}
+.progress-track {
+  height: 6px;
+  background: var(--surface-alt);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-top: 6px;
+}
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--accent);
+  transition: width 0.2s linear;
+}
+.domain-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.domain-nav a {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-muted);
+  text-decoration: none;
+  padding: 5px 8px;
+  border-radius: 6px;
+  background: var(--surface-alt);
+}
+.domain-nav a:hover { color: var(--accent); }
+/* Main Content */
+.hero {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px 30px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow);
+  position: relative;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+.badge-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.pill {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 99px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid var(--accent-border);
+}
+.pill.neutral {
+  background: var(--surface-alt);
+  color: var(--ink-muted);
+  border-color: var(--border);
+}
+h1 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 30px;
+  line-height: 1.22;
+  margin: 0 0 10px;
+  letter-spacing: -0.015em;
+}
+.tagline {
+  font-size: 17px;
+  color: var(--ink-muted);
+  margin: 0 0 14px;
+}
+.mental-model {
+  background: var(--surface-alt);
+  border-left: 3px solid var(--accent);
+  padding: 12px 16px;
+  border-radius: 0 8px 8px 0;
+  font-size: 14.5px;
+}
+.section-block {
+  margin-bottom: 34px;
+  scroll-margin-top: 84px;
+}
+.section-header {
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--border);
+}
+.section-obj {
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  font-weight: 700;
+}
+.section-header h2 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 23px;
+  margin: 4px 0 0;
+}
+/* Narrated Segment Cards */
+.seg {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid transparent;
+  border-radius: var(--radius);
+  padding: 18px 22px;
+  margin-bottom: 16px;
+  transition: background 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+}
+.seg.kind-callout {
+  border-left-color: var(--ink-muted);
+}
+.seg.is-speaking, .hero.is-speaking {
+  border-color: var(--accent-border);
+  border-left: 5px solid var(--accent);
+  box-shadow: 0 4px 22px rgba(201, 100, 66, 0.14);
+}
+.seg-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.seg-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--accent);
+}
+.seg-play-btn {
+  font-size: 11.5px;
+  color: var(--ink-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 2px 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.seg-play-btn:hover {
+  border-color: var(--accent-border);
+  color: var(--accent);
+}
+.seg.is-speaking .seg-play-btn, .hero.is-speaking .seg-play-btn {
+  color: var(--accent);
+  font-weight: 700;
+}
+.pulse-dot {
+  display: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: pulse 1.2s infinite ease-in-out;
+}
+.is-speaking .pulse-dot { display: inline-block; }
+@keyframes pulse {
+  0%, 100% { transform: scale(0.85); opacity: 0.6; }
+  50% { transform: scale(1.25); opacity: 1; }
+}
+.seg h3 {
+  font-size: 18px;
+  margin: 0 0 10px;
+  color: var(--ink);
+}
+/* Live Read-Along Synchronized Transcript */
+.read-along {
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 13px 16px;
+  margin: 10px 0 14px;
+  font-size: 16px;
+  line-height: 1.78;
+}
+.is-speaking .read-along {
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+}
+.read-along-tag {
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--ink-muted);
+  margin-bottom: 5px;
+}
+.is-speaking .read-along-tag {
+  color: var(--accent);
+}
+.sent {
+  border-radius: 5px;
+  padding: 2px 3px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.sent:hover {
+  background: var(--sent-bg);
+}
+.sent.active-sent {
+  background: var(--sent-bg);
+}
+.w {
+  border-radius: 4px;
+  padding: 1px 1.5px;
+  transition: background 0.08s ease, color 0.08s ease;
+}
+.sent.active-sent .w.w-future {
+  color: var(--word-future);
+}
+.sent.active-sent .w.w-past {
+  color: var(--word-past);
+}
+.w.w-now {
+  background: var(--word-bg);
+  color: var(--word-ink) !important;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(201, 100, 66, 0.25);
+}
+/* Reference Notes / Code / Tables */
+.ref-notes {
+  font-size: 15px;
+  color: var(--ink);
+}
+.ref-notes p { margin: 0 0 10px; }
+.ref-notes p:last-child { margin-bottom: 0; }
+.ref-notes ul, .ref-notes ol { margin: 6px 0 8px; padding-left: 22px; }
+.ref-notes li { margin-bottom: 5px; }
+.ref-notes code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.88em;
+  background: var(--surface-alt);
+  padding: 2px 5px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+.ref-notes pre {
+  background: var(--code-bg);
+  color: var(--code-ink);
+  padding: 14px 16px;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-size: 13.5px;
+  line-height: 1.5;
+  margin: 10px 0 4px;
+}
+.ref-notes pre code {
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: inherit;
+}
+.ref-notes table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  margin: 8px 0 4px;
+}
+.ref-notes th, .ref-notes td {
+  border: 1px solid var(--border);
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+.ref-notes th {
+  background: var(--surface-alt);
+  font-weight: 700;
+}
+/* Scenarios Quiz */
+.quiz-section {
+  margin-top: 42px;
+  scroll-margin-top: 84px;
+}
+.scenario-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px 24px;
+  margin-bottom: 18px;
+  box-shadow: var(--shadow);
+}
+.scenario-card h3 {
+  margin: 0 0 10px;
+  font-size: 17.5px;
+  color: var(--accent);
+}
+.scenario-prompt {
+  margin: 0 0 16px;
+  font-size: 15.5px;
+}
+.opt-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.opt-btn {
+  text-align: left;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  color: var(--ink);
+  padding: 11px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14.5px;
+  line-height: 1.45;
+  transition: all 0.15s;
+}
+.opt-btn:hover { border-color: var(--accent); }
+.opt-btn.correct { background: var(--ok-bg); border-color: var(--ok); color: var(--ink); font-weight: 600; }
+.opt-btn.wrong { background: var(--bad-bg); border-color: var(--bad); color: var(--ink); }
+.rationale {
+  display: none;
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  background: var(--surface-alt);
+  border-left: 4px solid var(--ok);
+  font-size: 14.5px;
+}
+.rationale.show { display: block; }
+</style>
+</head>
+<body>
+  <audio id="voiceAudio" src="audio.m4a" preload="metadata"></audio>
+
+  <header class="audio-bar">
+    <div class="audio-bar-inner">
+      <button id="playBtn" class="ab-btn primary" title="Play / Pause (Space)">&#9654; Play</button>
+      <button id="prevBtn" class="ab-btn" title="Previous block (Left Arrow)">&lsaquo; Prev</button>
+      <button id="nextBtn" class="ab-btn" title="Next block (Right Arrow)">Next &rsaquo;</button>
+      <div class="ab-scrubber">
+        <div class="ab-meta">
+          <span id="nowLabel" class="ab-now">Ready &mdash; click Play or any sentence</span>
+          <span id="timeLabel">0:00 / 0:00</span>
+        </div>
+        <input id="scrub" class="scrub" type="range" min="0" max="100" step="0.05" value="0" />
+      </div>
+      <button id="speedBtn" class="ab-btn" title="Playback speed">1x</button>
+      <button id="autoScrollBtn" class="ab-btn active" title="Auto-scroll to active sentence">Auto-Scroll: ON</button>
+      <button id="themeBtn" class="ab-btn" title="Toggle theme">Dark</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="side-top">
+        <a class="hub-link" href="../index.html">&larr; All 8 Domains</a>
+        <span class="pill">Weight 10%</span>
+      </div>
+      <div class="side-title">Listening Progress</div>
+      <div class="progress-track"><div id="progressFill" class="progress-fill"></div></div>
+      <div class="side-title">Domain 4 Sections</div>
+      <ul class="toc-list">
+        <li><a href="#top" class="active">Overview &amp; Mental Model</a></li><li><a href="#sec-1">Isolating Multi-Turn, Multi-Agent, and Tool Failures</a></li><li><a href="#sec-2">Debugging Thinking, Refusals, Grounding, and MCP</a></li><li><a href="#sec-3">Triage, Mitigation, Rollback, and Communication</a></li><li><a href="#sec-4">Converting Incidents into Evals, Monitoring, and Postmortems</a></li><li><a href="#scenarios">Exam Practice Scenarios</a></li>
+      </ul>
+      <div class="domain-nav">
+        <a href="../003-observability-monitoring/index.html">&larr; Domain 3</a>
+        <a href="../005-evaluation-engineering/index.html">Domain 5 &rarr;</a>
+      </div>
+    </aside>
+
+    <main id="top">
+      <section class="hero" data-seg-id="intro">
+        <div class="seg-top">
+          <div class="badge-row">
+            <span class="pill">CCDV-P Domain 4 of 8</span>
+            <span class="pill neutral">Exam Weight: 10%</span>
+            <span class="pill neutral">Voice: Kokoro Neural (af_heart)</span>
+          </div>
+          <button class="seg-play-btn" data-jump-seg="intro"><span class="pulse-dot"></span>&#9654; Play intro</button>
+        </div>
+        <h1>Advanced Debugging and Incident Response</h1>
+        <p class="tagline">Isolating root cause across model output, agent harness, tools, and data during complex production failures, then turning every incident into durable evals and monitoring.</p>
+        <div class="mental-model">
+          <strong>Staff Engineer Mental Model:</strong> Senior engineers never treat an LLM incident as a mysterious model glitch. They systematically isolate failures across four boundaries—model output, agent harness, tools/MCP, and retrieval data—contain blast radius fast through rollback or targeted fallback, and refuse to close any incident until its trace becomes a permanent regression test and alert.
+        </div>
+        <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="intro-s0" data-start="0.0" title="Click to jump here"><span class="w">Domain</span> <span class="w">4:</span> <span class="w">Advanced</span> <span class="w">Debugging</span> <span class="w">and</span> <span class="w">Incident</span> <span class="w">Response.</span></span> <span class="sent" data-sent-id="intro-s1" data-start="3.404" title="Click to jump here"><span class="w">Exam</span> <span class="w">weight:</span> <span class="w">10%.</span></span> <span class="sent" data-sent-id="intro-s2" data-start="5.187" title="Click to jump here"><span class="w">Isolating</span> <span class="w">root</span> <span class="w">cause</span> <span class="w">across</span> <span class="w">model</span> <span class="w">output,</span> <span class="w">agent</span> <span class="w">harness,</span> <span class="w">tools,</span> <span class="w">and</span> <span class="w">data</span> <span class="w">during</span> <span class="w">complex</span> <span class="w">production</span> <span class="w">failures,</span> <span class="w">then</span> <span class="w">turning</span> <span class="w">every</span> <span class="w">incident</span> <span class="w">into</span> <span class="w">durable</span> <span class="w">evals</span> <span class="w">and</span> <span class="w">monitoring.</span></span> <span class="sent" data-sent-id="intro-s3" data-start="16.335" title="Click to jump here"><span class="w">Senior</span> <span class="w">engineers</span> <span class="w">never</span> <span class="w">treat</span> <span class="w">an</span> <span class="w">LLM</span> <span class="w">incident</span> <span class="w">as</span> <span class="w">a</span> <span class="w">mysterious</span> <span class="w">model</span> <span class="w">glitch.</span></span> <span class="sent" data-sent-id="intro-s4" data-start="21.339" title="Click to jump here"><span class="w">They</span> <span class="w">systematically</span> <span class="w">isolate</span> <span class="w">failures</span> <span class="w">across</span> <span class="w">four</span> <span class="w">boundaries—model</span> <span class="w">output,</span> <span class="w">agent</span> <span class="w">harness,</span> <span class="w">tools/MCP,</span> <span class="w">and</span> <span class="w">retrieval</span> <span class="w">data—contain</span> <span class="w">blast</span> <span class="w">radius</span> <span class="w">fast</span> <span class="w">through</span> <span class="w">rollback</span> <span class="w">or</span> <span class="w">targeted</span> <span class="w">fallback,</span> <span class="w">and</span> <span class="w">refuse</span> <span class="w">to</span> <span class="w">close</span> <span class="w">any</span> <span class="w">incident</span> <span class="w">until</span> <span class="w">its</span> <span class="w">trace</span> <span class="w">becomes</span> <span class="w">a</span> <span class="w">permanent</span> <span class="w">regression</span> <span class="w">test</span> <span class="w">and</span> <span class="w">alert.</span></span></div></div>
+      </section>
+
+      
+        <section class="section-block" id="sec-1">
+          <div class="section-header">
+            <div class="section-obj">Complex Failure Diagnosis</div>
+            <h2>Isolating Multi-Turn, Multi-Agent, and Tool Failures</h2>
+          </div>
+          
+            <article class="seg kind-prose" data-seg-id="s1-1">
+              <div class="seg-top">
+                <span class="seg-label">MENTAL MODEL</span>
+                <button class="seg-play-btn" data-jump-seg="s1-1"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>The Four-Layer Failure Isolation Framework</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s1-1-s0" data-start="40.94" title="Click to jump here"><span class="w">When</span> <span class="w">a</span> <span class="w">multi-turn</span> <span class="w">or</span> <span class="w">multi-agent</span> <span class="w">Claude</span> <span class="w">system</span> <span class="w">breaks</span> <span class="w">in</span> <span class="w">production,</span> <span class="w">resist</span> <span class="w">the</span> <span class="w">urge</span> <span class="w">to</span> <span class="w">start</span> <span class="w">tweaking</span> <span class="w">prompts.</span></span> <span class="sent" data-sent-id="s1-1-s1" data-start="47.629" title="Click to jump here"><span class="w">First,</span> <span class="w">isolate</span> <span class="w">the</span> <span class="w">failing</span> <span class="w">trace</span> <span class="w">into</span> <span class="w">one</span> <span class="w">of</span> <span class="w">four</span> <span class="w">layers:</span> <span class="w">model</span> <span class="w">output,</span> <span class="w">the</span> <span class="w">agent</span> <span class="w">harness,</span> <span class="w">tools</span> <span class="w">and</span> <span class="w">M</span> <span class="w">C</span> <span class="w">P</span> <span class="w">servers,</span> <span class="w">or</span> <span class="w">retrieval</span> <span class="w">data.</span></span> <span class="sent" data-sent-id="s1-1-s2" data-start="56.943" title="Click to jump here"><span class="w">Pinpointing</span> <span class="w">the</span> <span class="w">exact</span> <span class="w">boundary</span> <span class="w">turns</span> <span class="w">a</span> <span class="w">non-deterministic</span> <span class="w">mystery</span> <span class="w">into</span> <span class="w">a</span> <span class="w">concrete</span> <span class="w">engineering</span> <span class="w">bug.</span></span></div></div>
+              <div class="ref-notes"><p>Production failures in multi-turn and multi-agent Claude systems rarely stem from a single obvious exception. Non-deterministic outputs, stateful histories, and asynchronous tool loops blur symptoms across boundaries. Before touching a prompt, isolate the failing span into one of four distinct layers: <strong>model output</strong> (refusals, truncation, reasoning drift), <strong>agent harness</strong> (history mutation, buffer limits, retry logic, compaction loops), <strong>tools and MCP</strong> (schema ambiguity, protocol mismatches, transport errors), or <strong>data and retrieval</strong> (stale chunks, missing context, indirect prompt injection).</p></div>
+            </article>
+            <article class="seg kind-table" data-seg-id="s1-2">
+              <div class="seg-top">
+                <span class="seg-label">TOOL-USE DIAGNOSTICS</span>
+                <button class="seg-play-btn" data-jump-seg="s1-2"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Messages API Tool-Use Symptom-to-Root-Cause Matrix</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s1-2-s0" data-start="63.617" title="Click to jump here"><span class="w">Many</span> <span class="w">production</span> <span class="w">tool</span> <span class="w">failures</span> <span class="w">come</span> <span class="w">straight</span> <span class="w">from</span> <span class="w">message-history</span> <span class="w">contract</span> <span class="w">violations.</span></span> <span class="sent" data-sent-id="s1-2-s1" data-start="68.429" title="Click to jump here"><span class="w">Every</span> <span class="w">tool</span> <span class="w">use</span> <span class="w">I</span> <span class="w">D</span> <span class="w">needs</span> <span class="w">a</span> <span class="w">matching</span> <span class="w">tool</span> <span class="w">result</span> <span class="w">placed</span> <span class="w">first</span> <span class="w">in</span> <span class="w">a</span> <span class="w">single</span> <span class="w">user</span> <span class="w">message.</span></span> <span class="sent" data-sent-id="s1-2-s2" data-start="73.775" title="Click to jump here"><span class="w">If</span> <span class="w">a</span> <span class="w">server</span> <span class="w">tool</span> <span class="w">paused</span> <span class="w">with</span> <span class="w">stop</span> <span class="w">reason</span> <span class="w">pause</span> <span class="w">turn,</span> <span class="w">send</span> <span class="w">the</span> <span class="w">assistant</span> <span class="w">turn</span> <span class="w">back</span> <span class="w">without</span> <span class="w">adding</span> <span class="w">a</span> <span class="w">user</span> <span class="w">message.</span></span> <span class="sent" data-sent-id="s1-2-s3" data-start="80.08" title="Click to jump here"><span class="w">And</span> <span class="w">never</span> <span class="w">match</span> <span class="w">raw</span> <span class="w">J</span> <span class="w">S</span> <span class="w">O</span> <span class="w">N</span> <span class="w">strings</span> <span class="w">on</span> <span class="w">tool</span> <span class="w">inputs,</span> <span class="w">because</span> <span class="w">Unicode</span> <span class="w">escaping</span> <span class="w">changes</span> <span class="w">across</span> <span class="w">model</span> <span class="w">versions.</span></span></div></div>
+              <div class="ref-notes"><table><thead><tr><th>Observed Symptom or Error</th><th>Root Cause</th><th>Verified Fix</th></tr></thead><tbody><tr><td><code>tool_use ids were found without tool_result blocks immediately after</code></td><td>Missing <code>tool_result</code> for one or more parallel <code>tool_use</code> IDs, or text placed before <code>tool_result</code> blocks</td><td>Return one <code>tool_result</code> per <code>tool_use</code> in a single <code>user</code> message, with all <code>tool_result</code> blocks first</td></tr><tr><td><code>was found without a corresponding ... block</code></td><td>Follow-up request blocked a waiting server tool (<code>server_tool_use</code> or <code>mcp_tool_use</code>)</td><td>Keep the same <code>tools</code> and <code>mcp_servers</code> arrays; on <code>stop_reason: "pause_turn"</code>, resend the assistant message without appending a user turn</td></tr><tr><td>Claude calls wrong tool or invents parameters</td><td>Ambiguous tool descriptions or missing schema constraints</td><td>Differentiate descriptions by <em>when</em> to use each tool, add <code>input_examples</code>, and enable <code>strict: true</code> where supported</td></tr><tr><td><code>All tools have defer_loading: true</code> or regex 400 error</td><td>Zero immediately visible tools, or unsupported regex features (backreferences, lookaheads, word boundaries) in strict mode</td><td>Keep at least one tool (and never the tool search tool) immediately loaded; simplify strict regex patterns</td></tr><tr><td>String comparison on tool inputs fails after model update</td><td>Unicode and forward-slash JSON escaping varies across model versions</td><td>Parse inputs with <code>json.loads()</code> or <code>JSON.parse()</code>; never match raw serialized JSON strings</td></tr></tbody></table></div>
+            </article>
+            <article class="seg kind-callout" data-seg-id="s1-3">
+              <div class="seg-top">
+                <span class="seg-label">EXAM TRAP</span>
+                <button class="seg-play-btn" data-jump-seg="s1-3"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Indirect Prompt Injection False Alarms &amp; Silent Structured-Output Failures</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s1-3-s0" data-start="87.992" title="Click to jump here"><span class="w">Watch</span> <span class="w">out</span> <span class="w">for</span> <span class="w">two</span> <span class="w">classic</span> <span class="w">exam</span> <span class="w">traps.</span></span> <span class="sent" data-sent-id="s1-3-s1" data-start="90.372" title="Click to jump here"><span class="w">If</span> <span class="w">Claude</span> <span class="w">flags</span> <span class="w">your</span> <span class="w">own</span> <span class="w">tool</span> <span class="w">output</span> <span class="w">as</span> <span class="w">a</span> <span class="w">prompt</span> <span class="w">injection,</span> <span class="w">it</span> <span class="w">is</span> <span class="w">because</span> <span class="w">your</span> <span class="w">harness</span> <span class="w">put</span> <span class="w">instructions</span> <span class="w">inside</span> <span class="w">the</span> <span class="w">tool</span> <span class="w">result</span> <span class="w">block</span> <span class="w">instead</span> <span class="w">of</span> <span class="w">keeping</span> <span class="w">it</span> <span class="w">pure</span> <span class="w">data.</span></span> <span class="sent" data-sent-id="s1-3-s2" data-start="100.069" title="Click to jump here"><span class="w">Second,</span> <span class="w">in</span> <span class="w">the</span> <span class="w">Agent</span> <span class="w">S</span> <span class="w">D</span> <span class="w">K,</span> <span class="w">a</span> <span class="w">run</span> <span class="w">can</span> <span class="w">return</span> <span class="w">subtype</span> <span class="w">success</span> <span class="w">while</span> <span class="w">structured</span> <span class="w">output</span> <span class="w">is</span> <span class="w">null.</span></span> <span class="sent" data-sent-id="s1-3-s3" data-start="106.46" title="Click to jump here"><span class="w">Always</span> <span class="w">treat</span> <span class="w">that</span> <span class="w">as</span> <span class="w">a</span> <span class="w">failure</span> <span class="w">and</span> <span class="w">check</span> <span class="w">for</span> <span class="w">a</span> <span class="w">refusal</span> <span class="w">stop</span> <span class="w">reason</span> <span class="w">or</span> <span class="w">contradictory</span> <span class="w">schema</span> <span class="w">constraints.</span></span></div></div>
+              <div class="ref-notes"><p><strong>Two subtle production traps:</strong> First, if Claude refuses to act on a tool result or asks the user to confirm instructions from it, check whether your harness placed <em>your own instructions</em> inside the <code>tool_result</code> content. Claude is trained to treat instructions inside tool results as untrusted third-party content (indirect prompt injection). Keep <code>tool_result</code> strictly data-only, and send harness instructions in a subsequent <code>user</code> turn or a mid-conversation <code>role: "system"</code> message.</p><p>Second, in the Agent SDK, a result can finish with <code>subtype: "success"</code> while <code>structured_output</code> is <code>None</code> (Python) or <code>undefined</code> (TypeScript). Always treat this as an application failure and inspect two causes: <code>stop_reason: "refusal"</code> or contradictory JSON Schema constraints (such as <code>minLength</code> exceeding <code>maxLength</code>).</p></div>
+            </article>
+            <article class="seg kind-bullets" data-seg-id="s1-4">
+              <div class="seg-top">
+                <span class="seg-label">HARNESS &amp; SDK TRIAGE</span>
+                <button class="seg-play-btn" data-jump-seg="s1-4"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Diagnosing Agent SDK and Claude Code Runtime Failures</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s1-4-s0" data-start="112.879" title="Click to jump here"><span class="w">When</span> <span class="w">debugging</span> <span class="w">the</span> <span class="w">Agent</span> <span class="w">S</span> <span class="w">D</span> <span class="w">K</span> <span class="w">or</span> <span class="w">Claude</span> <span class="w">Code,</span> <span class="w">know</span> <span class="w">the</span> <span class="w">exact</span> <span class="w">runtime</span> <span class="w">failure</span> <span class="w">signatures.</span></span> <span class="sent" data-sent-id="s1-4-s1" data-start="118.907" title="Click to jump here"><span class="w">In</span> <span class="w">Python,</span> <span class="w">Process</span> <span class="w">Error</span> <span class="w">hides</span> <span class="w">real</span> <span class="w">standard</span> <span class="w">error</span> <span class="w">unless</span> <span class="w">you</span> <span class="w">register</span> <span class="w">a</span> <span class="w">stderr</span> <span class="w">callback,</span> <span class="w">and</span> <span class="w">large</span> <span class="w">P</span> <span class="w">D</span> <span class="w">F</span> <span class="w">reads</span> <span class="w">trigger</span> <span class="w">C</span> <span class="w">L</span> <span class="w">I</span> <span class="w">J</span> <span class="w">S</span> <span class="w">O</span> <span class="w">N</span> <span class="w">Decode</span> <span class="w">Error</span> <span class="w">at</span> <span class="w">one</span> <span class="w">megabyte</span> <span class="w">because</span> <span class="w">base</span> <span class="w">sixty-four</span> <span class="w">payloads</span> <span class="w">are</span> <span class="w">duplicated—fix</span> <span class="w">it</span> <span class="w">by</span> <span class="w">raising</span> <span class="w">max</span> <span class="w">buffer</span> <span class="w">size</span> <span class="w">and</span> <span class="w">resuming</span> <span class="w">the</span> <span class="w">session.</span></span> <span class="sent" data-sent-id="s1-4-s2" data-start="138.268" title="Click to jump here"><span class="w">In</span> <span class="w">Claude</span> <span class="w">Code,</span> <span class="w">run</span> <span class="w">slash</span> <span class="w">context,</span> <span class="w">slash</span> <span class="w">doctor,</span> <span class="w">and</span> <span class="w">safe</span> <span class="w">mode</span> <span class="w">to</span> <span class="w">isolate</span> <span class="w">configuration</span> <span class="w">overrides</span> <span class="w">and</span> <span class="w">autocompact</span> <span class="w">thrashing.</span></span></div></div>
+              <div class="ref-notes"><ul><li><strong>Subprocess startup &amp; security refusals:</strong> <code>CLINotFoundError</code> signals missing <code>PATH</code> or bad <code>cli_path</code>; on Windows, Python Agent SDK raises <code>CLIConnectionError</code> and refuses <code>.bat</code>/<code>.cmd</code> shims (like <code>claude.cmd</code>) to prevent <code>cmd.exe</code> argument injection—use a native <code>claude.exe</code>.</li><li><strong>Process exits &amp; stderr capture:</strong> In Python, <code>ProcessError</code> hides real CLI stderr behind placeholder text unless you pass a <code>stderr</code> callback in <code>ClaudeAgentOptions</code>; catch <code>ResultError</code> (a subclass of <code>ProcessError</code>) first when the CLI emitted an error result.</li><li><strong>Buffer overflows on large tool payloads:</strong> <code>CLIJSONDecodeError</code> occurs when a single message exceeds the 1 MB default <code>max_buffer_size</code>—common on PDFs (~393 KB+) and screenshots because base64 is stored twice. Increase <code>max_buffer_size</code> (e.g., <code>64 * 1024 * 1024</code>), call <code>disconnect()</code>, and resume via <code>resume=session_id</code>.</li><li><strong>Silent streaming aborts:</strong> In Python, an exception inside an async prompt generator terminates the <code>query()</code> loop without raising, logging <code>Prompt stream failed; closing stdin</code>; wrap the generator in <code>try/except</code> to surface tracebacks.</li><li><strong>Claude Code config &amp; thrashing:</strong> Use <code>/context</code>, <code>/doctor</code>, <code>/hooks</code>, <code>/mcp</code>, and <code>claude --safe-mode</code> to isolate config overrides (<code>settings.local.json</code> beats <code>settings.json</code>; hooks live in <code>settings.json</code>, never standalone files). Recover from <code>Autocompact is thrashing</code> by chunking large reads, delegating to a subagent, or running focused <code>/compact</code>.</li></ul></div>
+            </article>
+            <article class="seg kind-bullets" data-seg-id="s1-5">
+              <div class="seg-top">
+                <span class="seg-label">MANAGED AGENTS &amp; WORKERS</span>
+                <button class="seg-play-btn" data-jump-seg="s1-5"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Troubleshooting Self-Hosted Managed Agent Workers</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s1-5-s0" data-start="147.076" title="Click to jump here"><span class="w">For</span> <span class="w">self-hosted</span> <span class="w">Managed</span> <span class="w">Agents,</span> <span class="w">start</span> <span class="w">with</span> <span class="w">the</span> <span class="w">work</span> <span class="w">stats</span> <span class="w">endpoint</span> <span class="w">from</span> <span class="w">external</span> <span class="w">ops</span> <span class="w">tooling.</span></span> <span class="sent" data-sent-id="s1-5-s1" data-start="152.656" title="Click to jump here"><span class="w">Sustained</span> <span class="w">non-zero</span> <span class="w">pending</span> <span class="w">counts</span> <span class="w">point</span> <span class="w">to</span> <span class="w">a</span> <span class="w">stalled</span> <span class="w">worker,</span> <span class="w">while</span> <span class="w">zero</span> <span class="w">workers</span> <span class="w">polling</span> <span class="w">flags</span> <span class="w">connectivity</span> <span class="w">or</span> <span class="w">credential</span> <span class="w">issues.</span></span> <span class="sent" data-sent-id="s1-5-s2" data-start="160.839" title="Click to jump here"><span class="w">Watch</span> <span class="w">for</span> <span class="w">silent</span> <span class="w">memory-store</span> <span class="w">mount</span> <span class="w">failures:</span> <span class="w">the</span> <span class="w">session</span> <span class="w">sits</span> <span class="w">idle</span> <span class="w">with</span> <span class="w">requires</span> <span class="w">action</span> <span class="w">and</span> <span class="w">no</span> <span class="w">error</span> <span class="w">event</span> <span class="w">until</span> <span class="w">you</span> <span class="w">fix</span> <span class="w">the</span> <span class="w">host</span> <span class="w">mount</span> <span class="w">and</span> <span class="w">send</span> <span class="w">a</span> <span class="w">user</span> <span class="w">interrupt.</span></span></div></div>
+              <div class="ref-notes"><ul><li><strong>Inspect queue telemetry first:</strong> Poll <code>GET /v1/environments/{environment_id}/work/stats</code> (with your organization API key from ops tooling, never on the worker host) to read <code>depth</code> (unclaimed backlog), <code>pending</code> (claimed but unacknowledged—sustained non-zero means a stalled worker), <code>oldest_queued_at</code>, and <code>workers_polling</code> (liveness over the last 30 seconds).</li><li><strong>Silent memory-store mount failures:</strong> If a worker cannot mount a memory store (e.g., missing session <code>secret</code>, unwritable <code>/mnt/memory</code>, or leftover directory from a killed worker), it fails the work item while the session sits <code>idle</code> with <code>requires_action</code> and <em>no error event</em>. Fix the host path, then send a <code>user.interrupt</code> event to requeue and retry.</li><li><strong>Graceful teardown vs. hard kills:</strong> <code>POST .../work/{work_id}/stop</code> transitions work to <code>stopping</code> so the worker cancels in-flight tools and syncs memory edits; <code>force: true</code> only marks the item <code>stopped</code> immediately without ending the in-flight tool sooner. Give containers enough <code>SIGTERM</code> grace period (60s, or 210s for Python workers) so memory syncs complete.</li></ul></div>
+            </article>
+        </section>
+        <section class="section-block" id="sec-2">
+          <div class="section-header">
+            <div class="section-obj">Complex Failure Diagnosis</div>
+            <h2>Debugging Thinking, Refusals, Grounding, and MCP</h2>
+          </div>
+          
+            <article class="seg kind-prose" data-seg-id="s2-1">
+              <div class="seg-top">
+                <span class="seg-label">PRESERVED THINKING</span>
+                <button class="seg-play-btn" data-jump-seg="s2-1"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Preserved-Thinking Prefix Checks and 400 Errors</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s2-1-s0" data-start="171.651" title="Click to jump here"><span class="w">On</span> <span class="w">models</span> <span class="w">with</span> <span class="w">preserved</span> <span class="w">thinking,</span> <span class="w">every</span> <span class="w">thinking</span> <span class="w">block</span> <span class="w">signature</span> <span class="w">fingerprints</span> <span class="w">the</span> <span class="w">exact</span> <span class="w">system</span> <span class="w">prompt,</span> <span class="w">tools</span> <span class="w">list,</span> <span class="w">and</span> <span class="w">messages</span> <span class="w">that</span> <span class="w">came</span> <span class="w">before</span> <span class="w">it.</span></span> <span class="sent" data-sent-id="s2-1-s1" data-start="180.409" title="Click to jump here"><span class="w">Even</span> <span class="w">changing</span> <span class="w">a</span> <span class="w">single</span> <span class="w">date</span> <span class="w">in</span> <span class="w">the</span> <span class="w">system</span> <span class="w">prompt</span> <span class="w">at</span> <span class="w">midnight</span> <span class="w">invalidates</span> <span class="w">every</span> <span class="w">thinking</span> <span class="w">block</span> <span class="w">after</span> <span class="w">it.</span></span> <span class="sent" data-sent-id="s2-1-s2" data-start="186.779" title="Click to jump here"><span class="w">That</span> <span class="w">triggers</span> <span class="w">a</span> <span class="w">four</span> <span class="w">hundred</span> <span class="w">error</span> <span class="w">saying</span> <span class="w">the</span> <span class="w">block</span> <span class="w">is</span> <span class="w">bound</span> <span class="w">to</span> <span class="w">a</span> <span class="w">different</span> <span class="w">conversation—or</span> <span class="w">worse,</span> <span class="w">lets</span> <span class="w">mismatched</span> <span class="w">reasoning</span> <span class="w">reach</span> <span class="w">the</span> <span class="w">model</span> <span class="w">silently</span> <span class="w">if</span> <span class="w">you</span> <span class="w">are</span> <span class="w">not</span> <span class="w">logging</span> <span class="w">input</span> <span class="w">transformations.</span></span></div></div>
+              <div class="ref-notes"><p>Models with preserved thinking—including Claude Opus 5.5, Sonnet 5.5, Haiku 5.5, and Fable/Mythos 5.1+—cryptographically bind each thinking block's <code>signature</code> to its exact <strong>prefix</strong>: <code>system</code>, <code>tools</code>, and all preceding messages. If your harness rebuilds <code>system</code> with a rolling timestamp, mutates the <code>tools</code> array mid-conversation, injects and later removes a per-turn reminder, or runs client-side compaction while keeping recent thinking blocks, the prefix check fails. Depending on the model, the API either rejects the call with HTTP 400 (<code>Invalid signature in thinking block. The block is bound to a different conversation.</code>) or silently passes stale reasoning to Claude unless you monitor <code>input_transformations</code>.</p></div>
+            </article>
+            <article class="seg kind-code" data-seg-id="s2-2">
+              <div class="seg-top">
+                <span class="seg-label">RECOVERY PATTERN</span>
+                <button class="seg-play-btn" data-jump-seg="s2-2"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Immediate Mitigation vs. Append-Only Architecture</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s2-2-s0" data-start="198.573" title="Click to jump here"><span class="w">To</span> <span class="w">recover</span> <span class="w">an</span> <span class="w">already-broken</span> <span class="w">conversation</span> <span class="w">immediately,</span> <span class="w">send</span> <span class="w">the</span> <span class="w">thinking</span> <span class="w">binding</span> <span class="w">controls</span> <span class="w">beta</span> <span class="w">header</span> <span class="w">with</span> <span class="w">prefix</span> <span class="w">mismatch</span> <span class="w">behavior</span> <span class="w">set</span> <span class="w">to</span> <span class="w">drop</span> <span class="w">block,</span> <span class="w">and</span> <span class="w">persist</span> <span class="w">that</span> <span class="w">setting</span> <span class="w">for</span> <span class="w">that</span> <span class="w">session.</span></span> <span class="sent" data-sent-id="s2-2-s1" data-start="210.02" title="Click to jump here"><span class="w">Never</span> <span class="w">leave</span> <span class="w">drop</span> <span class="w">block</span> <span class="w">on</span> <span class="w">globally</span> <span class="w">to</span> <span class="w">hide</span> <span class="w">bugs,</span> <span class="w">because</span> <span class="w">dropping</span> <span class="w">thinking</span> <span class="w">costs</span> <span class="w">extra</span> <span class="w">output</span> <span class="w">tokens</span> <span class="w">and</span> <span class="w">breaks</span> <span class="w">the</span> <span class="w">prompt</span> <span class="w">cache.</span></span> <span class="sent" data-sent-id="s2-2-s2" data-start="217.861" title="Click to jump here"><span class="w">The</span> <span class="w">permanent</span> <span class="w">fix</span> <span class="w">is</span> <span class="w">an</span> <span class="w">append-only</span> <span class="w">history:</span> <span class="w">echo</span> <span class="w">assistant</span> <span class="w">turns</span> <span class="w">verbatim,</span> <span class="w">freeze</span> <span class="w">system</span> <span class="w">and</span> <span class="w">tools,</span> <span class="w">and</span> <span class="w">append</span> <span class="w">updates</span> <span class="w">at</span> <span class="w">the</span> <span class="w">end.</span></span></div></div>
+              <div class="ref-notes"><pre><code># 1. Immediate recovery for an affected in-flight conversation ONLY:
+response = client.beta.messages.create(
+    model="claude-opus-5-5",
+    max_tokens=16000,
+    thinking={
+        "type": "adaptive",
+        "block_binding": {"prefix_mismatch_behavior": "drop_block"},
+    },
+    messages=messages,
+    betas=["thinking-binding-controls-2026-08-01"],
+)
+# Inspect response.input_transformations for reason == "prefix_binding_mismatch"
+
+# 2. Permanent fix — Three Habits of an Append-Only Integration:
+#    (a) Echo assistant turns verbatim (including thinking blocks with empty text when display="omitted").
+#    (b) Build `system` and `tools` once per conversation and never mutate them.
+#    (c) Append updates at the end via new user turns or mid-conversation role="system" messages;
+#        use server-side compaction/context editing instead of client-side trimming.</code></pre></div>
+            </article>
+            <article class="seg kind-table" data-seg-id="s2-3">
+              <div class="seg-top">
+                <span class="seg-label">THINKING &amp; STOP REASONS</span>
+                <button class="seg-play-btn" data-jump-seg="s2-3"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Diagnosing Thinking 400s and Stop-Reason Mismatches</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s2-3-s0" data-start="226.264" title="Click to jump here"><span class="w">Configuration</span> <span class="w">four</span> <span class="w">hundreds</span> <span class="w">usually</span> <span class="w">come</span> <span class="w">from</span> <span class="w">model-version</span> <span class="w">mismatches.</span></span> <span class="sent" data-sent-id="s2-3-s1" data-start="230.756" title="Click to jump here"><span class="w">Claude</span> <span class="w">four</span> <span class="w">point</span> <span class="w">seven</span> <span class="w">and</span> <span class="w">newer</span> <span class="w">reject</span> <span class="w">legacy</span> <span class="w">enabled</span> <span class="w">thinking</span> <span class="w">with</span> <span class="w">budget</span> <span class="w">tokens</span> <span class="w">in</span> <span class="w">favor</span> <span class="w">of</span> <span class="w">adaptive</span> <span class="w">thinking</span> <span class="w">and</span> <span class="w">effort.</span></span> <span class="sent" data-sent-id="s2-3-s2" data-start="238.661" title="Click to jump here"><span class="w">Remember</span> <span class="w">that</span> <span class="w">thinking</span> <span class="w">tokens</span> <span class="w">count</span> <span class="w">toward</span> <span class="w">max</span> <span class="w">tokens,</span> <span class="w">so</span> <span class="w">a</span> <span class="w">truncated</span> <span class="w">response</span> <span class="w">with</span> <span class="w">stop</span> <span class="w">reason</span> <span class="w">max</span> <span class="w">tokens</span> <span class="w">means</span> <span class="w">you</span> <span class="w">need</span> <span class="w">a</span> <span class="w">larger</span> <span class="w">output</span> <span class="w">budget</span> <span class="w">or</span> <span class="w">lower</span> <span class="w">effort—never</span> <span class="w">a</span> <span class="w">blind</span> <span class="w">retry.</span></span></div></div>
+              <div class="ref-notes"><table><thead><tr><th>Symptom / Stop Reason</th><th>Root Cause</th><th>Diagnostic &amp; Fix</th></tr></thead><tbody><tr><td>400: <code>thinking.type.enabled is not supported</code></td><td>Legacy extended thinking (<code>budget_tokens</code>) sent to Claude 4.7+ / 5.x model</td><td>Migrate to <code>thinking: {"type": "adaptive"}</code> and steer depth with <code>output_config.effort</code></td></tr><tr><td>400 on <code>thinking: {"type": "disabled"}</code></td><td>Model has always-on thinking (Opus 5.5, Fable/Mythos 5.x), or Sonnet 5.5 requires <code>"between_tools"</code>, or paired with effort <code>xhigh</code>/<code>max</code></td><td>Omit <code>thinking</code> (use <code>display: "omitted"</code> to hide text); on Sonnet 5.5 use <code>between_tools</code> at effort <code>high</code> or below</td></tr><tr><td><code>stop_reason: "max_tokens"</code> with missing/truncated text</td><td>Thinking tokens count toward <code>max_tokens</code> and exhausted the budget before text output</td><td>Raise <code>max_tokens</code> for both thinking and text, or lower <code>effort</code></td></tr><tr><td>Tool calls or <code>&lt;thinking&gt;</code> XML leak into visible text</td><td>Running Claude Opus 5 with thinking disabled on tool-heavy workloads</td><td>Re-enable default adaptive thinking and lower <code>effort</code> to control token cost</td></tr><tr><td><code>cache_read_input_tokens</code> drops to zero mid-conversation</td><td>Varying <code>tool_choice</code>, thinking config, or <code>output_config.effort</code>, or prepending a new tool</td><td>Keep thinking config and effort constant; declare deferred tools up front with <code>defer_loading: true</code></td></tr></tbody></table></div>
+            </article>
+            <article class="seg kind-callout" data-seg-id="s2-4">
+              <div class="seg-top">
+                <span class="seg-label">REFUSALS &amp; GROUNDING</span>
+                <button class="seg-play-btn" data-jump-seg="s2-4"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Model Refusals as a Failure Class and Stage-by-Stage Grounding Triage</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s2-4-s0" data-start="251.096" title="Click to jump here"><span class="w">Refusals</span> <span class="w">are</span> <span class="w">not</span> <span class="w">transient</span> <span class="w">network</span> <span class="w">errors—they</span> <span class="w">arrive</span> <span class="w">as</span> <span class="w">H</span> <span class="w">T</span> <span class="w">T</span> <span class="w">P</span> <span class="w">two</span> <span class="w">hundred</span> <span class="w">with</span> <span class="w">stop</span> <span class="w">reason</span> <span class="w">refusal</span> <span class="w">and</span> <span class="w">a</span> <span class="w">category</span> <span class="w">in</span> <span class="w">stop</span> <span class="w">details.</span></span> <span class="sent" data-sent-id="s2-4-s1" data-start="260.516" title="Click to jump here"><span class="w">Because</span> <span class="w">policy</span> <span class="w">checks</span> <span class="w">inspect</span> <span class="w">the</span> <span class="w">entire</span> <span class="w">transcript,</span> <span class="w">retrying</span> <span class="w">in</span> <span class="w">the</span> <span class="w">same</span> <span class="w">conversation</span> <span class="w">just</span> <span class="w">loops</span> <span class="w">the</span> <span class="w">refusal;</span> <span class="w">you</span> <span class="w">must</span> <span class="w">rewind,</span> <span class="w">start</span> <span class="w">fresh,</span> <span class="w">or</span> <span class="w">use</span> <span class="w">server-side</span> <span class="w">fallback.</span></span> <span class="sent" data-sent-id="s2-4-s2" data-start="271.429" title="Click to jump here"><span class="w">For</span> <span class="w">retrieval-grounding</span> <span class="w">bugs,</span> <span class="w">trace</span> <span class="w">stage</span> <span class="w">by</span> <span class="w">stage</span> <span class="w">from</span> <span class="w">query</span> <span class="w">formulation</span> <span class="w">through</span> <span class="w">recall,</span> <span class="w">reranking,</span> <span class="w">and</span> <span class="w">context</span> <span class="w">assembly</span> <span class="w">before</span> <span class="w">blaming</span> <span class="w">synthesis.</span></span></div></div>
+              <div class="ref-notes"><p><strong>Treat refusals as a first-class failure mode, never an HTTP error:</strong> Classifier refusals return HTTP 200 with <code>stop_reason: "refusal"</code> and <code>stop_details.category</code> (such as cybersecurity safeguards or <code>reasoning_extraction</code> when a prompt or <code>CLAUDE.md</code> asks for verbatim <code>&lt;thinking&gt;</code> scratchpads). Because Usage Policy checks evaluate the <em>entire conversation</em>, retrying in-thread usually re-triggers the refusal. Rewind before the triggering turn (<code>/rewind</code>) or start a clean session; for API workloads, route declined categories via <code>fallbacks: "default"</code> (<code>anthropic-beta: server-side-fallback-2026-07-01</code>) or client-side fallback middleware.</p><p><strong>Isolating retrieval-grounding failures by stage:</strong> When a RAG or search-grounded agent hallucinates or omits facts, inspect each pipeline stage in order—(1) query formulation/expansion, (2) index recall and chunk boundaries, (3) reranker top-K cutoffs, (4) context window truncation or stale documents, and (5) model synthesis faithfulness against the exact retrieved chunks.</p></div>
+            </article>
+            <article class="seg kind-bullets" data-seg-id="s2-5">
+              <div class="seg-top">
+                <span class="seg-label">MCP DEBUGGING</span>
+                <button class="seg-play-btn" data-jump-seg="s2-5"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Debugging MCP Servers, Inspector, and Tunnel Stacks</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s2-5-s0" data-start="281.005" title="Click to jump here"><span class="w">When</span> <span class="w">an</span> <span class="w">M</span> <span class="w">C</span> <span class="w">P</span> <span class="w">integration</span> <span class="w">misbehaves,</span> <span class="w">reach</span> <span class="w">for</span> <span class="w">the</span> <span class="w">M</span> <span class="w">C</span> <span class="w">P</span> <span class="w">Inspector</span> <span class="w">first</span> <span class="w">to</span> <span class="w">decouple</span> <span class="w">the</span> <span class="w">server</span> <span class="w">from</span> <span class="w">the</span> <span class="w">host</span> <span class="w">client.</span></span> <span class="sent" data-sent-id="s2-5-s1" data-start="288.505" title="Click to jump here"><span class="w">On</span> <span class="w">local</span> <span class="w">stdio</span> <span class="w">servers,</span> <span class="w">logging</span> <span class="w">to</span> <span class="w">standard</span> <span class="w">out</span> <span class="w">corrupts</span> <span class="w">J</span> <span class="w">S</span> <span class="w">O</span> <span class="w">N</span> <span class="w">R</span> <span class="w">P</span> <span class="w">C</span> <span class="w">framing,</span> <span class="w">so</span> <span class="w">always</span> <span class="w">log</span> <span class="w">to</span> <span class="w">standard</span> <span class="w">error</span> <span class="w">or</span> <span class="w">OpenTelemetry.</span></span> <span class="sent" data-sent-id="s2-5-s2" data-start="298.352" title="Click to jump here"><span class="w">For</span> <span class="w">M</span> <span class="w">C</span> <span class="w">P</span> <span class="w">tunnels,</span> <span class="w">debug</span> <span class="w">strictly</span> <span class="w">in</span> <span class="w">layer</span> <span class="w">order:</span> <span class="w">outbound</span> <span class="w">cloudflared</span> <span class="w">connectivity,</span> <span class="w">inner</span> <span class="w">T</span> <span class="w">L</span> <span class="w">S</span> <span class="w">certificates,</span> <span class="w">and</span> <span class="w">finally</span> <span class="w">upstream</span> <span class="w">I</span> <span class="w">P</span> <span class="w">validation</span> <span class="w">and</span> <span class="w">routing.</span></span></div></div>
+              <div class="ref-notes"><ul><li><strong>Start with MCP Inspector:</strong> Run <code>npx @modelcontextprotocol/inspector</code> in <code>--web</code>, <code>--cli</code> (scriptable for CI), or <code>--tui</code> mode to isolate server behavior from host client quirks.</li><li><strong>Never log to stdout on stdio servers:</strong> Local stdio servers use <code>stdout</code> exclusively for JSON-RPC framing; write logs to <code>stderr</code> (captured automatically by the host) or OpenTelemetry. Always use absolute paths and explicit <code>env</code> blocks in config because stdio servers inherit a minimal environment and undefined working directory.</li><li><strong>Decode JSON-RPC protocol errors:</strong> Call <code>server/discover</code> to verify version negotiation. Error <code>-32022</code> is <code>UnsupportedProtocolVersionError</code>; <code>-32021</code> is <code>MissingRequiredClientCapabilityError</code>; <code>-32602</code> often signals missing required per-request <code>_meta</code> fields (<code>io.modelcontextprotocol/protocolVersion</code> or <code>clientCapabilities</code>).</li><li><strong>Layer-by-layer MCP tunnel triage:</strong> Diagnose in order: (1) outbound <code>cloudflared</code> to tunnel edge (check <code>TUNNEL_TOKEN</code> and TCP/UDP port 7844), (2) inner TLS between Anthropic and your proxy (SAN must match <code>*.&lt;tunnel-domain&gt;</code> and CA must be registered), and (3) upstream routing &amp; SSRF IP validation (proxy allows only RFC1918 IPv4 by default; setting <code>upstream.allowed_ips</code> <em>replaces</em> the default ranges).</li></ul></div>
+            </article>
+        </section>
+        <section class="section-block" id="sec-3">
+          <div class="section-header">
+            <div class="section-obj">Incident Response and Learning Loops</div>
+            <h2>Triage, Mitigation, Rollback, and Communication</h2>
+          </div>
+          
+            <article class="seg kind-prose" data-seg-id="s3-1">
+              <div class="seg-top">
+                <span class="seg-label">INCIDENT TRIAGE</span>
+                <button class="seg-play-btn" data-jump-seg="s3-1"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Triaging Outages vs. Silent Quality Regressions</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s3-1-s0" data-start="310.167" title="Click to jump here"><span class="w">In</span> <span class="w">production</span> <span class="w">AI</span> <span class="w">operations,</span> <span class="w">the</span> <span class="w">hardest</span> <span class="w">incidents</span> <span class="w">return</span> <span class="w">H</span> <span class="w">T</span> <span class="w">T</span> <span class="w">P</span> <span class="w">two</span> <span class="w">hundred</span> <span class="w">while</span> <span class="w">quality</span> <span class="w">silently</span> <span class="w">collapses.</span></span> <span class="sent" data-sent-id="s3-1-s1" data-start="318.072" title="Click to jump here"><span class="w">Start</span> <span class="w">triage</span> <span class="w">by</span> <span class="w">checking</span> <span class="w">status</span> <span class="w">dot</span> <span class="w">claude</span> <span class="w">dot</span> <span class="w">com,</span> <span class="w">confirming</span> <span class="w">which</span> <span class="w">model</span> <span class="w">and</span> <span class="w">effort</span> <span class="w">level</span> <span class="w">actually</span> <span class="w">served</span> <span class="w">traffic,</span> <span class="w">and</span> <span class="w">slicing</span> <span class="w">traces</span> <span class="w">by</span> <span class="w">stop</span> <span class="w">reason,</span> <span class="w">tenant,</span> <span class="w">and</span> <span class="w">deployment</span> <span class="w">version.</span></span> <span class="sent" data-sent-id="s3-1-s2" data-start="329.86" title="Click to jump here"><span class="w">That</span> <span class="w">immediately</span> <span class="w">separates</span> <span class="w">an</span> <span class="w">upstream</span> <span class="w">provider</span> <span class="w">outage</span> <span class="w">from</span> <span class="w">a</span> <span class="w">bad</span> <span class="w">prompt</span> <span class="w">release</span> <span class="w">or</span> <span class="w">data</span> <span class="w">drift.</span></span></div></div>
+              <div class="ref-notes"><p>LLM production incidents fall into two operational classes: <strong>hard availability outages</strong> (HTTP 429 rate limits, 529 overloaded, 5xx errors, worker queue stalls) and <strong>silent quality regressions</strong> where endpoints return HTTP 200 while accuracy, refusal rates, latency, or token spend degrade sharply. Triage starts by scoping blast radius—check <code>status.claude.com</code>, confirm active model IDs (watching for automatic model fallback notices), verify <code>effort</code> levels and context saturation, and slice traces by release version, tenant, and <code>stop_reason</code> cohort to determine whether the trigger is external provider load, a recent prompt/tool deploy, or upstream data drift.</p></div>
+            </article>
+            <article class="seg kind-table" data-seg-id="s3-2">
+              <div class="seg-top">
+                <span class="seg-label">MITIGATION PLAYBOOK</span>
+                <button class="seg-play-btn" data-jump-seg="s3-2"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Incident-Response Decision Matrix</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s3-2-s0" data-start="335.895" title="Click to jump here"><span class="w">Every</span> <span class="w">incident</span> <span class="w">class</span> <span class="w">has</span> <span class="w">a</span> <span class="w">fast,</span> <span class="w">safe</span> <span class="w">containment</span> <span class="w">lever.</span></span> <span class="sent" data-sent-id="s3-2-s1" data-start="339.192" title="Click to jump here"><span class="w">For</span> <span class="w">provider</span> <span class="w">four</span> <span class="w">twenty-nines</span> <span class="w">and</span> <span class="w">five</span> <span class="w">twenty-nines,</span> <span class="w">back</span> <span class="w">off</span> <span class="w">and</span> <span class="w">fail</span> <span class="w">over.</span></span> <span class="sent" data-sent-id="s3-2-s2" data-start="343.513" title="Click to jump here"><span class="w">For</span> <span class="w">quality</span> <span class="w">regressions</span> <span class="w">after</span> <span class="w">a</span> <span class="w">deploy,</span> <span class="w">roll</span> <span class="w">back</span> <span class="w">immediately.</span></span> <span class="sent" data-sent-id="s3-2-s3" data-start="347.173" title="Click to jump here"><span class="w">For</span> <span class="w">runaway</span> <span class="w">tool</span> <span class="w">loops,</span> <span class="w">trip</span> <span class="w">a</span> <span class="w">deterministic</span> <span class="w">circuit</span> <span class="w">breaker</span> <span class="w">or</span> <span class="w">kill</span> <span class="w">switch</span> <span class="w">rather</span> <span class="w">than</span> <span class="w">hoping</span> <span class="w">a</span> <span class="w">prompt</span> <span class="w">tweak</span> <span class="w">stops</span> <span class="w">the</span> <span class="w">loop.</span></span></div></div>
+              <div class="ref-notes"><table><thead><tr><th>Incident Signal</th><th>Fastest Safe Containment</th><th>What NOT to Do</th></tr></thead><tbody><tr><td>Provider 429 / 529 spike or regional outage</td><td>Honor <code>Retry-After</code> with jittered backoff, shed non-critical traffic, fail over to secondary region/platform or fallback model</td><td>Tight retry loops with no backoff (amplifies rate-limit storm and spend)</td></tr><tr><td>Quality regression or refusal surge right after prompt/tool release</td><td><strong>Immediate rollback</strong> to last known-good versioned prompt, tool schema, or model snapshot</td><td>Live hot-patching prompts in production without evals</td></tr><tr><td>Preserved-thinking 400 spike on active sessions</td><td>Enable <code>prefix_mismatch_behavior: "drop_block"</code> for affected in-flight sessions only, then deploy append-only fix</td><td>Enable <code>drop_block</code> globally forever (hides bugs, increases token cost, breaks cache)</td></tr><tr><td>Runaway multi-agent loop or destructive tool spike</td><td>Trip deterministic circuit breaker / feature-flag kill switch; stop Managed Agent workers gracefully with <code>SIGTERM</code></td><td>Rely on adding a stronger system prompt warning mid-incident</td></tr><tr><td>Stale or poisoned retrieval index causing hallucinations</td><td>Switch to last known-good index snapshot or degrade gracefully to uncertainty declaration / human escalation</td><td>Raise temperature or swap to a larger model (cannot fix missing/wrong context)</td></tr></tbody></table></div>
+            </article>
+            <article class="seg kind-callout" data-seg-id="s3-3">
+              <div class="seg-top">
+                <span class="seg-label">EXAM TRAP</span>
+                <button class="seg-play-btn" data-jump-seg="s3-3"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Why Deterministic Rollback Beats Mid-Incident Prompt Tweaking</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s3-3-s0" data-start="354.765" title="Click to jump here"><span class="w">Here</span> <span class="w">is</span> <span class="w">a</span> <span class="w">high-frequency</span> <span class="w">exam</span> <span class="w">principle:</span> <span class="w">during</span> <span class="w">an</span> <span class="w">active</span> <span class="w">quality</span> <span class="w">regression,</span> <span class="w">roll</span> <span class="w">back</span> <span class="w">to</span> <span class="w">the</span> <span class="w">last</span> <span class="w">known-good</span> <span class="w">versioned</span> <span class="w">prompt,</span> <span class="w">schema,</span> <span class="w">or</span> <span class="w">model</span> <span class="w">snapshot</span> <span class="w">before</span> <span class="w">attempting</span> <span class="w">any</span> <span class="w">fix.</span></span> <span class="sent" data-sent-id="s3-3-s1" data-start="366.212" title="Click to jump here"><span class="w">Ad-hoc</span> <span class="w">prompt</span> <span class="w">patching</span> <span class="w">in</span> <span class="w">production</span> <span class="w">is</span> <span class="w">unverified,</span> <span class="w">busts</span> <span class="w">your</span> <span class="w">prompt</span> <span class="w">caches,</span> <span class="w">and</span> <span class="w">can</span> <span class="w">trigger</span> <span class="w">secondary</span> <span class="w">prefix-check</span> <span class="w">failures</span> <span class="w">across</span> <span class="w">live</span> <span class="w">sessions.</span></span></div></div>
+              <div class="ref-notes"><p>Under incident pressure, teams are often tempted to edit the system prompt live to patch a refusal spike or hallucination. On the CCDV-P exam, <strong>rolling back to a verified versioned artifact</strong> (prompt, tool schema, model snapshot, or retrieval index) almost always beats ad-hoc hot-patching. Live prompt edits are uncalibrated, invalidate prompt caches across the fleet, can break preserved-thinking prefixes for active sessions, and frequently trade one regression for another.</p></div>
+            </article>
+            <article class="seg kind-bullets" data-seg-id="s3-4">
+              <div class="seg-top">
+                <span class="seg-label">STATEFUL ROLLBACK</span>
+                <button class="seg-play-btn" data-jump-seg="s3-4"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Safe Rollback and State Preservation for Long-Running Agents</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s3-4-s0" data-start="375.127" title="Click to jump here"><span class="w">Rolling</span> <span class="w">back</span> <span class="w">stateful</span> <span class="w">agents</span> <span class="w">requires</span> <span class="w">extra</span> <span class="w">care.</span></span> <span class="sent" data-sent-id="s3-4-s1" data-start="378.296" title="Click to jump here"><span class="w">Pinning</span> <span class="w">system</span> <span class="w">prompts</span> <span class="w">and</span> <span class="w">tools</span> <span class="w">per</span> <span class="w">session</span> <span class="w">lets</span> <span class="w">you</span> <span class="w">roll</span> <span class="w">back</span> <span class="w">new</span> <span class="w">traffic</span> <span class="w">without</span> <span class="w">breaking</span> <span class="w">preserved-thinking</span> <span class="w">signatures</span> <span class="w">on</span> <span class="w">active</span> <span class="w">sessions.</span></span> <span class="sent" data-sent-id="s3-4-s2" data-start="386.457" title="Click to jump here"><span class="w">And</span> <span class="w">when</span> <span class="w">recovering</span> <span class="w">an</span> <span class="w">individual</span> <span class="w">bad</span> <span class="w">turn,</span> <span class="w">rewind</span> <span class="w">to</span> <span class="w">a</span> <span class="w">clean</span> <span class="w">checkpoint</span> <span class="w">instead</span> <span class="w">of</span> <span class="w">correcting</span> <span class="w">in-thread,</span> <span class="w">while</span> <span class="w">always</span> <span class="w">preserving</span> <span class="w">Request</span> <span class="w">and</span> <span class="w">Message</span> <span class="w">I</span> <span class="w">Ds</span> <span class="w">for</span> <span class="w">forensics.</span></span></div></div>
+              <div class="ref-notes"><ul><li><strong>Respect active session prefixes:</strong> Rolling back a global <code>system</code> prompt or <code>tools</code> list fixes <em>new</em> sessions immediately, but existing long-running conversations that resume with preserved thinking must either keep their original session-pinned <code>system</code>/<code>tools</code> or use per-session <code>drop_block</code> recovery.</li><li><strong>Rewind rather than correct in-thread:</strong> When an agent produces a bad turn or triggers a refusal, correcting it in a follow-up message keeps the flawed attempt in context and anchors later turns. Roll back to a pre-failure checkpoint (e.g., <code>/rewind</code> or persisted session state).</li><li><strong>Preserve forensic evidence before clearing:</strong> Before resetting queues, restarting workers, or clearing broken sessions, capture Request IDs, Message IDs, sanitized trace spans, and exact tool payloads so postmortem reconstruction is possible (respecting ZDR and PII redaction policies).</li></ul></div>
+            </article>
+            <article class="seg kind-prose" data-seg-id="s3-5">
+              <div class="seg-top">
+                <span class="seg-label">STAKEHOLDER COMMS</span>
+                <button class="seg-play-btn" data-jump-seg="s3-5"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Communicating Clearly During Non-Deterministic Incidents</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s3-5-s0" data-start="397.569" title="Click to jump here"><span class="w">During</span> <span class="w">a</span> <span class="w">non-deterministic</span> <span class="w">AI</span> <span class="w">incident,</span> <span class="w">disciplined</span> <span class="w">communication</span> <span class="w">keeps</span> <span class="w">trust</span> <span class="w">intact.</span></span> <span class="sent" data-sent-id="s3-5-s1" data-start="403.0" title="Click to jump here"><span class="w">Report</span> <span class="w">verified</span> <span class="w">blast</span> <span class="w">radius,</span> <span class="w">explain</span> <span class="w">the</span> <span class="w">active</span> <span class="w">mitigation</span> <span class="w">including</span> <span class="w">any</span> <span class="w">latency</span> <span class="w">or</span> <span class="w">quality</span> <span class="w">tradeoffs</span> <span class="w">from</span> <span class="w">fallback</span> <span class="w">routing,</span> <span class="w">share</span> <span class="w">concrete</span> <span class="w">workarounds,</span> <span class="w">and</span> <span class="w">commit</span> <span class="w">to</span> <span class="w">a</span> <span class="w">timestamp</span> <span class="w">for</span> <span class="w">the</span> <span class="w">next</span> <span class="w">update</span> <span class="w">without</span> <span class="w">guessing</span> <span class="w">at</span> <span class="w">root</span> <span class="w">causes.</span></span></div></div>
+              <div class="ref-notes"><p>Effective incident communication separates <strong>confirmed facts</strong> from hypotheses. Status updates to engineering leadership, support teams, and customers should cover four elements: (1) concrete user-visible impact and affected scope (e.g., percentage of workflows or specific tenants), (2) active containment and any temporary tradeoffs (such as fallback model latency increases or read-only degradation), (3) clear customer workarounds (e.g., starting a fresh session after a policy refusal or escalating flagged tasks), and (4) the exact time of the next update. Never speculate on model-level root causes before trace cohorts confirm them.</p></div>
+            </article>
+        </section>
+        <section class="section-block" id="sec-4">
+          <div class="section-header">
+            <div class="section-obj">Incident Response and Learning Loops</div>
+            <h2>Converting Incidents into Evals, Monitoring, and Postmortems</h2>
+          </div>
+          
+            <article class="seg kind-prose" data-seg-id="s4-1">
+              <div class="seg-top">
+                <span class="seg-label">LEARNING LOOPS</span>
+                <button class="seg-play-btn" data-jump-seg="s4-1"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Closing the Production Reliability Loop</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s4-1-s0" data-start="417.951" title="Click to jump here"><span class="w">Shipping</span> <span class="w">a</span> <span class="w">hotfix</span> <span class="w">never</span> <span class="w">finishes</span> <span class="w">an</span> <span class="w">incident.</span></span> <span class="sent" data-sent-id="s4-1-s1" data-start="420.544" title="Click to jump here"><span class="w">Because</span> <span class="w">prompts,</span> <span class="w">tools,</span> <span class="w">retrieval</span> <span class="w">indexes,</span> <span class="w">and</span> <span class="w">models</span> <span class="w">evolve</span> <span class="w">constantly,</span> <span class="w">unguarded</span> <span class="w">bugs</span> <span class="w">always</span> <span class="w">return.</span></span> <span class="sent" data-sent-id="s4-1-s2" data-start="427.34" title="Click to jump here"><span class="w">Before</span> <span class="w">closing</span> <span class="w">any</span> <span class="w">production</span> <span class="w">incident,</span> <span class="w">convert</span> <span class="w">it</span> <span class="w">into</span> <span class="w">three</span> <span class="w">permanent</span> <span class="w">artifacts:</span> <span class="w">a</span> <span class="w">C</span> <span class="w">I</span> <span class="w">regression</span> <span class="w">evaluation,</span> <span class="w">monitoring</span> <span class="w">coverage</span> <span class="w">for</span> <span class="w">the</span> <span class="w">blind</span> <span class="w">spot,</span> <span class="w">and</span> <span class="w">a</span> <span class="w">blameless</span> <span class="w">postmortem</span> <span class="w">with</span> <span class="w">owned</span> <span class="w">action</span> <span class="w">items.</span></span></div></div>
+              <div class="ref-notes"><p>Fixing the immediate bug that caused an LLM outage is only half the job. Because model behavior, prompt templates, MCP tool lists, and retrieval corpora evolve continuously, any failure mode without an automated guard will eventually regress. A complete incident learning loop produces <strong>three durable engineering artifacts</strong> before the incident ticket closes: (1) new regression evaluation cases in the CI/CD gate, (2) expanded production monitoring and alerting covering the blind spot that delayed detection, and (3) a blameless postmortem documenting systemic contributing factors and owned follow-up work.</p></div>
+            </article>
+            <article class="seg kind-bullets" data-seg-id="s4-2">
+              <div class="seg-top">
+                <span class="seg-label">INCIDENT-TO-EVAL</span>
+                <button class="seg-play-btn" data-jump-seg="s4-2"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Turning Production Traces into Durable Regression Evals</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s4-2-s0" data-start="440.223" title="Click to jump here"><span class="w">Promote</span> <span class="w">every</span> <span class="w">real</span> <span class="w">incident</span> <span class="w">trace</span> <span class="w">into</span> <span class="w">your</span> <span class="w">test</span> <span class="w">suite,</span> <span class="w">after</span> <span class="w">sanitizing</span> <span class="w">P</span> <span class="w">I</span> <span class="w">I</span> <span class="w">and</span> <span class="w">secrets.</span></span> <span class="sent" data-sent-id="s4-2-s1" data-start="446.272" title="Click to jump here"><span class="w">Match</span> <span class="w">the</span> <span class="w">test</span> <span class="w">to</span> <span class="w">the</span> <span class="w">failure</span> <span class="w">layer:</span> <span class="w">harness</span> <span class="w">contracts</span> <span class="w">like</span> <span class="w">tool-result</span> <span class="w">ordering</span> <span class="w">and</span> <span class="w">prefix</span> <span class="w">invariance</span> <span class="w">belong</span> <span class="w">in</span> <span class="w">fast</span> <span class="w">deterministic</span> <span class="w">C</span> <span class="w">I</span> <span class="w">tests,</span> <span class="w">while</span> <span class="w">grounding</span> <span class="w">and</span> <span class="w">refusal</span> <span class="w">regressions</span> <span class="w">belong</span> <span class="w">in</span> <span class="w">your</span> <span class="w">calibrated</span> <span class="w">evaluation</span> <span class="w">suite—always</span> <span class="w">covering</span> <span class="w">compaction,</span> <span class="w">fallback,</span> <span class="w">and</span> <span class="w">session</span> <span class="w">resume.</span></span></div></div>
+              <div class="ref-notes"><ul><li><strong>Sanitize before promoting to golden sets:</strong> Strip PII, credentials, and customer secrets from failing production traces (honoring zero-data-retention commitments) while preserving the exact structural trigger—such as the tool schema, multi-turn history shape, or retrieved chunk set.</li><li><strong>Match test type to failure layer:</strong> Harness and contract bugs (missing <code>tool_result</code>, JSON escaping, buffer limits, prefix mutations) belong in fast <strong>deterministic CI tests</strong>. Quality, grounding, and refusal regressions belong in <strong>calibrated eval suites</strong> (code-graded checks plus human-calibrated LLM-as-judge rubrics).</li><li><strong>Exercise edge-case lifecycle paths:</strong> Plain single-turn happy-path tests miss real production bugs. Include multi-turn sessions that trigger compaction, late tool loading, model fallback, and session resume.</li></ul></div>
+            </article>
+            <article class="seg kind-code" data-seg-id="s4-3">
+              <div class="seg-top">
+                <span class="seg-label">CI REGRESSION GATE</span>
+                <button class="seg-play-btn" data-jump-seg="s4-3"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Enforcing Preserved-Thinking Prefix Invariants in CI</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s4-3-s0" data-start="464.296" title="Click to jump here"><span class="w">Anthropic</span> <span class="w">recommends</span> <span class="w">a</span> <span class="w">two-step</span> <span class="w">pattern</span> <span class="w">for</span> <span class="w">testing</span> <span class="w">preserved-thinking</span> <span class="w">invariants</span> <span class="w">in</span> <span class="w">C</span> <span class="w">I.</span></span> <span class="sent" data-sent-id="s4-3-s1" data-start="469.833" title="Click to jump here"><span class="w">First,</span> <span class="w">prove</span> <span class="w">your</span> <span class="w">test</span> <span class="w">can</span> <span class="w">fail</span> <span class="w">by</span> <span class="w">intentionally</span> <span class="w">mutating</span> <span class="w">the</span> <span class="w">system</span> <span class="w">prompt</span> <span class="w">with</span> <span class="w">drop</span> <span class="w">block</span> <span class="w">and</span> <span class="w">asserting</span> <span class="w">a</span> <span class="w">prefix</span> <span class="w">binding</span> <span class="w">mismatch</span> <span class="w">entry.</span></span> <span class="sent" data-sent-id="s4-3-s2" data-start="478.315" title="Click to jump here"><span class="w">Then</span> <span class="w">remove</span> <span class="w">the</span> <span class="w">mutation</span> <span class="w">and</span> <span class="w">run</span> <span class="w">real</span> <span class="w">compaction</span> <span class="w">and</span> <span class="w">resume</span> <span class="w">flows</span> <span class="w">with</span> <span class="w">prefix</span> <span class="w">mismatch</span> <span class="w">behavior</span> <span class="w">set</span> <span class="w">to</span> <span class="w">error</span> <span class="w">so</span> <span class="w">any</span> <span class="w">future</span> <span class="w">regression</span> <span class="w">breaks</span> <span class="w">the</span> <span class="w">build.</span></span></div></div>
+              <div class="ref-notes"><pre><code># Step 1: Prove the CI harness catches a real violation by injecting a deliberate prefix
+# change with `drop_block` and asserting `prefix_binding_mismatch` appears.
+# Step 2: Remove the deliberate change and enforce `prefix_mismatch_behavior="error"`
+# across compaction, late-tool, and session-resume integration tests.
+response = client.beta.messages.create(
+    model="claude-opus-5-5",
+    max_tokens=16000,
+    thinking={
+        "type": "adaptive",
+        "block_binding": {"prefix_mismatch_behavior": "error"},
+    },
+    messages=session_messages,
+    betas=["thinking-binding-controls-2026-08-01"],
+)
+# Fail CI only on reason == "prefix_binding_mismatch" (ignore expected
+# "model_binding_mismatch" entries in deliberate cross-model fallback tests).</code></pre></div>
+            </article>
+            <article class="seg kind-bullets" data-seg-id="s4-4">
+              <div class="seg-top">
+                <span class="seg-label">MONITORING COVERAGE</span>
+                <button class="seg-play-btn" data-jump-seg="s4-4"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Eliminating Observability Blind Spots Found in Triage</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s4-4-s0" data-start="488.275" title="Click to jump here"><span class="w">Every</span> <span class="w">minute</span> <span class="w">spent</span> <span class="w">hunting</span> <span class="w">for</span> <span class="w">clues</span> <span class="w">during</span> <span class="w">triage</span> <span class="w">reveals</span> <span class="w">a</span> <span class="w">monitoring</span> <span class="w">gap.</span></span> <span class="sent" data-sent-id="s4-4-s1" data-start="492.895" title="Click to jump here"><span class="w">Add</span> <span class="w">alerts</span> <span class="w">on</span> <span class="w">stop</span> <span class="w">reason</span> <span class="w">distributions—especially</span> <span class="w">refusals</span> <span class="w">and</span> <span class="w">max</span> <span class="w">tokens—not</span> <span class="w">just</span> <span class="w">H</span> <span class="w">T</span> <span class="w">T</span> <span class="w">P</span> <span class="w">status</span> <span class="w">codes.</span></span> <span class="sent" data-sent-id="s4-4-s2" data-start="500.907" title="Click to jump here"><span class="w">Log</span> <span class="w">input</span> <span class="w">transformations</span> <span class="w">for</span> <span class="w">silent</span> <span class="w">thinking</span> <span class="w">mismatches,</span> <span class="w">watch</span> <span class="w">prompt-cache</span> <span class="w">hit</span> <span class="w">rates</span> <span class="w">for</span> <span class="w">prefix</span> <span class="w">drift,</span> <span class="w">and</span> <span class="w">emit</span> <span class="w">explicit</span> <span class="w">metrics</span> <span class="w">whenever</span> <span class="w">fallback</span> <span class="w">models</span> <span class="w">activate.</span></span></div></div>
+              <div class="ref-notes"><ul><li><strong>Alert on <code>stop_reason</code> distribution shifts:</strong> Track rolling rates of <code>refusal</code> (segmented by <code>stop_details.category</code>), <code>max_tokens</code>, <code>pause_turn</code>, and <code>model_context_window_exceeded</code>—not just HTTP 4xx/5xx error codes.</li><li><strong>Watch silent reasoning and cache loss:</strong> Log <code>input_transformations</code> (alerting on <code>thinking_mismatch_allowed</code> or unexpected <code>thinking_dropped</code>) and alert on sudden drops in <code>cache_read_input_tokens</code> that signal prefix mutations.</li><li><strong>Track fallback activation and worker health:</strong> Emit explicit metrics whenever server-side or client-side fallback routes traffic to a secondary model, and alert on Managed Agents <code>pending &gt; 0</code> sustained stalls, <code>workers_polling == 0</code>, and rising <code>oldest_queued_at</code> age.</li></ul></div>
+            </article>
+            <article class="seg kind-callout" data-seg-id="s4-5">
+              <div class="seg-top">
+                <span class="seg-label">BLAMELESS POSTMORTEM</span>
+                <button class="seg-play-btn" data-jump-seg="s4-5"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Writing Blameless Postmortems for Probabilistic Systems</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s4-5-s0" data-start="511.144" title="Click to jump here"><span class="w">Finally,</span> <span class="w">write</span> <span class="w">blameless</span> <span class="w">postmortems</span> <span class="w">that</span> <span class="w">target</span> <span class="w">systemic</span> <span class="w">weaknesses</span> <span class="w">rather</span> <span class="w">than</span> <span class="w">individuals</span> <span class="w">or</span> <span class="w">vague</span> <span class="w">model</span> <span class="w">flakiness.</span></span> <span class="sent" data-sent-id="s4-5-s1" data-start="518.644" title="Click to jump here"><span class="w">Document</span> <span class="w">why</span> <span class="w">the</span> <span class="w">bad</span> <span class="w">change</span> <span class="w">reached</span> <span class="w">production—like</span> <span class="w">a</span> <span class="w">missing</span> <span class="w">evaluation</span> <span class="w">gate,</span> <span class="w">an</span> <span class="w">unpinned</span> <span class="w">M</span> <span class="w">C</span> <span class="w">P</span> <span class="w">tool</span> <span class="w">list,</span> <span class="w">or</span> <span class="w">an</span> <span class="w">undifferentiated</span> <span class="w">retry</span> <span class="w">loop—and</span> <span class="w">assign</span> <span class="w">time-bound</span> <span class="w">engineering</span> <span class="w">fixes</span> <span class="w">tied</span> <span class="w">directly</span> <span class="w">to</span> <span class="w">your</span> <span class="w">S</span> <span class="w">L</span> <span class="w">O</span> <span class="w">error</span> <span class="w">budget.</span></span></div></div>
+              <div class="ref-notes"><p>A strong CCDV-P postmortem never stops at "the model hallucinated" or "an engineer shipped a bad prompt." It identifies <strong>systemic gaps</strong>—such as an undifferentiated retry path that retried refusals, a missing CI evaluation gate, an unpinned MCP tool list that mutated mid-session, or a missing deterministic guardrail—and pairs each finding with a concrete, owner-assigned, time-bound remediation prioritized against your quality and availability SLO error budget.</p></div>
+            </article>
+        </section>
+
+      <section class="quiz-section" id="scenarios">
+        <div class="section-header">
+          <div class="section-obj">CCDV-P Scenario Practice</div>
+          <h2>Production Scenario Questions</h2>
+        </div>
+        
+        <div class="scenario-card" data-correct="B">
+          <h3>Scenario 1: Midnight 400 Spike on Preserved-Thinking Sessions</h3>
+          <p class="scenario-prompt">A long-running multi-turn coding assistant running on Claude Opus 5.5 operates smoothly all day, then at 00:00 UTC active conversations suddenly fail with HTTP 400: `messages.3.content.0: Invalid signature in thinking block. The block is bound to a different conversation.` Investigation reveals the agent harness rebuilds the `system` prompt on every turn using the current UTC date. Active customer sessions are currently blocked. What is the best two-step response?</p>
+          <div class="opt-list"><button class="opt-btn" data-key="A"><strong>A.</strong> Retry the failed requests with exponential backoff and strip all thinking blocks from every conversation globally so prefix checks never run.</button><button class="opt-btn" data-key="B"><strong>B.</strong> Enable `thinking.block_binding.prefix_mismatch_behavior: &quot;drop_block&quot;` with the `thinking-binding-controls-2026-08-01` beta header for affected in-flight conversations to restore them, then update the harness to keep `system` static per conversation and append date updates at the end of `messages`.</button><button class="opt-btn" data-key="C"><strong>C.</strong> Set `thinking: {&quot;type&quot;: &quot;disabled&quot;}` on Claude Opus 5.5 so thinking blocks are no longer generated or validated.</button><button class="opt-btn" data-key="D"><strong>D.</strong> Leave `prefix_mismatch_behavior: &quot;drop_block&quot;` enabled permanently across all requests so midnight date updates continue working without code changes.</button></div>
+          <div class="rationale">
+            <strong>Answer: B</strong> &mdash; B follows Anthropic&#x27;s exact two-step recovery and permanent fix: `drop_block` (with `thinking-binding-controls-2026-08-01`) unblocks already-mutated in-flight conversations, while making the integration append-only (freezing `system` and appending date updates in a new turn or mid-conversation system message) prevents future prefix-check failures and preserves prompt caching. A fails because retrying an unchanged invalid body always returns 400 and stripping all thinking globally degrades reasoning quality; C fails with a 400 error because thinking is always on for Claude Opus 5.5; D masks an ongoing bug, increases output token spend every turn, and repeatedly invalidates prompt caches.
+          </div>
+        </div>
+        <div class="scenario-card" data-correct="A">
+          <h3>Scenario 2: Silent None Structured Outputs and 1 MB Buffer Aborts in Agent SDK</h3>
+          <p class="scenario-prompt">A document-processing pipeline built on the Python Claude Agent SDK experiences two failures in production: 15% of runs complete with `subtype: &quot;success&quot;` but `structured_output` is `None`, crashing downstream consumers; another 5% of runs processing 500 KB PDFs abort with `CLIJSONDecodeError: JSON message exceeded maximum buffer size of 1048576 bytes`. Which set of fixes addresses both root causes?</p>
+          <div class="opt-list"><button class="opt-btn" data-key="A"><strong>A.</strong> Treat `structured_output is None` as an application failure, inspect `stop_reason` for `&quot;refusal&quot;` and audit the JSON Schema for contradictory constraints; increase `ClaudeAgentOptions(max_buffer_size=64 * 1024 * 1024)`, call `disconnect()`, and resume interrupted work with `resume=session_id`.</button><button class="opt-btn" data-key="B"><strong>B.</strong> Add a `try/except ProcessError` block to retry both failures automatically with a higher `max_tokens` limit.</button><button class="opt-btn" data-key="C"><strong>C.</strong> Switch from `structured_output` to regex parsing on plain text and instruct Claude in `CLAUDE.md` to summarize PDFs in fewer than 500 words.</button><button class="opt-btn" data-key="D"><strong>D.</strong> Enable `claude --safe-mode` in production and lower `output_config.effort` to `low` so tool payloads stay under 1 MB.</button></div>
+          <div class="rationale">
+            <strong>Answer: A</strong> &mdash; A directly resolves both documented Agent SDK failure modes: `subtype: &quot;success&quot;` with `structured_output: None` occurs on `stop_reason: &quot;refusal&quot;` or unsatisfiable schemas (e.g., contradictory `minLength`/`maxLength`) and must be handled as a failure in application code; `CLIJSONDecodeError` happens on ~393 KB+ PDFs because Read tool results encode base64 twice, exceeding the 1 MB default `max_buffer_size`—raising `max_buffer_size` (e.g., to 64 MB), disconnecting, and resuming via `session_id` fixes and recovers it. B catches the wrong exception and fails to fix buffer limits or schema/refusal causes; C abandons schema validation and doesn&#x27;t stop the Read tool payload from exceeding 1 MB; D confuses interactive CLI debugging flags and effort with tool-result size.
+          </div>
+        </div>
+        <div class="scenario-card" data-correct="B">
+          <h3>Scenario 3: Post-Release Refusal Surge Masked by HTTP 200s</h3>
+          <p class="scenario-prompt">Thirty minutes after deploying a new prompt template for a customer support agent, HTTP 5xx alerts remain silent, yet customer escalations triple. Trace cohort analysis shows `stop_reason: &quot;refusal&quot;` jumped from 0.2% to 24% with `Details: [reasoning_extraction]` because the new template instructs Claude to output a verbatim `&lt;thinking&gt;` scratchpad field in its JSON response. Worse, the harness retry middleware retries refused turns three times inside the same conversation, tripling token spend. What should the on-call engineer do?</p>
+          <div class="opt-list"><button class="opt-btn" data-key="A"><strong>A.</strong> Edit the production prompt live to tell Claude that the `&lt;thinking&gt;` field is authorized for internal debugging, and raise the retry limit to five.</button><button class="opt-btn" data-key="B"><strong>B.</strong> Immediately roll back the prompt template to the previous verified version, update retry logic so `stop_reason: &quot;refusal&quot;` is never retried in-thread, and close the incident by adding a CI regression eval for `reasoning_extraction` refusals plus an alert on `stop_reason: &quot;refusal&quot;` rate.</button><button class="opt-btn" data-key="C"><strong>C.</strong> Disable all safety classifiers via an API header so the new JSON schema can remain in production.</button><button class="opt-btn" data-key="D"><strong>D.</strong> Leave the prompt deployed while running a week-long A/B test to confirm whether users prefer the new JSON schema.</button></div>
+          <div class="rationale">
+            <strong>Answer: B</strong> &mdash; B executes the complete CCDV-P incident response and learning loop: immediate rollback to the last known-good prompt stops customer impact deterministically; fixing the undifferentiated retry path stops wasted retries on `stop_reason: &quot;refusal&quot;` (which re-triggers on the same conversation history); and adding both a CI regression eval and a `stop_reason: &quot;refusal&quot;` SLI alert prevents recurrence and eliminates the HTTP-200 blind spot. A hot-patches an unverified prompt that still triggers `reasoning_extraction` safeguards and worsens the retry storm; C invents a nonexistent capability; D prolongs an active 24% failure outage.
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+<script>
+const TIMELINE = {"duration":533.94,"segments":[{"id":"intro","section":"Overview","start":0.0,"end":40.24,"sentences":[{"id":"intro-s0","start":0.0,"end":3.264,"words":[{"t":"Domain","s":0.0,"e":0.415},{"t":"4:","s":0.415,"e":0.671},{"t":"Advanced","s":0.671,"e":1.224},{"t":"Debugging","s":1.224,"e":1.846},{"t":"and","s":1.846,"e":2.054},{"t":"Incident","s":2.054,"e":2.607},{"t":"Response.","s":2.607,"e":3.264}]},{"id":"intro-s1","start":3.404,"end":5.047,"words":[{"t":"Exam","s":3.404,"e":3.823},{"t":"weight:","s":3.823,"e":4.681},{"t":"10%.","s":4.681,"e":5.047}]},{"id":"intro-s2","start":5.187,"end":16.195,"words":[{"t":"Isolating","s":5.187,"e":5.833},{"t":"root","s":5.833,"e":6.12},{"t":"cause","s":6.12,"e":6.48},{"t":"across","s":6.48,"e":6.91},{"t":"model","s":6.91,"e":7.269},{"t":"output,","s":7.269,"e":7.858},{"t":"agent","s":7.858,"e":8.217},{"t":"harness,","s":8.217,"e":8.878},{"t":"tools,","s":8.878,"e":9.395},{"t":"and","s":9.395,"e":9.61},{"t":"data","s":9.61,"e":9.898},{"t":"during","s":9.898,"e":10.328},{"t":"complex","s":10.328,"e":10.831},{"t":"production","s":10.831,"e":11.549},{"t":"failures,","s":11.549,"e":12.282},{"t":"then","s":12.282,"e":12.569},{"t":"turning","s":12.569,"e":13.071},{"t":"every","s":13.071,"e":13.43},{"t":"incident","s":13.43,"e":14.005},{"t":"into","s":14.005,"e":14.292},{"t":"durable","s":14.292,"e":14.795},{"t":"evals","s":14.795,"e":15.154},{"t":"and","s":15.154,"e":15.369},{"t":"monitoring.","s":15.369,"e":16.195}]},{"id":"intro-s3","start":16.335,"end":21.199,"words":[{"t":"Senior","s":16.335,"e":16.791},{"t":"engineers","s":16.791,"e":17.475},{"t":"never","s":17.475,"e":17.855},{"t":"treat","s":17.855,"e":18.235},{"t":"an","s":18.235,"e":18.387},{"t":"LLM","s":18.387,"e":18.615},{"t":"incident","s":18.615,"e":19.223},{"t":"as","s":19.223,"e":19.375},{"t":"a","s":19.375,"e":19.489},{"t":"mysterious","s":19.489,"e":20.249},{"t":"model","s":20.249,"e":20.629},{"t":"glitch.","s":20.629,"e":21.199}]},{"id":"intro-s4","start":21.339,"end":40.24,"words":[{"t":"They","s":21.339,"e":21.648},{"t":"systematically","s":21.648,"e":22.729},{"t":"isolate","s":22.729,"e":23.269},{"t":"failures","s":23.269,"e":23.887},{"t":"across","s":23.887,"e":24.35},{"t":"four","s":24.35,"e":24.659},{"t":"boundaries\u2014model","s":24.659,"e":25.817},{"t":"output,","s":25.817,"e":26.45},{"t":"agent","s":26.45,"e":26.836},{"t":"harness,","s":26.836,"e":27.547},{"t":"tools/MCP,","s":27.547,"e":28.334},{"t":"and","s":28.334,"e":28.566},{"t":"retrieval","s":28.566,"e":29.261},{"t":"data\u2014contain","s":29.261,"e":30.11},{"t":"blast","s":30.11,"e":30.496},{"t":"radius","s":30.496,"e":30.959},{"t":"fast","s":30.959,"e":31.268},{"t":"through","s":31.268,"e":31.809},{"t":"rollback","s":31.809,"e":32.426},{"t":"or","s":32.426,"e":32.581},{"t":"targeted","s":32.581,"e":33.198},{"t":"fallback,","s":33.198,"e":33.986},{"t":"and","s":33.986,"e":34.218},{"t":"refuse","s":34.218,"e":34.681},{"t":"to","s":34.681,"e":34.835},{"t":"close","s":34.835,"e":35.221},{"t":"any","s":35.221,"e":35.453},{"t":"incident","s":35.453,"e":36.071},{"t":"until","s":36.071,"e":36.457},{"t":"its","s":36.457,"e":36.688},{"t":"trace","s":36.688,"e":37.074},{"t":"becomes","s":37.074,"e":37.615},{"t":"a","s":37.615,"e":37.731},{"t":"permanent","s":37.731,"e":38.426},{"t":"regression","s":38.426,"e":39.198},{"t":"test","s":39.198,"e":39.507},{"t":"and","s":39.507,"e":39.738},{"t":"alert.","s":39.738,"e":40.24}]}]},{"id":"s1-1","section":"Isolating Multi-Turn, Multi-Agent, and Tool Failures","start":40.94,"end":63.257,"sentences":[{"id":"s1-1-s0","start":40.94,"end":47.489,"words":[{"t":"When","s":40.94,"e":41.215},{"t":"a","s":41.215,"e":41.318},{"t":"multi-turn","s":41.318,"e":41.937},{"t":"or","s":41.937,"e":42.075},{"t":"multi-agent","s":42.075,"e":42.763},{"t":"Claude","s":42.763,"e":43.176},{"t":"system","s":43.176,"e":43.588},{"t":"breaks","s":43.588,"e":44.001},{"t":"in","s":44.001,"e":44.139},{"t":"production,","s":44.139,"e":44.978},{"t":"resist","s":44.978,"e":45.391},{"t":"the","s":45.391,"e":45.597},{"t":"urge","s":45.597,"e":45.872},{"t":"to","s":45.872,"e":46.01},{"t":"start","s":46.01,"e":46.354},{"t":"tweaking","s":46.354,"e":46.904},{"t":"prompts.","s":46.904,"e":47.489}]},{"id":"s1-1-s1","start":47.629,"end":56.803,"words":[{"t":"First,","s":47.629,"e":48.184},{"t":"isolate","s":48.184,"e":48.724},{"t":"the","s":48.724,"e":48.955},{"t":"failing","s":48.955,"e":49.495},{"t":"trace","s":49.495,"e":49.88},{"t":"into","s":49.88,"e":50.188},{"t":"one","s":50.188,"e":50.42},{"t":"of","s":50.42,"e":50.574},{"t":"four","s":50.574,"e":50.882},{"t":"layers:","s":50.882,"e":51.514},{"t":"model","s":51.514,"e":51.9},{"t":"output,","s":51.9,"e":52.532},{"t":"the","s":52.532,"e":52.763},{"t":"agent","s":52.763,"e":53.149},{"t":"harness,","s":53.149,"e":53.858},{"t":"tools","s":53.858,"e":54.244},{"t":"and","s":54.244,"e":54.475},{"t":"M","s":54.475,"e":54.59},{"t":"C","s":54.59,"e":54.706},{"t":"P","s":54.706,"e":54.822},{"t":"servers,","s":54.822,"e":55.531},{"t":"or","s":55.531,"e":55.685},{"t":"retrieval","s":55.685,"e":56.379},{"t":"data.","s":56.379,"e":56.803}]},{"id":"s1-1-s2","start":56.943,"end":63.257,"words":[{"t":"Pinpointing","s":56.943,"e":57.755},{"t":"the","s":57.755,"e":57.977},{"t":"exact","s":57.977,"e":58.346},{"t":"boundary","s":58.346,"e":58.937},{"t":"turns","s":58.937,"e":59.306},{"t":"a","s":59.306,"e":59.417},{"t":"non-deterministic","s":59.417,"e":60.598},{"t":"mystery","s":60.598,"e":61.115},{"t":"into","s":61.115,"e":61.411},{"t":"a","s":61.411,"e":61.522},{"t":"concrete","s":61.522,"e":62.112},{"t":"engineering","s":62.112,"e":62.925},{"t":"bug.","s":62.925,"e":63.257}]}]},{"id":"s1-2","section":"Isolating Multi-Turn, Multi-Agent, and Tool Failures","start":63.617,"end":87.632,"sentences":[{"id":"s1-2-s0","start":63.617,"end":68.289,"words":[{"t":"Many","s":63.617,"e":63.865},{"t":"production","s":63.865,"e":64.483},{"t":"tool","s":64.483,"e":64.731},{"t":"failures","s":64.731,"e":65.226},{"t":"come","s":65.226,"e":65.473},{"t":"straight","s":65.473,"e":65.968},{"t":"from","s":65.968,"e":66.216},{"t":"message-history","s":66.216,"e":67.082},{"t":"contract","s":67.082,"e":67.577},{"t":"violations.","s":67.577,"e":68.289}]},{"id":"s1-2-s1","start":68.429,"end":73.635,"words":[{"t":"Every","s":68.429,"e":68.788},{"t":"tool","s":68.788,"e":69.075},{"t":"use","s":69.075,"e":69.291},{"t":"I","s":69.291,"e":69.398},{"t":"D","s":69.398,"e":69.506},{"t":"needs","s":69.506,"e":69.865},{"t":"a","s":69.865,"e":69.973},{"t":"matching","s":69.973,"e":70.547},{"t":"tool","s":70.547,"e":70.835},{"t":"result","s":70.835,"e":71.265},{"t":"placed","s":71.265,"e":71.696},{"t":"first","s":71.696,"e":72.055},{"t":"in","s":72.055,"e":72.199},{"t":"a","s":72.199,"e":72.307},{"t":"single","s":72.307,"e":72.737},{"t":"user","s":72.737,"e":73.025},{"t":"message.","s":73.025,"e":73.635}]},{"id":"s1-2-s2","start":73.775,"end":79.94,"words":[{"t":"If","s":73.775,"e":73.904},{"t":"a","s":73.904,"e":74.0},{"t":"server","s":74.0,"e":74.387},{"t":"tool","s":74.387,"e":74.645},{"t":"paused","s":74.645,"e":75.031},{"t":"with","s":75.031,"e":75.289},{"t":"stop","s":75.289,"e":75.547},{"t":"reason","s":75.547,"e":75.933},{"t":"pause","s":75.933,"e":76.255},{"t":"turn,","s":76.255,"e":76.655},{"t":"send","s":76.655,"e":76.912},{"t":"the","s":76.912,"e":77.106},{"t":"assistant","s":77.106,"e":77.685},{"t":"turn","s":77.685,"e":77.943},{"t":"back","s":77.943,"e":78.201},{"t":"without","s":78.201,"e":78.652},{"t":"adding","s":78.652,"e":79.038},{"t":"a","s":79.038,"e":79.135},{"t":"user","s":79.135,"e":79.392},{"t":"message.","s":79.392,"e":79.94}]},{"id":"s1-2-s3","start":80.08,"end":87.632,"words":[{"t":"And","s":80.08,"e":80.324},{"t":"never","s":80.324,"e":80.732},{"t":"match","s":80.732,"e":81.139},{"t":"raw","s":81.139,"e":81.383},{"t":"J","s":81.383,"e":81.506},{"t":"S","s":81.506,"e":81.628},{"t":"O","s":81.628,"e":81.75},{"t":"N","s":81.75,"e":81.872},{"t":"strings","s":81.872,"e":82.443},{"t":"on","s":82.443,"e":82.605},{"t":"tool","s":82.605,"e":82.931},{"t":"inputs,","s":82.931,"e":83.599},{"t":"because","s":83.599,"e":84.17},{"t":"Unicode","s":84.17,"e":84.74},{"t":"escaping","s":84.74,"e":85.392},{"t":"changes","s":85.392,"e":85.962},{"t":"across","s":85.962,"e":86.451},{"t":"model","s":86.451,"e":86.858},{"t":"versions.","s":86.858,"e":87.632}]}]},{"id":"s1-3","section":"Isolating Multi-Turn, Multi-Agent, and Tool Failures","start":87.992,"end":112.519,"sentences":[{"id":"s1-3-s0","start":87.992,"end":90.232,"words":[{"t":"Watch","s":87.992,"e":88.348},{"t":"out","s":88.348,"e":88.561},{"t":"for","s":88.561,"e":88.774},{"t":"two","s":88.774,"e":88.988},{"t":"classic","s":88.988,"e":89.485},{"t":"exam","s":89.485,"e":89.77},{"t":"traps.","s":89.77,"e":90.232}]},{"id":"s1-3-s1","start":90.372,"end":99.929,"words":[{"t":"If","s":90.372,"e":90.509},{"t":"Claude","s":90.509,"e":90.921},{"t":"flags","s":90.921,"e":91.265},{"t":"your","s":91.265,"e":91.539},{"t":"own","s":91.539,"e":91.745},{"t":"tool","s":91.745,"e":92.02},{"t":"output","s":92.02,"e":92.432},{"t":"as","s":92.432,"e":92.569},{"t":"a","s":92.569,"e":92.672},{"t":"prompt","s":92.672,"e":93.084},{"t":"injection,","s":93.084,"e":93.853},{"t":"it","s":93.853,"e":93.99},{"t":"is","s":93.99,"e":94.128},{"t":"because","s":94.128,"e":94.608},{"t":"your","s":94.608,"e":94.883},{"t":"harness","s":94.883,"e":95.363},{"t":"put","s":95.363,"e":95.569},{"t":"instructions","s":95.569,"e":96.393},{"t":"inside","s":96.393,"e":96.805},{"t":"the","s":96.805,"e":97.011},{"t":"tool","s":97.011,"e":97.286},{"t":"result","s":97.286,"e":97.698},{"t":"block","s":97.698,"e":98.041},{"t":"instead","s":98.041,"e":98.522},{"t":"of","s":98.522,"e":98.659},{"t":"keeping","s":98.659,"e":99.139},{"t":"it","s":99.139,"e":99.277},{"t":"pure","s":99.277,"e":99.551},{"t":"data.","s":99.551,"e":99.929}]},{"id":"s1-3-s2","start":100.069,"end":106.32,"words":[{"t":"Second,","s":100.069,"e":100.703},{"t":"in","s":100.703,"e":100.857},{"t":"the","s":100.857,"e":101.089},{"t":"Agent","s":101.089,"e":101.475},{"t":"S","s":101.475,"e":101.591},{"t":"D","s":101.591,"e":101.707},{"t":"K,","s":101.707,"e":101.993},{"t":"a","s":101.993,"e":102.109},{"t":"run","s":102.109,"e":102.341},{"t":"can","s":102.341,"e":102.572},{"t":"return","s":102.572,"e":103.036},{"t":"subtype","s":103.036,"e":103.577},{"t":"success","s":103.577,"e":104.118},{"t":"while","s":104.118,"e":104.504},{"t":"structured","s":104.504,"e":105.277},{"t":"output","s":105.277,"e":105.74},{"t":"is","s":105.74,"e":105.895},{"t":"null.","s":105.895,"e":106.32}]},{"id":"s1-3-s3","start":106.46,"end":112.519,"words":[{"t":"Always","s":106.46,"e":106.871},{"t":"treat","s":106.871,"e":107.213},{"t":"that","s":107.213,"e":107.487},{"t":"as","s":107.487,"e":107.624},{"t":"a","s":107.624,"e":107.727},{"t":"failure","s":107.727,"e":108.206},{"t":"and","s":108.206,"e":108.411},{"t":"check","s":108.411,"e":108.754},{"t":"for","s":108.754,"e":108.959},{"t":"a","s":108.959,"e":109.062},{"t":"refusal","s":109.062,"e":109.541},{"t":"stop","s":109.541,"e":109.815},{"t":"reason","s":109.815,"e":110.225},{"t":"or","s":110.225,"e":110.362},{"t":"contradictory","s":110.362,"e":111.252},{"t":"schema","s":111.252,"e":111.663},{"t":"constraints.","s":111.663,"e":112.519}]}]},{"id":"s1-4","section":"Isolating Multi-Turn, Multi-Agent, and Tool Failures","start":112.879,"end":146.716,"sentences":[{"id":"s1-4-s0","start":112.879,"end":118.767,"words":[{"t":"When","s":112.879,"e":113.184},{"t":"debugging","s":113.184,"e":113.871},{"t":"the","s":113.871,"e":114.099},{"t":"Agent","s":114.099,"e":114.481},{"t":"S","s":114.481,"e":114.595},{"t":"D","s":114.595,"e":114.709},{"t":"K","s":114.709,"e":114.824},{"t":"or","s":114.824,"e":114.976},{"t":"Claude","s":114.976,"e":115.434},{"t":"Code,","s":115.434,"e":115.907},{"t":"know","s":115.907,"e":116.212},{"t":"the","s":116.212,"e":116.441},{"t":"exact","s":116.441,"e":116.822},{"t":"runtime","s":116.822,"e":117.356},{"t":"failure","s":117.356,"e":117.89},{"t":"signatures.","s":117.89,"e":118.767}]},{"id":"s1-4-s1","start":118.907,"end":138.128,"words":[{"t":"In","s":118.907,"e":119.075},{"t":"Python,","s":119.075,"e":119.765},{"t":"Process","s":119.765,"e":120.354},{"t":"Error","s":120.354,"e":120.775},{"t":"hides","s":120.775,"e":121.196},{"t":"real","s":121.196,"e":121.533},{"t":"standard","s":121.533,"e":122.206},{"t":"error","s":122.206,"e":122.627},{"t":"unless","s":122.627,"e":123.132},{"t":"you","s":123.132,"e":123.384},{"t":"register","s":123.384,"e":124.057},{"t":"a","s":124.057,"e":124.184},{"t":"stderr","s":124.184,"e":124.688},{"t":"callback,","s":124.688,"e":125.547},{"t":"and","s":125.547,"e":125.799},{"t":"large","s":125.799,"e":126.22},{"t":"P","s":126.22,"e":126.346},{"t":"D","s":126.346,"e":126.473},{"t":"F","s":126.473,"e":126.599},{"t":"reads","s":126.599,"e":127.02},{"t":"trigger","s":127.02,"e":127.609},{"t":"C","s":127.609,"e":127.735},{"t":"L","s":127.735,"e":127.861},{"t":"I","s":127.861,"e":127.987},{"t":"J","s":127.987,"e":128.114},{"t":"S","s":128.114,"e":128.24},{"t":"O","s":128.24,"e":128.366},{"t":"N","s":128.366,"e":128.492},{"t":"Decode","s":128.492,"e":128.997},{"t":"Error","s":128.997,"e":129.418},{"t":"at","s":129.418,"e":129.586},{"t":"one","s":129.586,"e":129.839},{"t":"megabyte","s":129.839,"e":130.512},{"t":"because","s":130.512,"e":131.101},{"t":"base","s":131.101,"e":131.438},{"t":"sixty-four","s":131.438,"e":132.195},{"t":"payloads","s":132.195,"e":132.868},{"t":"are","s":132.868,"e":133.121},{"t":"duplicated\u2014fix","s":133.121,"e":134.215},{"t":"it","s":134.215,"e":134.383},{"t":"by","s":134.383,"e":134.551},{"t":"raising","s":134.551,"e":135.14},{"t":"max","s":135.14,"e":135.393},{"t":"buffer","s":135.393,"e":135.898},{"t":"size","s":135.898,"e":136.235},{"t":"and","s":136.235,"e":136.487},{"t":"resuming","s":136.487,"e":137.16},{"t":"the","s":137.16,"e":137.413},{"t":"session.","s":137.413,"e":138.128}]},{"id":"s1-4-s2","start":138.268,"end":146.716,"words":[{"t":"In","s":138.268,"e":138.42},{"t":"Claude","s":138.42,"e":138.876},{"t":"Code,","s":138.876,"e":139.348},{"t":"run","s":139.348,"e":139.576},{"t":"slash","s":139.576,"e":139.956},{"t":"context,","s":139.956,"e":140.656},{"t":"slash","s":140.656,"e":141.036},{"t":"doctor,","s":141.036,"e":141.659},{"t":"and","s":141.659,"e":141.887},{"t":"safe","s":141.887,"e":142.192},{"t":"mode","s":142.192,"e":142.496},{"t":"to","s":142.496,"e":142.648},{"t":"isolate","s":142.648,"e":143.18},{"t":"configuration","s":143.18,"e":144.169},{"t":"overrides","s":144.169,"e":144.853},{"t":"and","s":144.853,"e":145.081},{"t":"autocompact","s":145.081,"e":145.918},{"t":"thrashing.","s":145.918,"e":146.716}]}]},{"id":"s1-5","section":"Isolating Multi-Turn, Multi-Agent, and Tool Failures","start":147.076,"end":170.951,"sentences":[{"id":"s1-5-s0","start":147.076,"end":152.516,"words":[{"t":"For","s":147.076,"e":147.278},{"t":"self-hosted","s":147.278,"e":147.952},{"t":"Managed","s":147.952,"e":148.424},{"t":"Agents,","s":148.424,"e":148.977},{"t":"start","s":148.977,"e":149.314},{"t":"with","s":149.314,"e":149.584},{"t":"the","s":149.584,"e":149.786},{"t":"work","s":149.786,"e":150.056},{"t":"stats","s":150.056,"e":150.393},{"t":"endpoint","s":150.393,"e":150.932},{"t":"from","s":150.932,"e":151.202},{"t":"external","s":151.202,"e":151.741},{"t":"ops","s":151.741,"e":151.943},{"t":"tooling.","s":151.943,"e":152.516}]},{"id":"s1-5-s1","start":152.656,"end":160.699,"words":[{"t":"Sustained","s":152.656,"e":153.301},{"t":"non-zero","s":153.301,"e":153.803},{"t":"pending","s":153.803,"e":154.305},{"t":"counts","s":154.305,"e":154.735},{"t":"point","s":154.735,"e":155.093},{"t":"to","s":155.093,"e":155.237},{"t":"a","s":155.237,"e":155.344},{"t":"stalled","s":155.344,"e":155.846},{"t":"worker,","s":155.846,"e":156.434},{"t":"while","s":156.434,"e":156.792},{"t":"zero","s":156.792,"e":157.079},{"t":"workers","s":157.079,"e":157.581},{"t":"polling","s":157.581,"e":158.083},{"t":"flags","s":158.083,"e":158.441},{"t":"connectivity","s":158.441,"e":159.301},{"t":"or","s":159.301,"e":159.445},{"t":"credential","s":159.445,"e":160.161},{"t":"issues.","s":160.161,"e":160.699}]},{"id":"s1-5-s2","start":160.839,"end":170.951,"words":[{"t":"Watch","s":160.839,"e":161.208},{"t":"for","s":161.208,"e":161.429},{"t":"silent","s":161.429,"e":161.871},{"t":"memory-store","s":161.871,"e":162.682},{"t":"mount","s":162.682,"e":163.05},{"t":"failures:","s":163.05,"e":163.802},{"t":"the","s":163.802,"e":164.023},{"t":"session","s":164.023,"e":164.539},{"t":"sits","s":164.539,"e":164.834},{"t":"idle","s":164.834,"e":165.128},{"t":"with","s":165.128,"e":165.423},{"t":"requires","s":165.423,"e":166.013},{"t":"action","s":166.013,"e":166.455},{"t":"and","s":166.455,"e":166.676},{"t":"no","s":166.676,"e":166.824},{"t":"error","s":166.824,"e":167.192},{"t":"event","s":167.192,"e":167.561},{"t":"until","s":167.561,"e":167.929},{"t":"you","s":167.929,"e":168.15},{"t":"fix","s":168.15,"e":168.371},{"t":"the","s":168.371,"e":168.593},{"t":"host","s":168.593,"e":168.887},{"t":"mount","s":168.887,"e":169.256},{"t":"and","s":169.256,"e":169.477},{"t":"send","s":169.477,"e":169.772},{"t":"a","s":169.772,"e":169.882},{"t":"user","s":169.882,"e":170.177},{"t":"interrupt.","s":170.177,"e":170.951}]}]},{"id":"s2-1","section":"Debugging Thinking, Refusals, Grounding, and MCP","start":171.651,"end":198.213,"sentences":[{"id":"s2-1-s0","start":171.651,"end":180.269,"words":[{"t":"On","s":171.651,"e":171.781},{"t":"models","s":171.781,"e":172.173},{"t":"with","s":172.173,"e":172.434},{"t":"preserved","s":172.434,"e":173.021},{"t":"thinking,","s":173.021,"e":173.686},{"t":"every","s":173.686,"e":174.013},{"t":"thinking","s":174.013,"e":174.535},{"t":"block","s":174.535,"e":174.861},{"t":"signature","s":174.861,"e":175.448},{"t":"fingerprints","s":175.448,"e":176.231},{"t":"the","s":176.231,"e":176.426},{"t":"exact","s":176.426,"e":176.753},{"t":"system","s":176.753,"e":177.144},{"t":"prompt,","s":177.144,"e":177.679},{"t":"tools","s":177.679,"e":178.005},{"t":"list,","s":178.005,"e":178.41},{"t":"and","s":178.41,"e":178.605},{"t":"messages","s":178.605,"e":179.127},{"t":"that","s":179.127,"e":179.388},{"t":"came","s":179.388,"e":179.649},{"t":"before","s":179.649,"e":180.041},{"t":"it.","s":180.041,"e":180.269}]},{"id":"s2-1-s1","start":180.409,"end":186.639,"words":[{"t":"Even","s":180.409,"e":180.692},{"t":"changing","s":180.692,"e":181.259},{"t":"a","s":181.259,"e":181.365},{"t":"single","s":181.365,"e":181.79},{"t":"date","s":181.79,"e":182.073},{"t":"in","s":182.073,"e":182.214},{"t":"the","s":182.214,"e":182.427},{"t":"system","s":182.427,"e":182.851},{"t":"prompt","s":182.851,"e":183.276},{"t":"at","s":183.276,"e":183.418},{"t":"midnight","s":183.418,"e":183.984},{"t":"invalidates","s":183.984,"e":184.763},{"t":"every","s":184.763,"e":185.117},{"t":"thinking","s":185.117,"e":185.683},{"t":"block","s":185.683,"e":186.037},{"t":"after","s":186.037,"e":186.391},{"t":"it.","s":186.391,"e":186.639}]},{"id":"s2-1-s2","start":186.779,"end":198.213,"words":[{"t":"That","s":186.779,"e":187.052},{"t":"triggers","s":187.052,"e":187.597},{"t":"a","s":187.597,"e":187.699},{"t":"four","s":187.699,"e":187.972},{"t":"hundred","s":187.972,"e":188.449},{"t":"error","s":188.449,"e":188.79},{"t":"saying","s":188.79,"e":189.199},{"t":"the","s":189.199,"e":189.404},{"t":"block","s":189.404,"e":189.745},{"t":"is","s":189.745,"e":189.881},{"t":"bound","s":189.881,"e":190.222},{"t":"to","s":190.222,"e":190.359},{"t":"a","s":190.359,"e":190.461},{"t":"different","s":190.461,"e":191.074},{"t":"conversation\u2014or","s":191.074,"e":192.029},{"t":"worse,","s":192.029,"e":192.52},{"t":"lets","s":192.52,"e":192.793},{"t":"mismatched","s":192.793,"e":193.474},{"t":"reasoning","s":193.474,"e":194.088},{"t":"reach","s":194.088,"e":194.429},{"t":"the","s":194.429,"e":194.633},{"t":"model","s":194.633,"e":194.974},{"t":"silently","s":194.974,"e":195.52},{"t":"if","s":195.52,"e":195.656},{"t":"you","s":195.656,"e":195.861},{"t":"are","s":195.861,"e":196.065},{"t":"not","s":196.065,"e":196.27},{"t":"logging","s":196.27,"e":196.747},{"t":"input","s":196.747,"e":197.088},{"t":"transformations.","s":197.088,"e":198.213}]}]},{"id":"s2-2","section":"Debugging Thinking, Refusals, Grounding, and MCP","start":198.573,"end":225.904,"sentences":[{"id":"s2-2-s0","start":198.573,"end":209.88,"words":[{"t":"To","s":198.573,"e":198.708},{"t":"recover","s":198.708,"e":199.179},{"t":"an","s":199.179,"e":199.314},{"t":"already-broken","s":199.314,"e":200.189},{"t":"conversation","s":200.189,"e":200.997},{"t":"immediately,","s":200.997,"e":201.886},{"t":"send","s":201.886,"e":202.156},{"t":"the","s":202.156,"e":202.358},{"t":"thinking","s":202.358,"e":202.896},{"t":"binding","s":202.896,"e":203.368},{"t":"controls","s":203.368,"e":203.907},{"t":"beta","s":203.907,"e":204.176},{"t":"header","s":204.176,"e":204.58},{"t":"with","s":204.58,"e":204.849},{"t":"prefix","s":204.849,"e":205.253},{"t":"mismatch","s":205.253,"e":205.792},{"t":"behavior","s":205.792,"e":206.331},{"t":"set","s":206.331,"e":206.533},{"t":"to","s":206.533,"e":206.668},{"t":"drop","s":206.668,"e":206.937},{"t":"block,","s":206.937,"e":207.422},{"t":"and","s":207.422,"e":207.624},{"t":"persist","s":207.624,"e":208.095},{"t":"that","s":208.095,"e":208.365},{"t":"setting","s":208.365,"e":208.836},{"t":"for","s":208.836,"e":209.038},{"t":"that","s":209.038,"e":209.308},{"t":"session.","s":209.308,"e":209.88}]},{"id":"s2-2-s1","start":210.02,"end":217.721,"words":[{"t":"Never","s":210.02,"e":210.368},{"t":"leave","s":210.368,"e":210.716},{"t":"drop","s":210.716,"e":210.994},{"t":"block","s":210.994,"e":211.342},{"t":"on","s":211.342,"e":211.481},{"t":"globally","s":211.481,"e":212.037},{"t":"to","s":212.037,"e":212.177},{"t":"hide","s":212.177,"e":212.455},{"t":"bugs,","s":212.455,"e":212.886},{"t":"because","s":212.886,"e":213.373},{"t":"dropping","s":213.373,"e":213.93},{"t":"thinking","s":213.93,"e":214.486},{"t":"costs","s":214.486,"e":214.834},{"t":"extra","s":214.834,"e":215.182},{"t":"output","s":215.182,"e":215.599},{"t":"tokens","s":215.599,"e":216.017},{"t":"and","s":216.017,"e":216.225},{"t":"breaks","s":216.225,"e":216.643},{"t":"the","s":216.643,"e":216.851},{"t":"prompt","s":216.851,"e":217.269},{"t":"cache.","s":217.269,"e":217.721}]},{"id":"s2-2-s2","start":217.861,"end":225.904,"words":[{"t":"The","s":217.861,"e":218.072},{"t":"permanent","s":218.072,"e":218.707},{"t":"fix","s":218.707,"e":218.918},{"t":"is","s":218.918,"e":219.059},{"t":"an","s":219.059,"e":219.2},{"t":"append-only","s":219.2,"e":219.905},{"t":"history:","s":219.905,"e":220.554},{"t":"echo","s":220.554,"e":220.836},{"t":"assistant","s":220.836,"e":221.47},{"t":"turns","s":221.47,"e":221.823},{"t":"verbatim,","s":221.823,"e":222.542},{"t":"freeze","s":222.542,"e":222.965},{"t":"system","s":222.965,"e":223.387},{"t":"and","s":223.387,"e":223.599},{"t":"tools,","s":223.599,"e":224.106},{"t":"and","s":224.106,"e":224.318},{"t":"append","s":224.318,"e":224.741},{"t":"updates","s":224.741,"e":225.234},{"t":"at","s":225.234,"e":225.375},{"t":"the","s":225.375,"e":225.587},{"t":"end.","s":225.587,"e":225.904}]}]},{"id":"s2-3","section":"Debugging Thinking, Refusals, Grounding, and MCP","start":226.264,"end":250.736,"sentences":[{"id":"s2-3-s0","start":226.264,"end":230.616,"words":[{"t":"Configuration","s":226.264,"e":227.155},{"t":"four","s":227.155,"e":227.429},{"t":"hundreds","s":227.429,"e":227.977},{"t":"usually","s":227.977,"e":228.457},{"t":"come","s":228.457,"e":228.731},{"t":"from","s":228.731,"e":229.005},{"t":"model-version","s":229.005,"e":229.828},{"t":"mismatches.","s":229.828,"e":230.616}]},{"id":"s2-3-s1","start":230.756,"end":238.521,"words":[{"t":"Claude","s":230.756,"e":231.193},{"t":"four","s":231.193,"e":231.485},{"t":"point","s":231.485,"e":231.85},{"t":"seven","s":231.85,"e":232.214},{"t":"and","s":232.214,"e":232.433},{"t":"newer","s":232.433,"e":232.798},{"t":"reject","s":232.798,"e":233.235},{"t":"legacy","s":233.235,"e":233.672},{"t":"enabled","s":233.672,"e":234.183},{"t":"thinking","s":234.183,"e":234.766},{"t":"with","s":234.766,"e":235.058},{"t":"budget","s":235.058,"e":235.495},{"t":"tokens","s":235.495,"e":235.933},{"t":"in","s":235.933,"e":236.078},{"t":"favor","s":236.078,"e":236.443},{"t":"of","s":236.443,"e":236.589},{"t":"adaptive","s":236.589,"e":237.172},{"t":"thinking","s":237.172,"e":237.755},{"t":"and","s":237.755,"e":237.974},{"t":"effort.","s":237.974,"e":238.521}]},{"id":"s2-3-s2","start":238.661,"end":250.736,"words":[{"t":"Remember","s":238.661,"e":239.287},{"t":"that","s":239.287,"e":239.601},{"t":"thinking","s":239.601,"e":240.227},{"t":"tokens","s":240.227,"e":240.697},{"t":"count","s":240.697,"e":241.089},{"t":"toward","s":241.089,"e":241.558},{"t":"max","s":241.558,"e":241.793},{"t":"tokens,","s":241.793,"e":242.435},{"t":"so","s":242.435,"e":242.592},{"t":"a","s":242.592,"e":242.709},{"t":"truncated","s":242.709,"e":243.414},{"t":"response","s":243.414,"e":244.041},{"t":"with","s":244.041,"e":244.354},{"t":"stop","s":244.354,"e":244.667},{"t":"reason","s":244.667,"e":245.137},{"t":"max","s":245.137,"e":245.372},{"t":"tokens","s":245.372,"e":245.842},{"t":"means","s":245.842,"e":246.233},{"t":"you","s":246.233,"e":246.468},{"t":"need","s":246.468,"e":246.781},{"t":"a","s":246.781,"e":246.899},{"t":"larger","s":246.899,"e":247.369},{"t":"output","s":247.369,"e":247.839},{"t":"budget","s":247.839,"e":248.308},{"t":"or","s":248.308,"e":248.465},{"t":"lower","s":248.465,"e":248.857},{"t":"effort\u2014never","s":248.857,"e":249.718},{"t":"a","s":249.718,"e":249.835},{"t":"blind","s":249.835,"e":250.227},{"t":"retry.","s":250.227,"e":250.736}]}]},{"id":"s2-4","section":"Debugging Thinking, Refusals, Grounding, and MCP","start":251.096,"end":280.645,"sentences":[{"id":"s2-4-s0","start":251.096,"end":260.376,"words":[{"t":"Refusals","s":251.096,"e":251.759},{"t":"are","s":251.759,"e":252.007},{"t":"not","s":252.007,"e":252.256},{"t":"transient","s":252.256,"e":253.002},{"t":"network","s":253.002,"e":253.582},{"t":"errors\u2014they","s":253.582,"e":254.41},{"t":"arrive","s":254.41,"e":254.907},{"t":"as","s":254.907,"e":255.073},{"t":"H","s":255.073,"e":255.197},{"t":"T","s":255.197,"e":255.322},{"t":"T","s":255.322,"e":255.446},{"t":"P","s":255.446,"e":255.57},{"t":"two","s":255.57,"e":255.819},{"t":"hundred","s":255.819,"e":256.399},{"t":"with","s":256.399,"e":256.73},{"t":"stop","s":256.73,"e":257.062},{"t":"reason","s":257.062,"e":257.559},{"t":"refusal","s":257.559,"e":258.139},{"t":"and","s":258.139,"e":258.387},{"t":"a","s":258.387,"e":258.512},{"t":"category","s":258.512,"e":259.175},{"t":"in","s":259.175,"e":259.34},{"t":"stop","s":259.34,"e":259.672},{"t":"details.","s":259.672,"e":260.376}]},{"id":"s2-4-s1","start":260.516,"end":271.289,"words":[{"t":"Because","s":260.516,"e":261.021},{"t":"policy","s":261.021,"e":261.454},{"t":"checks","s":261.454,"e":261.887},{"t":"inspect","s":261.887,"e":262.392},{"t":"the","s":262.392,"e":262.609},{"t":"entire","s":262.609,"e":263.041},{"t":"transcript,","s":263.041,"e":263.922},{"t":"retrying","s":263.922,"e":264.499},{"t":"in","s":264.499,"e":264.643},{"t":"the","s":264.643,"e":264.86},{"t":"same","s":264.86,"e":265.148},{"t":"conversation","s":265.148,"e":266.014},{"t":"just","s":266.014,"e":266.303},{"t":"loops","s":266.303,"e":266.664},{"t":"the","s":266.664,"e":266.88},{"t":"refusal;","s":266.88,"e":267.544},{"t":"you","s":267.544,"e":267.761},{"t":"must","s":267.761,"e":268.049},{"t":"rewind,","s":268.049,"e":268.641},{"t":"start","s":268.641,"e":269.002},{"t":"fresh,","s":269.002,"e":269.521},{"t":"or","s":269.521,"e":269.665},{"t":"use","s":269.665,"e":269.882},{"t":"server-side","s":269.882,"e":270.604},{"t":"fallback.","s":270.604,"e":271.289}]},{"id":"s2-4-s2","start":271.429,"end":280.645,"words":[{"t":"For","s":271.429,"e":271.638},{"t":"retrieval-grounding","s":271.638,"e":272.894},{"t":"bugs,","s":272.894,"e":273.327},{"t":"trace","s":273.327,"e":273.675},{"t":"stage","s":273.675,"e":274.024},{"t":"by","s":274.024,"e":274.164},{"t":"stage","s":274.164,"e":274.513},{"t":"from","s":274.513,"e":274.792},{"t":"query","s":274.792,"e":275.141},{"t":"formulation","s":275.141,"e":275.908},{"t":"through","s":275.908,"e":276.396},{"t":"recall,","s":276.396,"e":276.968},{"t":"reranking,","s":276.968,"e":277.75},{"t":"and","s":277.75,"e":277.959},{"t":"context","s":277.959,"e":278.447},{"t":"assembly","s":278.447,"e":279.006},{"t":"before","s":279.006,"e":279.424},{"t":"blaming","s":279.424,"e":279.912},{"t":"synthesis.","s":279.912,"e":280.645}]}]},{"id":"s2-5","section":"Debugging Thinking, Refusals, Grounding, and MCP","start":281.005,"end":309.467,"sentences":[{"id":"s2-5-s0","start":281.005,"end":288.365,"words":[{"t":"When","s":281.005,"e":281.297},{"t":"an","s":281.297,"e":281.444},{"t":"M","s":281.444,"e":281.553},{"t":"C","s":281.553,"e":281.663},{"t":"P","s":281.663,"e":281.772},{"t":"integration","s":281.772,"e":282.576},{"t":"misbehaves,","s":282.576,"e":283.468},{"t":"reach","s":283.468,"e":283.834},{"t":"for","s":283.834,"e":284.053},{"t":"the","s":284.053,"e":284.272},{"t":"M","s":284.272,"e":284.382},{"t":"C","s":284.382,"e":284.491},{"t":"P","s":284.491,"e":284.601},{"t":"Inspector","s":284.601,"e":285.259},{"t":"first","s":285.259,"e":285.624},{"t":"to","s":285.624,"e":285.77},{"t":"decouple","s":285.77,"e":286.355},{"t":"the","s":286.355,"e":286.574},{"t":"server","s":286.574,"e":287.013},{"t":"from","s":287.013,"e":287.305},{"t":"the","s":287.305,"e":287.524},{"t":"host","s":287.524,"e":287.817},{"t":"client.","s":287.817,"e":288.365}]},{"id":"s2-5-s1","start":288.505,"end":298.212,"words":[{"t":"On","s":288.505,"e":288.679},{"t":"local","s":288.679,"e":289.115},{"t":"stdio","s":289.115,"e":289.551},{"t":"servers,","s":289.551,"e":290.352},{"t":"logging","s":290.352,"e":290.962},{"t":"to","s":290.962,"e":291.137},{"t":"standard","s":291.137,"e":291.834},{"t":"out","s":291.834,"e":292.095},{"t":"corrupts","s":292.095,"e":292.792},{"t":"J","s":292.792,"e":292.923},{"t":"S","s":292.923,"e":293.054},{"t":"O","s":293.054,"e":293.184},{"t":"N","s":293.184,"e":293.315},{"t":"R","s":293.315,"e":293.446},{"t":"P","s":293.446,"e":293.576},{"t":"C","s":293.576,"e":293.707},{"t":"framing,","s":293.707,"e":294.509},{"t":"so","s":294.509,"e":294.683},{"t":"always","s":294.683,"e":295.206},{"t":"log","s":295.206,"e":295.467},{"t":"to","s":295.467,"e":295.641},{"t":"standard","s":295.641,"e":296.339},{"t":"error","s":296.339,"e":296.774},{"t":"or","s":296.774,"e":296.949},{"t":"OpenTelemetry.","s":296.949,"e":298.212}]},{"id":"s2-5-s2","start":298.352,"end":309.467,"words":[{"t":"For","s":298.352,"e":298.585},{"t":"M","s":298.585,"e":298.701},{"t":"C","s":298.701,"e":298.817},{"t":"P","s":298.817,"e":298.934},{"t":"tunnels,","s":298.934,"e":299.647},{"t":"debug","s":299.647,"e":300.035},{"t":"strictly","s":300.035,"e":300.656},{"t":"in","s":300.656,"e":300.811},{"t":"layer","s":300.811,"e":301.199},{"t":"order:","s":301.199,"e":301.757},{"t":"outbound","s":301.757,"e":302.378},{"t":"cloudflared","s":302.378,"e":303.231},{"t":"connectivity,","s":303.231,"e":304.332},{"t":"inner","s":304.332,"e":304.72},{"t":"T","s":304.72,"e":304.836},{"t":"L","s":304.836,"e":304.953},{"t":"S","s":304.953,"e":305.069},{"t":"certificates,","s":305.069,"e":306.171},{"t":"and","s":306.171,"e":306.403},{"t":"finally","s":306.403,"e":306.946},{"t":"upstream","s":306.946,"e":307.567},{"t":"I","s":307.567,"e":307.683},{"t":"P","s":307.683,"e":307.799},{"t":"validation","s":307.799,"e":308.575},{"t":"and","s":308.575,"e":308.808},{"t":"routing.","s":308.808,"e":309.467}]}]},{"id":"s3-1","section":"Triage, Mitigation, Rollback, and Communication","start":310.167,"end":335.535,"sentences":[{"id":"s3-1-s0","start":310.167,"end":317.932,"words":[{"t":"In","s":310.167,"e":310.326},{"t":"production","s":310.326,"e":311.121},{"t":"AI","s":311.121,"e":311.28},{"t":"operations,","s":311.28,"e":312.249},{"t":"the","s":312.249,"e":312.488},{"t":"hardest","s":312.488,"e":313.044},{"t":"incidents","s":313.044,"e":313.759},{"t":"return","s":313.759,"e":314.236},{"t":"H","s":314.236,"e":314.355},{"t":"T","s":314.355,"e":314.475},{"t":"T","s":314.475,"e":314.594},{"t":"P","s":314.594,"e":314.713},{"t":"two","s":314.713,"e":314.952},{"t":"hundred","s":314.952,"e":315.508},{"t":"while","s":315.508,"e":315.905},{"t":"quality","s":315.905,"e":316.462},{"t":"silently","s":316.462,"e":317.097},{"t":"collapses.","s":317.097,"e":317.932}]},{"id":"s3-1-s1","start":318.072,"end":329.72,"words":[{"t":"Start","s":318.072,"e":318.433},{"t":"triage","s":318.433,"e":318.866},{"t":"by","s":318.866,"e":319.011},{"t":"checking","s":319.011,"e":319.588},{"t":"status","s":319.588,"e":320.022},{"t":"dot","s":320.022,"e":320.238},{"t":"claude","s":320.238,"e":320.672},{"t":"dot","s":320.672,"e":320.888},{"t":"com,","s":320.888,"e":321.264},{"t":"confirming","s":321.264,"e":321.986},{"t":"which","s":321.986,"e":322.347},{"t":"model","s":322.347,"e":322.708},{"t":"and","s":322.708,"e":322.925},{"t":"effort","s":322.925,"e":323.358},{"t":"level","s":323.358,"e":323.719},{"t":"actually","s":323.719,"e":324.297},{"t":"served","s":324.297,"e":324.73},{"t":"traffic,","s":324.73,"e":325.394},{"t":"and","s":325.394,"e":325.611},{"t":"slicing","s":325.611,"e":326.117},{"t":"traces","s":326.117,"e":326.55},{"t":"by","s":326.55,"e":326.694},{"t":"stop","s":326.694,"e":326.983},{"t":"reason,","s":326.983,"e":327.575},{"t":"tenant,","s":327.575,"e":328.167},{"t":"and","s":328.167,"e":328.384},{"t":"deployment","s":328.384,"e":329.106},{"t":"version.","s":329.106,"e":329.72}]},{"id":"s3-1-s2","start":329.86,"end":335.535,"words":[{"t":"That","s":329.86,"e":330.137},{"t":"immediately","s":330.137,"e":330.898},{"t":"separates","s":330.898,"e":331.521},{"t":"an","s":331.521,"e":331.659},{"t":"upstream","s":331.659,"e":332.213},{"t":"provider","s":332.213,"e":332.767},{"t":"outage","s":332.767,"e":333.182},{"t":"from","s":333.182,"e":333.459},{"t":"a","s":333.459,"e":333.563},{"t":"bad","s":333.563,"e":333.77},{"t":"prompt","s":333.77,"e":334.185},{"t":"release","s":334.185,"e":334.67},{"t":"or","s":334.67,"e":334.808},{"t":"data","s":334.808,"e":335.085},{"t":"drift.","s":335.085,"e":335.535}]}]},{"id":"s3-2","section":"Triage, Mitigation, Rollback, and Communication","start":335.895,"end":354.405,"sentences":[{"id":"s3-2-s0","start":335.895,"end":339.052,"words":[{"t":"Every","s":335.895,"e":336.209},{"t":"incident","s":336.209,"e":336.713},{"t":"class","s":336.713,"e":337.027},{"t":"has","s":337.027,"e":337.216},{"t":"a","s":337.216,"e":337.31},{"t":"fast,","s":337.31,"e":337.7},{"t":"safe","s":337.7,"e":337.951},{"t":"containment","s":337.951,"e":338.643},{"t":"lever.","s":338.643,"e":339.052}]},{"id":"s3-2-s1","start":339.192,"end":343.373,"words":[{"t":"For","s":339.192,"e":339.383},{"t":"provider","s":339.383,"e":339.892},{"t":"four","s":339.892,"e":340.147},{"t":"twenty-nines","s":340.147,"e":340.847},{"t":"and","s":340.847,"e":341.037},{"t":"five","s":341.037,"e":341.292},{"t":"twenty-nines,","s":341.292,"e":342.132},{"t":"back","s":342.132,"e":342.387},{"t":"off","s":342.387,"e":342.578},{"t":"and","s":342.578,"e":342.768},{"t":"fail","s":342.768,"e":343.023},{"t":"over.","s":343.023,"e":343.373}]},{"id":"s3-2-s2","start":343.513,"end":347.033,"words":[{"t":"For","s":343.513,"e":343.701},{"t":"quality","s":343.701,"e":344.139},{"t":"regressions","s":344.139,"e":344.828},{"t":"after","s":344.828,"e":345.141},{"t":"a","s":345.141,"e":345.235},{"t":"deploy,","s":345.235,"e":345.749},{"t":"roll","s":345.749,"e":346.0},{"t":"back","s":346.0,"e":346.25},{"t":"immediately.","s":346.25,"e":347.033}]},{"id":"s3-2-s3","start":347.173,"end":354.405,"words":[{"t":"For","s":347.173,"e":347.374},{"t":"runaway","s":347.374,"e":347.844},{"t":"tool","s":347.844,"e":348.113},{"t":"loops,","s":348.113,"e":348.597},{"t":"trip","s":348.597,"e":348.865},{"t":"a","s":348.865,"e":348.966},{"t":"deterministic","s":348.966,"e":349.839},{"t":"circuit","s":349.839,"e":350.309},{"t":"breaker","s":350.309,"e":350.779},{"t":"or","s":350.779,"e":350.913},{"t":"kill","s":350.913,"e":351.182},{"t":"switch","s":351.182,"e":351.585},{"t":"rather","s":351.585,"e":351.988},{"t":"than","s":351.988,"e":352.256},{"t":"hoping","s":352.256,"e":352.659},{"t":"a","s":352.659,"e":352.76},{"t":"prompt","s":352.76,"e":353.163},{"t":"tweak","s":353.163,"e":353.498},{"t":"stops","s":353.498,"e":353.834},{"t":"the","s":353.834,"e":354.036},{"t":"loop.","s":354.036,"e":354.405}]}]},{"id":"s3-3","section":"Triage, Mitigation, Rollback, and Communication","start":354.765,"end":374.767,"sentences":[{"id":"s3-3-s0","start":354.765,"end":366.072,"words":[{"t":"Here","s":354.765,"e":355.05},{"t":"is","s":355.05,"e":355.192},{"t":"a","s":355.192,"e":355.299},{"t":"high-frequency","s":355.299,"e":356.225},{"t":"exam","s":356.225,"e":356.509},{"t":"principle:","s":356.509,"e":357.307},{"t":"during","s":357.307,"e":357.734},{"t":"an","s":357.734,"e":357.877},{"t":"active","s":357.877,"e":358.304},{"t":"quality","s":358.304,"e":358.802},{"t":"regression,","s":358.802,"e":359.671},{"t":"roll","s":359.671,"e":359.956},{"t":"back","s":359.956,"e":360.24},{"t":"to","s":360.24,"e":360.383},{"t":"the","s":360.383,"e":360.597},{"t":"last","s":360.597,"e":360.881},{"t":"known-good","s":360.881,"e":361.522},{"t":"versioned","s":361.522,"e":362.163},{"t":"prompt,","s":362.163,"e":362.747},{"t":"schema,","s":362.747,"e":363.331},{"t":"or","s":363.331,"e":363.473},{"t":"model","s":363.473,"e":363.829},{"t":"snapshot","s":363.829,"e":364.399},{"t":"before","s":364.399,"e":364.826},{"t":"attempting","s":364.826,"e":365.538},{"t":"any","s":365.538,"e":365.752},{"t":"fix.","s":365.752,"e":366.072}]},{"id":"s3-3-s1","start":366.212,"end":374.767,"words":[{"t":"Ad-hoc","s":366.212,"e":366.544},{"t":"prompt","s":366.544,"e":366.942},{"t":"patching","s":366.942,"e":367.473},{"t":"in","s":367.473,"e":367.606},{"t":"production","s":367.606,"e":368.269},{"t":"is","s":368.269,"e":368.402},{"t":"unverified,","s":368.402,"e":369.212},{"t":"busts","s":369.212,"e":369.544},{"t":"your","s":369.544,"e":369.809},{"t":"prompt","s":369.809,"e":370.207},{"t":"caches,","s":370.207,"e":370.752},{"t":"and","s":370.752,"e":370.951},{"t":"can","s":370.951,"e":371.15},{"t":"trigger","s":371.15,"e":371.614},{"t":"secondary","s":371.614,"e":372.212},{"t":"prefix-check","s":372.212,"e":372.942},{"t":"failures","s":372.942,"e":373.473},{"t":"across","s":373.473,"e":373.871},{"t":"live","s":373.871,"e":374.136},{"t":"sessions.","s":374.136,"e":374.767}]}]},{"id":"s3-4","section":"Triage, Mitigation, Rollback, and Communication","start":375.127,"end":397.209,"sentences":[{"id":"s3-4-s0","start":375.127,"end":378.156,"words":[{"t":"Rolling","s":375.127,"e":375.614},{"t":"back","s":375.614,"e":375.893},{"t":"stateful","s":375.893,"e":376.45},{"t":"agents","s":376.45,"e":376.868},{"t":"requires","s":376.868,"e":377.425},{"t":"extra","s":377.425,"e":377.773},{"t":"care.","s":377.773,"e":378.156}]},{"id":"s3-4-s1","start":378.296,"end":386.317,"words":[{"t":"Pinning","s":378.296,"e":378.754},{"t":"system","s":378.754,"e":379.147},{"t":"prompts","s":379.147,"e":379.606},{"t":"and","s":379.606,"e":379.802},{"t":"tools","s":379.802,"e":380.129},{"t":"per","s":380.129,"e":380.326},{"t":"session","s":380.326,"e":380.784},{"t":"lets","s":380.784,"e":381.046},{"t":"you","s":381.046,"e":381.242},{"t":"roll","s":381.242,"e":381.504},{"t":"back","s":381.504,"e":381.766},{"t":"new","s":381.766,"e":381.963},{"t":"traffic","s":381.963,"e":382.421},{"t":"without","s":382.421,"e":382.879},{"t":"breaking","s":382.879,"e":383.403},{"t":"preserved-thinking","s":383.403,"e":384.516},{"t":"signatures","s":384.516,"e":385.171},{"t":"on","s":385.171,"e":385.302},{"t":"active","s":385.302,"e":385.695},{"t":"sessions.","s":385.695,"e":386.317}]},{"id":"s3-4-s2","start":386.457,"end":397.209,"words":[{"t":"And","s":386.457,"e":386.677},{"t":"when","s":386.677,"e":386.969},{"t":"recovering","s":386.969,"e":387.701},{"t":"an","s":387.701,"e":387.848},{"t":"individual","s":387.848,"e":388.58},{"t":"bad","s":388.58,"e":388.799},{"t":"turn,","s":388.799,"e":389.253},{"t":"rewind","s":389.253,"e":389.692},{"t":"to","s":389.692,"e":389.839},{"t":"a","s":389.839,"e":389.948},{"t":"clean","s":389.948,"e":390.314},{"t":"checkpoint","s":390.314,"e":391.046},{"t":"instead","s":391.046,"e":391.559},{"t":"of","s":391.559,"e":391.705},{"t":"correcting","s":391.705,"e":392.437},{"t":"in-thread,","s":392.437,"e":393.183},{"t":"while","s":393.183,"e":393.549},{"t":"always","s":393.549,"e":393.989},{"t":"preserving","s":393.989,"e":394.72},{"t":"Request","s":394.72,"e":395.233},{"t":"and","s":395.233,"e":395.452},{"t":"Message","s":395.452,"e":395.965},{"t":"I","s":395.965,"e":396.075},{"t":"Ds","s":396.075,"e":396.221},{"t":"for","s":396.221,"e":396.44},{"t":"forensics.","s":396.44,"e":397.209}]}]},{"id":"s3-5","section":"Triage, Mitigation, Rollback, and Communication","start":397.569,"end":417.251,"sentences":[{"id":"s3-5-s0","start":397.569,"end":402.86,"words":[{"t":"During","s":397.569,"e":397.98},{"t":"a","s":397.98,"e":398.083},{"t":"non-deterministic","s":398.083,"e":399.18},{"t":"AI","s":399.18,"e":399.317},{"t":"incident,","s":399.317,"e":400.016},{"t":"disciplined","s":400.016,"e":400.77},{"t":"communication","s":400.77,"e":401.661},{"t":"keeps","s":401.661,"e":402.003},{"t":"trust","s":402.003,"e":402.346},{"t":"intact.","s":402.346,"e":402.86}]},{"id":"s3-5-s1","start":403.0,"end":417.251,"words":[{"t":"Report","s":403.0,"e":403.42},{"t":"verified","s":403.42,"e":403.98},{"t":"blast","s":403.98,"e":404.33},{"t":"radius,","s":404.33,"e":404.904},{"t":"explain","s":404.904,"e":405.394},{"t":"the","s":405.394,"e":405.604},{"t":"active","s":405.604,"e":406.024},{"t":"mitigation","s":406.024,"e":406.724},{"t":"including","s":406.724,"e":407.354},{"t":"any","s":407.354,"e":407.564},{"t":"latency","s":407.564,"e":408.054},{"t":"or","s":408.054,"e":408.194},{"t":"quality","s":408.194,"e":408.684},{"t":"tradeoffs","s":408.684,"e":409.314},{"t":"from","s":409.314,"e":409.594},{"t":"fallback","s":409.594,"e":410.153},{"t":"routing,","s":410.153,"e":410.797},{"t":"share","s":410.797,"e":411.147},{"t":"concrete","s":411.147,"e":411.707},{"t":"workarounds,","s":411.707,"e":412.631},{"t":"and","s":412.631,"e":412.841},{"t":"commit","s":412.841,"e":413.261},{"t":"to","s":413.261,"e":413.401},{"t":"a","s":413.401,"e":413.506},{"t":"timestamp","s":413.506,"e":414.136},{"t":"for","s":414.136,"e":414.346},{"t":"the","s":414.346,"e":414.556},{"t":"next","s":414.556,"e":414.836},{"t":"update","s":414.836,"e":415.256},{"t":"without","s":415.256,"e":415.746},{"t":"guessing","s":415.746,"e":416.306},{"t":"at","s":416.306,"e":416.446},{"t":"root","s":416.446,"e":416.726},{"t":"causes.","s":416.726,"e":417.251}]}]},{"id":"s4-1","section":"Converting Incidents into Evals, Monitoring, and Postmortems","start":417.951,"end":439.863,"sentences":[{"id":"s4-1-s0","start":417.951,"end":420.404,"words":[{"t":"Shipping","s":417.951,"e":418.442},{"t":"a","s":418.442,"e":418.534},{"t":"hotfix","s":418.534,"e":418.902},{"t":"never","s":418.902,"e":419.208},{"t":"finishes","s":419.208,"e":419.699},{"t":"an","s":419.699,"e":419.821},{"t":"incident.","s":419.821,"e":420.404}]},{"id":"s4-1-s1","start":420.544,"end":427.2,"words":[{"t":"Because","s":420.544,"e":421.033},{"t":"prompts,","s":421.033,"e":421.675},{"t":"tools,","s":421.675,"e":422.178},{"t":"retrieval","s":422.178,"e":422.807},{"t":"indexes,","s":422.807,"e":423.449},{"t":"and","s":423.449,"e":423.659},{"t":"models","s":423.659,"e":424.078},{"t":"evolve","s":424.078,"e":424.497},{"t":"constantly,","s":424.497,"e":425.349},{"t":"unguarded","s":425.349,"e":425.978},{"t":"bugs","s":425.978,"e":426.257},{"t":"always","s":426.257,"e":426.676},{"t":"return.","s":426.676,"e":427.2}]},{"id":"s4-1-s2","start":427.34,"end":439.863,"words":[{"t":"Before","s":427.34,"e":427.754},{"t":"closing","s":427.754,"e":428.238},{"t":"any","s":428.238,"e":428.445},{"t":"production","s":428.445,"e":429.136},{"t":"incident,","s":429.136,"e":429.84},{"t":"convert","s":429.84,"e":430.324},{"t":"it","s":430.324,"e":430.462},{"t":"into","s":430.462,"e":430.738},{"t":"three","s":430.738,"e":431.084},{"t":"permanent","s":431.084,"e":431.705},{"t":"artifacts:","s":431.705,"e":432.479},{"t":"a","s":432.479,"e":432.583},{"t":"C","s":432.583,"e":432.686},{"t":"I","s":432.686,"e":432.79},{"t":"regression","s":432.79,"e":433.481},{"t":"evaluation,","s":433.481,"e":434.323},{"t":"monitoring","s":434.323,"e":435.014},{"t":"coverage","s":435.014,"e":435.567},{"t":"for","s":435.567,"e":435.774},{"t":"the","s":435.774,"e":435.981},{"t":"blind","s":435.981,"e":436.326},{"t":"spot,","s":436.326,"e":436.755},{"t":"and","s":436.755,"e":436.962},{"t":"a","s":436.962,"e":437.066},{"t":"blameless","s":437.066,"e":437.687},{"t":"postmortem","s":437.687,"e":438.378},{"t":"with","s":438.378,"e":438.654},{"t":"owned","s":438.654,"e":439.0},{"t":"action","s":439.0,"e":439.414},{"t":"items.","s":439.414,"e":439.863}]}]},{"id":"s4-2","section":"Converting Incidents into Evals, Monitoring, and Postmortems","start":440.223,"end":463.936,"sentences":[{"id":"s4-2-s0","start":440.223,"end":446.132,"words":[{"t":"Promote","s":440.223,"e":440.745},{"t":"every","s":440.745,"e":441.118},{"t":"real","s":441.118,"e":441.417},{"t":"incident","s":441.417,"e":442.014},{"t":"trace","s":442.014,"e":442.387},{"t":"into","s":442.387,"e":442.685},{"t":"your","s":442.685,"e":442.984},{"t":"test","s":442.984,"e":443.282},{"t":"suite,","s":443.282,"e":443.819},{"t":"after","s":443.819,"e":444.192},{"t":"sanitizing","s":444.192,"e":444.938},{"t":"P","s":444.938,"e":445.05},{"t":"I","s":445.05,"e":445.162},{"t":"I","s":445.162,"e":445.274},{"t":"and","s":445.274,"e":445.498},{"t":"secrets.","s":445.498,"e":446.132}]},{"id":"s4-2-s1","start":446.272,"end":463.936,"words":[{"t":"Match","s":446.272,"e":446.626},{"t":"the","s":446.626,"e":446.839},{"t":"test","s":446.839,"e":447.122},{"t":"to","s":447.122,"e":447.264},{"t":"the","s":447.264,"e":447.477},{"t":"failure","s":447.477,"e":447.973},{"t":"layer:","s":447.973,"e":448.483},{"t":"harness","s":448.483,"e":448.979},{"t":"contracts","s":448.979,"e":449.616},{"t":"like","s":449.616,"e":449.9},{"t":"tool-result","s":449.9,"e":450.608},{"t":"ordering","s":450.608,"e":451.175},{"t":"and","s":451.175,"e":451.388},{"t":"prefix","s":451.388,"e":451.813},{"t":"invariance","s":451.813,"e":452.521},{"t":"belong","s":452.521,"e":452.946},{"t":"in","s":452.946,"e":453.088},{"t":"fast","s":453.088,"e":453.372},{"t":"deterministic","s":453.372,"e":454.293},{"t":"C","s":454.293,"e":454.399},{"t":"I","s":454.399,"e":454.505},{"t":"tests,","s":454.505,"e":455.015},{"t":"while","s":455.015,"e":455.37},{"t":"grounding","s":455.37,"e":456.007},{"t":"and","s":456.007,"e":456.22},{"t":"refusal","s":456.22,"e":456.716},{"t":"regressions","s":456.716,"e":457.495},{"t":"belong","s":457.495,"e":457.92},{"t":"in","s":457.92,"e":458.062},{"t":"your","s":458.062,"e":458.346},{"t":"calibrated","s":458.346,"e":459.054},{"t":"evaluation","s":459.054,"e":459.763},{"t":"suite\u2014always","s":459.763,"e":460.542},{"t":"covering","s":460.542,"e":461.109},{"t":"compaction,","s":461.109,"e":461.973},{"t":"fallback,","s":461.973,"e":462.696},{"t":"and","s":462.696,"e":462.909},{"t":"session","s":462.909,"e":463.405},{"t":"resume.","s":463.405,"e":463.936}]}]},{"id":"s4-3","section":"Converting Incidents into Evals, Monitoring, and Postmortems","start":464.296,"end":487.915,"sentences":[{"id":"s4-3-s0","start":464.296,"end":469.693,"words":[{"t":"Anthropic","s":464.296,"e":464.919},{"t":"recommends","s":464.919,"e":465.611},{"t":"a","s":465.611,"e":465.714},{"t":"two-step","s":465.714,"e":466.199},{"t":"pattern","s":466.199,"e":466.683},{"t":"for","s":466.683,"e":466.891},{"t":"testing","s":466.891,"e":467.375},{"t":"preserved-thinking","s":467.375,"e":468.551},{"t":"invariants","s":468.551,"e":469.243},{"t":"in","s":469.243,"e":469.382},{"t":"C","s":469.382,"e":469.485},{"t":"I.","s":469.485,"e":469.693}]},{"id":"s4-3-s1","start":469.833,"end":478.175,"words":[{"t":"First,","s":469.833,"e":470.337},{"t":"prove","s":470.337,"e":470.687},{"t":"your","s":470.687,"e":470.967},{"t":"test","s":470.967,"e":471.247},{"t":"can","s":471.247,"e":471.457},{"t":"fail","s":471.457,"e":471.737},{"t":"by","s":471.737,"e":471.877},{"t":"intentionally","s":471.877,"e":472.786},{"t":"mutating","s":472.786,"e":473.346},{"t":"the","s":473.346,"e":473.556},{"t":"system","s":473.556,"e":473.976},{"t":"prompt","s":473.976,"e":474.396},{"t":"with","s":474.396,"e":474.676},{"t":"drop","s":474.676,"e":474.956},{"t":"block","s":474.956,"e":475.306},{"t":"and","s":475.306,"e":475.516},{"t":"asserting","s":475.516,"e":476.145},{"t":"a","s":476.145,"e":476.25},{"t":"prefix","s":476.25,"e":476.67},{"t":"binding","s":476.67,"e":477.16},{"t":"mismatch","s":477.16,"e":477.72},{"t":"entry.","s":477.72,"e":478.175}]},{"id":"s4-3-s2","start":478.315,"end":487.915,"words":[{"t":"Then","s":478.315,"e":478.616},{"t":"remove","s":478.616,"e":479.068},{"t":"the","s":479.068,"e":479.294},{"t":"mutation","s":479.294,"e":479.896},{"t":"and","s":479.896,"e":480.122},{"t":"run","s":480.122,"e":480.348},{"t":"real","s":480.348,"e":480.649},{"t":"compaction","s":480.649,"e":481.402},{"t":"and","s":481.402,"e":481.628},{"t":"resume","s":481.628,"e":482.08},{"t":"flows","s":482.08,"e":482.456},{"t":"with","s":482.456,"e":482.757},{"t":"prefix","s":482.757,"e":483.209},{"t":"mismatch","s":483.209,"e":483.811},{"t":"behavior","s":483.811,"e":484.414},{"t":"set","s":484.414,"e":484.64},{"t":"to","s":484.64,"e":484.79},{"t":"error","s":484.79,"e":485.167},{"t":"so","s":485.167,"e":485.317},{"t":"any","s":485.317,"e":485.543},{"t":"future","s":485.543,"e":485.995},{"t":"regression","s":485.995,"e":486.748},{"t":"breaks","s":486.748,"e":487.2},{"t":"the","s":487.2,"e":487.426},{"t":"build.","s":487.426,"e":487.915}]}]},{"id":"s4-4","section":"Converting Incidents into Evals, Monitoring, and Postmortems","start":488.275,"end":510.784,"sentences":[{"id":"s4-4-s0","start":488.275,"end":492.755,"words":[{"t":"Every","s":488.275,"e":488.614},{"t":"minute","s":488.614,"e":489.022},{"t":"spent","s":489.022,"e":489.361},{"t":"hunting","s":489.361,"e":489.836},{"t":"for","s":489.836,"e":490.04},{"t":"clues","s":490.04,"e":490.379},{"t":"during","s":490.379,"e":490.787},{"t":"triage","s":490.787,"e":491.194},{"t":"reveals","s":491.194,"e":491.669},{"t":"a","s":491.669,"e":491.771},{"t":"monitoring","s":491.771,"e":492.45},{"t":"gap.","s":492.45,"e":492.755}]},{"id":"s4-4-s1","start":492.895,"end":500.767,"words":[{"t":"Add","s":492.895,"e":493.159},{"t":"alerts","s":493.159,"e":493.687},{"t":"on","s":493.687,"e":493.863},{"t":"stop","s":493.863,"e":494.214},{"t":"reason","s":494.214,"e":494.742},{"t":"distributions\u2014especially","s":494.742,"e":496.765},{"t":"refusals","s":496.765,"e":497.469},{"t":"and","s":497.469,"e":497.733},{"t":"max","s":497.733,"e":497.996},{"t":"tokens\u2014not","s":497.996,"e":498.788},{"t":"just","s":498.788,"e":499.14},{"t":"H","s":499.14,"e":499.272},{"t":"T","s":499.272,"e":499.404},{"t":"T","s":499.404,"e":499.536},{"t":"P","s":499.536,"e":499.668},{"t":"status","s":499.668,"e":500.195},{"t":"codes.","s":500.195,"e":500.767}]},{"id":"s4-4-s2","start":500.907,"end":510.784,"words":[{"t":"Log","s":500.907,"e":501.11},{"t":"input","s":501.11,"e":501.449},{"t":"transformations","s":501.449,"e":502.464},{"t":"for","s":502.464,"e":502.667},{"t":"silent","s":502.667,"e":503.073},{"t":"thinking","s":503.073,"e":503.615},{"t":"mismatches,","s":503.615,"e":504.441},{"t":"watch","s":504.441,"e":504.779},{"t":"prompt-cache","s":504.779,"e":505.524},{"t":"hit","s":505.524,"e":505.727},{"t":"rates","s":505.727,"e":506.066},{"t":"for","s":506.066,"e":506.269},{"t":"prefix","s":506.269,"e":506.675},{"t":"drift,","s":506.675,"e":507.162},{"t":"and","s":507.162,"e":507.365},{"t":"emit","s":507.365,"e":507.636},{"t":"explicit","s":507.636,"e":508.178},{"t":"metrics","s":508.178,"e":508.652},{"t":"whenever","s":508.652,"e":509.193},{"t":"fallback","s":509.193,"e":509.735},{"t":"models","s":509.735,"e":510.141},{"t":"activate.","s":510.141,"e":510.784}]}]},{"id":"s4-5","section":"Converting Incidents into Evals, Monitoring, and Postmortems","start":511.144,"end":533.94,"sentences":[{"id":"s4-5-s0","start":511.144,"end":518.504,"words":[{"t":"Finally,","s":511.144,"e":511.785},{"t":"write","s":511.785,"e":512.133},{"t":"blameless","s":512.133,"e":512.759},{"t":"postmortems","s":512.759,"e":513.525},{"t":"that","s":513.525,"e":513.804},{"t":"target","s":513.804,"e":514.222},{"t":"systemic","s":514.222,"e":514.779},{"t":"weaknesses","s":514.779,"e":515.475},{"t":"rather","s":515.475,"e":515.893},{"t":"than","s":515.893,"e":516.171},{"t":"individuals","s":516.171,"e":516.937},{"t":"or","s":516.937,"e":517.077},{"t":"vague","s":517.077,"e":517.425},{"t":"model","s":517.425,"e":517.773},{"t":"flakiness.","s":517.773,"e":518.504}]},{"id":"s4-5-s1","start":518.644,"end":533.94,"words":[{"t":"Document","s":518.644,"e":519.283},{"t":"why","s":519.283,"e":519.523},{"t":"the","s":519.523,"e":519.763},{"t":"bad","s":519.763,"e":520.003},{"t":"change","s":520.003,"e":520.482},{"t":"reached","s":520.482,"e":521.041},{"t":"production\u2014like","s":521.041,"e":522.16},{"t":"a","s":522.16,"e":522.28},{"t":"missing","s":522.28,"e":522.84},{"t":"evaluation","s":522.84,"e":523.639},{"t":"gate,","s":523.639,"e":524.134},{"t":"an","s":524.134,"e":524.294},{"t":"unpinned","s":524.294,"e":524.933},{"t":"M","s":524.933,"e":525.053},{"t":"C","s":525.053,"e":525.173},{"t":"P","s":525.173,"e":525.293},{"t":"tool","s":525.293,"e":525.613},{"t":"list,","s":525.613,"e":526.108},{"t":"or","s":526.108,"e":526.268},{"t":"an","s":526.268,"e":526.428},{"t":"undifferentiated","s":526.428,"e":527.707},{"t":"retry","s":527.707,"e":528.106},{"t":"loop\u2014and","s":528.106,"e":528.666},{"t":"assign","s":528.666,"e":529.145},{"t":"time-bound","s":529.145,"e":529.864},{"t":"engineering","s":529.864,"e":530.743},{"t":"fixes","s":530.743,"e":531.143},{"t":"tied","s":531.143,"e":531.463},{"t":"directly","s":531.463,"e":532.102},{"t":"to","s":532.102,"e":532.262},{"t":"your","s":532.262,"e":532.581},{"t":"S","s":532.581,"e":532.701},{"t":"L","s":532.701,"e":532.821},{"t":"O","s":532.821,"e":532.941},{"t":"error","s":532.941,"e":533.341},{"t":"budget.","s":533.341,"e":533.94}]}]}]};
+
+(function() {
+  const audio = document.getElementById('voiceAudio');
+  const playBtn = document.getElementById('playBtn');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const scrub = document.getElementById('scrub');
+  const speedBtn = document.getElementById('speedBtn');
+  const autoScrollBtn = document.getElementById('autoScrollBtn');
+  const themeBtn = document.getElementById('themeBtn');
+  const nowLabel = document.getElementById('nowLabel');
+  const timeLabel = document.getElementById('timeLabel');
+  const progressFill = document.getElementById('progressFill');
+
+  const speeds = [0.85, 1.0, 1.15, 1.25, 1.5, 1.75, 2.0];
+  let speedIdx = 1;
+  let autoScroll = true;
+  let activeSegId = null;
+  let activeSentId = null;
+  let activeWordEl = null;
+  let rafId = null;
+
+  const segMap = new Map();
+  const flatSents = [];
+  TIMELINE.segments.forEach((seg, segIdx) => {
+    segMap.set(seg.id, { ...seg, idx: segIdx });
+    (seg.sentences || []).forEach(sent => {
+      flatSents.push({ ...sent, segId: seg.id, segIdx, section: seg.section });
+    });
+  });
+
+  function fmt(sec) {
+    if (!isFinite(sec) || sec < 0) sec = 0;
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  }
+
+  function setPlayUI(playing) {
+    playBtn.innerHTML = playing ? '&#10074;&#10074; Pause' : '&#9654; Play';
+  }
+
+  function findSentenceAt(t) {
+    // Binary search for fast 60fps lookup
+    let lo = 0, hi = flatSents.length - 1, best = null;
+    while (lo <= hi) {
+      const mid = (lo + hi) >> 1;
+      const s = flatSents[mid];
+      if (t >= s.start && t <= s.end) return s;
+      if (t < s.start) hi = mid - 1;
+      else { best = s; lo = mid + 1; }
+    }
+    return best || flatSents[0] || null;
+  }
+
+  function updateHighlights(t) {
+    const sent = findSentenceAt(t);
+    if (!sent) return;
+
+    // 1. Highlight parent block
+    if (activeSegId !== sent.segId) {
+      document.querySelectorAll('.is-speaking').forEach(el => el.classList.remove('is-speaking'));
+      const segEl = document.querySelector(`[data-seg-id="${sent.segId}"]`);
+      if (segEl) segEl.classList.add('is-speaking');
+      activeSegId = sent.segId;
+      nowLabel.textContent = `${sent.section} (${sent.segIdx + 1}/${TIMELINE.segments.length})`;
+
+      const secEl = segEl ? segEl.closest('.section-block') : null;
+      document.querySelectorAll('.toc-list a').forEach(a => a.classList.remove('active'));
+      if (secEl) {
+        const link = document.querySelector(`.toc-list a[href="#${secEl.id}"]`);
+        if (link) link.classList.add('active');
+      } else {
+        const first = document.querySelector('.toc-list a[href="#top"]');
+        if (first) first.classList.add('active');
+      }
+    }
+
+    // 2. Highlight active sentence
+    if (activeSentId !== sent.id) {
+      document.querySelectorAll('.sent.active-sent').forEach(el => {
+        el.classList.remove('active-sent');
+        el.querySelectorAll('.w').forEach(w => w.classList.remove('w-past', 'w-now', 'w-future'));
+      });
+      const sentEl = document.querySelector(`[data-sent-id="${sent.id}"]`);
+      if (sentEl) {
+        sentEl.classList.add('active-sent');
+        if (autoScroll && !audio.paused) {
+          sentEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+      activeSentId = sent.id;
+      activeWordEl = null;
+    }
+
+    // 3. Karaoke word-by-word highlighting inside active sentence
+    const sentEl = document.querySelector(`[data-sent-id="${sent.id}"]`);
+    if (sentEl) {
+      const wordSpans = sentEl.querySelectorAll('.w');
+      const words = sent.words || [];
+      for (let i = 0; i < words.length && i < wordSpans.length; i++) {
+        const w = words[i];
+        const sp = wordSpans[i];
+        if (t >= w.s && t <= w.e) {
+          if (activeWordEl !== sp) {
+            sp.classList.remove('w-past', 'w-future');
+            sp.classList.add('w-now');
+            activeWordEl = sp;
+          }
+        } else if (t > w.e) {
+          sp.classList.remove('w-now', 'w-future');
+          sp.classList.add('w-past');
+        } else {
+          sp.classList.remove('w-now', 'w-past');
+          sp.classList.add('w-future');
+        }
+      }
+    }
+  }
+
+  function syncUI() {
+    const t = audio.currentTime || 0;
+    const dur = audio.duration || TIMELINE.duration || 1;
+    scrub.max = dur;
+    scrub.value = t;
+    timeLabel.textContent = `${fmt(t)} / ${fmt(dur)}`;
+    progressFill.style.width = `${Math.min(100, (t / dur) * 100)}%`;
+    updateHighlights(t);
+  }
+
+  function tick() {
+    syncUI();
+    if (!audio.paused && !audio.ended) {
+      rafId = requestAnimationFrame(tick);
+    }
+  }
+
+  function jumpToTime(t, autoPlay = true) {
+    audio.currentTime = Math.max(0, t + 0.005);
+    syncUI();
+    if (autoPlay) audio.play().catch(() => {});
+  }
+
+  // Click any sentence to jump directly to that exact sentence!
+  document.querySelectorAll('.sent[data-start]').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      jumpToTime(parseFloat(el.dataset.start), true);
+    });
+  });
+
+  // Click block Play button to jump to start of block
+  document.querySelectorAll('.seg-play-btn[data-jump-seg]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const seg = segMap.get(btn.dataset.jumpSeg);
+      if (seg) jumpToTime(seg.start, true);
+    });
+  });
+
+  playBtn.addEventListener('click', () => {
+    if (audio.paused) audio.play().catch(() => {});
+    else audio.pause();
+  });
+
+  prevBtn.addEventListener('click', () => {
+    const cur = findSentenceAt(audio.currentTime || 0);
+    const segIdx = cur ? Math.max(0, cur.segIdx - 1) : 0;
+    jumpToTime(TIMELINE.segments[segIdx].start, !audio.paused);
+  });
+
+  nextBtn.addEventListener('click', () => {
+    const cur = findSentenceAt(audio.currentTime || 0);
+    const segIdx = cur ? Math.min(TIMELINE.segments.length - 1, cur.segIdx + 1) : 0;
+    jumpToTime(TIMELINE.segments[segIdx].start, !audio.paused);
+  });
+
+  scrub.addEventListener('input', () => {
+    audio.currentTime = parseFloat(scrub.value);
+    syncUI();
+  });
+
+  function applySpeed(idx) {
+    speedIdx = ((idx % speeds.length) + speeds.length) % speeds.length;
+    const rate = speeds[speedIdx];
+    audio.preservesPitch = true;
+    audio.webkitPreservesPitch = true;
+    audio.defaultPlaybackRate = rate;
+    audio.playbackRate = rate;
+    speedBtn.textContent = `${rate}x`;
+    try { localStorage.setItem('ccdvp-speed', String(speedIdx)); } catch {}
+    syncUI();
+  }
+
+  speedBtn.addEventListener('click', () => applySpeed(speedIdx + 1));
+  try {
+    const savedSpeed = parseInt(localStorage.getItem('ccdvp-speed'), 10);
+    if (!isNaN(savedSpeed) && savedSpeed >= 0 && savedSpeed < speeds.length) {
+      applySpeed(savedSpeed);
+    } else {
+      applySpeed(1);
+    }
+  } catch { applySpeed(1); }
+
+  autoScrollBtn.addEventListener('click', () => {
+    autoScroll = !autoScroll;
+    autoScrollBtn.classList.toggle('active', autoScroll);
+    autoScrollBtn.textContent = autoScroll ? 'Auto-Scroll: ON' : 'Auto-Scroll: OFF';
+  });
+
+  themeBtn.addEventListener('click', () => {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    themeBtn.textContent = isDark ? 'Dark' : 'Light';
+    try { localStorage.setItem('ccdvp-theme', isDark ? 'light' : 'dark'); } catch {}
+  });
+  try {
+    if (localStorage.getItem('ccdvp-theme') === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      themeBtn.textContent = 'Light';
+    }
+  } catch {}
+
+  audio.addEventListener('play', () => { setPlayUI(true); tick(); });
+  audio.addEventListener('pause', () => { setPlayUI(false); if (rafId) cancelAnimationFrame(rafId); });
+  audio.addEventListener('ended', () => { setPlayUI(false); if (rafId) cancelAnimationFrame(rafId); });
+  audio.addEventListener('timeupdate', syncUI);
+  audio.addEventListener('seeked', syncUI);
+  audio.addEventListener('ratechange', syncUI);
+  audio.addEventListener('loadedmetadata', () => {
+    audio.playbackRate = speeds[speedIdx];
+    syncUI();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    if (e.code === 'Space') { e.preventDefault(); playBtn.click(); }
+    else if (e.code === 'ArrowRight') { e.preventDefault(); nextBtn.click(); }
+    else if (e.code === 'ArrowLeft') { e.preventDefault(); prevBtn.click(); }
+  });
+
+  document.querySelectorAll('.scenario-card').forEach(card => {
+    const correct = card.dataset.correct;
+    const rat = card.querySelector('.rationale');
+    card.querySelectorAll('.opt-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        card.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('correct', 'wrong'));
+        if (btn.dataset.key === correct) {
+          btn.classList.add('correct');
+        } else {
+          btn.classList.add('wrong');
+          const rightBtn = card.querySelector(`.opt-btn[data-key="${correct}"]`);
+          if (rightBtn) rightBtn.classList.add('correct');
+        }
+        rat.classList.add('show');
+      });
+    });
+  });
+
+  syncUI();
+})();
+
+</script>
+</body>
+</html>

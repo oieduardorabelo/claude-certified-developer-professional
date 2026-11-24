@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Domain 1: Advanced Agent Architecture and Orchestration — CCDV-P Study Guide</title>
+<style>
+:root {
+  --bg: #FAF8F5;
+  --surface: #FFFFFF;
+  --surface-alt: #F3EFE8;
+  --ink: #1A1915;
+  --ink-muted: #5C5850;
+  --border: #E5DFD5;
+  --accent: #C96442;
+  --accent-soft: #FDF3EC;
+  --accent-border: #E6A98F;
+  --sent-bg: rgba(201, 100, 66, 0.11);
+  --word-bg: #F7C97E;
+  --word-ink: #1A1915;
+  --word-past: #1A1915;
+  --word-future: #6D685F;
+  --code-bg: #1E1D1A;
+  --code-ink: #F4F0E8;
+  --ok: #2D7A4F;
+  --ok-bg: #EAF6EF;
+  --bad: #B83A3A;
+  --bad-bg: #FCEEEE;
+  --shadow: 0 2px 12px rgba(26, 25, 21, 0.06);
+  --radius: 12px;
+}
+[data-theme="dark"] {
+  --bg: #141311;
+  --surface: #1D1C19;
+  --surface-alt: #25231F;
+  --ink: #F2EEE6;
+  --ink-muted: #A9A295;
+  --border: #322F2A;
+  --accent: #E07A56;
+  --accent-soft: #2A1E18;
+  --accent-border: #8A452C;
+  --sent-bg: rgba(224, 122, 86, 0.16);
+  --word-bg: #C96442;
+  --word-ink: #FFFFFF;
+  --word-past: #F2EEE6;
+  --word-future: #9E978B;
+  --code-bg: #0E0D0C;
+  --code-ink: #EFEAE0;
+  --ok: #52B788;
+  --ok-bg: #172B21;
+  --bad: #E06C6C;
+  --bad-bg: #2E1919;
+  --shadow: 0 2px 16px rgba(0, 0, 0, 0.35);
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+  line-height: 1.68;
+  font-size: 16px;
+}
+/* Sticky Audio Bar */
+.audio-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  padding: 10px 20px;
+}
+.audio-bar-inner {
+  max-width: 1240px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.ab-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  background: var(--surface-alt);
+  color: var(--ink);
+  border-radius: 8px;
+  height: 36px;
+  padding: 0 11px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.ab-btn:hover { border-color: var(--accent); color: var(--accent); }
+.ab-btn.primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+  min-width: 96px;
+  gap: 6px;
+}
+.ab-btn.primary:hover { filter: brightness(1.06); color: #fff; }
+.ab-btn.active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.ab-scrubber {
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.ab-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+.ab-now {
+  font-weight: 600;
+  color: var(--accent);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 360px;
+}
+input[type="range"].scrub {
+  width: 100%;
+  accent-color: var(--accent);
+  cursor: pointer;
+  height: 5px;
+}
+/* Layout */
+.layout {
+  max-width: 1240px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 270px minmax(0, 1fr);
+  gap: 32px;
+  padding: 28px 20px 80px;
+}
+@media (max-width: 940px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { position: static !important; }
+}
+.sidebar {
+  position: sticky;
+  top: 76px;
+  align-self: start;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  box-shadow: var(--shadow);
+}
+.side-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.hub-link {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+}
+.hub-link:hover { text-decoration: underline; }
+.side-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-muted);
+  font-weight: 700;
+  margin: 14px 0 8px;
+}
+.toc-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.toc-list a {
+  display: block;
+  padding: 7px 10px;
+  border-radius: 7px;
+  font-size: 13.5px;
+  color: var(--ink-muted);
+  text-decoration: none;
+  border-left: 3px solid transparent;
+  transition: all 0.15s;
+}
+.toc-list a:hover { background: var(--surface-alt); color: var(--ink); }
+.toc-list a.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-left-color: var(--accent);
+  font-weight: 600;
+}
+.progress-track {
+  height: 6px;
+  background: var(--surface-alt);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-top: 6px;
+}
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--accent);
+  transition: width 0.2s linear;
+}
+.domain-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.domain-nav a {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-muted);
+  text-decoration: none;
+  padding: 5px 8px;
+  border-radius: 6px;
+  background: var(--surface-alt);
+}
+.domain-nav a:hover { color: var(--accent); }
+/* Main Content */
+.hero {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px 30px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow);
+  position: relative;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+.badge-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.pill {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 99px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid var(--accent-border);
+}
+.pill.neutral {
+  background: var(--surface-alt);
+  color: var(--ink-muted);
+  border-color: var(--border);
+}
+h1 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 30px;
+  line-height: 1.22;
+  margin: 0 0 10px;
+  letter-spacing: -0.015em;
+}
+.tagline {
+  font-size: 17px;
+  color: var(--ink-muted);
+  margin: 0 0 14px;
+}
+.mental-model {
+  background: var(--surface-alt);
+  border-left: 3px solid var(--accent);
+  padding: 12px 16px;
+  border-radius: 0 8px 8px 0;
+  font-size: 14.5px;
+}
+.section-block {
+  margin-bottom: 34px;
+  scroll-margin-top: 84px;
+}
+.section-header {
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--border);
+}
+.section-obj {
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  font-weight: 700;
+}
+.section-header h2 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 23px;
+  margin: 4px 0 0;
+}
+/* Narrated Segment Cards */
+.seg {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid transparent;
+  border-radius: var(--radius);
+  padding: 18px 22px;
+  margin-bottom: 16px;
+  transition: background 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+}
+.seg.kind-callout {
+  border-left-color: var(--ink-muted);
+}
+.seg.is-speaking, .hero.is-speaking {
+  border-color: var(--accent-border);
+  border-left: 5px solid var(--accent);
+  box-shadow: 0 4px 22px rgba(201, 100, 66, 0.14);
+}
+.seg-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.seg-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--accent);
+}
+.seg-play-btn {
+  font-size: 11.5px;
+  color: var(--ink-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 2px 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.seg-play-btn:hover {
+  border-color: var(--accent-border);
+  color: var(--accent);
+}
+.seg.is-speaking .seg-play-btn, .hero.is-speaking .seg-play-btn {
+  color: var(--accent);
+  font-weight: 700;
+}
+.pulse-dot {
+  display: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: pulse 1.2s infinite ease-in-out;
+}
+.is-speaking .pulse-dot { display: inline-block; }
+@keyframes pulse {
+  0%, 100% { transform: scale(0.85); opacity: 0.6; }
+  50% { transform: scale(1.25); opacity: 1; }
+}
+.seg h3 {
+  font-size: 18px;
+  margin: 0 0 10px;
+  color: var(--ink);
+}
+/* Live Read-Along Synchronized Transcript */
+.read-along {
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 13px 16px;
+  margin: 10px 0 14px;
+  font-size: 16px;
+  line-height: 1.78;
+}
+.is-speaking .read-along {
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+}
+.read-along-tag {
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--ink-muted);
+  margin-bottom: 5px;
+}
+.is-speaking .read-along-tag {
+  color: var(--accent);
+}
+.sent {
+  border-radius: 5px;
+  padding: 2px 3px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.sent:hover {
+  background: var(--sent-bg);
+}
+.sent.active-sent {
+  background: var(--sent-bg);
+}
+.w {
+  border-radius: 4px;
+  padding: 1px 1.5px;
+  transition: background 0.08s ease, color 0.08s ease;
+}
+.sent.active-sent .w.w-future {
+  color: var(--word-future);
+}
+.sent.active-sent .w.w-past {
+  color: var(--word-past);
+}
+.w.w-now {
+  background: var(--word-bg);
+  color: var(--word-ink) !important;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(201, 100, 66, 0.25);
+}
+/* Reference Notes / Code / Tables */
+.ref-notes {
+  font-size: 15px;
+  color: var(--ink);
+}
+.ref-notes p { margin: 0 0 10px; }
+.ref-notes p:last-child { margin-bottom: 0; }
+.ref-notes ul, .ref-notes ol { margin: 6px 0 8px; padding-left: 22px; }
+.ref-notes li { margin-bottom: 5px; }
+.ref-notes code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.88em;
+  background: var(--surface-alt);
+  padding: 2px 5px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+.ref-notes pre {
+  background: var(--code-bg);
+  color: var(--code-ink);
+  padding: 14px 16px;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-size: 13.5px;
+  line-height: 1.5;
+  margin: 10px 0 4px;
+}
+.ref-notes pre code {
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: inherit;
+}
+.ref-notes table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  margin: 8px 0 4px;
+}
+.ref-notes th, .ref-notes td {
+  border: 1px solid var(--border);
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+.ref-notes th {
+  background: var(--surface-alt);
+  font-weight: 700;
+}
+/* Scenarios Quiz */
+.quiz-section {
+  margin-top: 42px;
+  scroll-margin-top: 84px;
+}
+.scenario-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px 24px;
+  margin-bottom: 18px;
+  box-shadow: var(--shadow);
+}
+.scenario-card h3 {
+  margin: 0 0 10px;
+  font-size: 17.5px;
+  color: var(--accent);
+}
+.scenario-prompt {
+  margin: 0 0 16px;
+  font-size: 15.5px;
+}
+.opt-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.opt-btn {
+  text-align: left;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  color: var(--ink);
+  padding: 11px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14.5px;
+  line-height: 1.45;
+  transition: all 0.15s;
+}
+.opt-btn:hover { border-color: var(--accent); }
+.opt-btn.correct { background: var(--ok-bg); border-color: var(--ok); color: var(--ink); font-weight: 600; }
+.opt-btn.wrong { background: var(--bad-bg); border-color: var(--bad); color: var(--ink); }
+.rationale {
+  display: none;
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  background: var(--surface-alt);
+  border-left: 4px solid var(--ok);
+  font-size: 14.5px;
+}
+.rationale.show { display: block; }
+</style>
+</head>
+<body>
+  <audio id="voiceAudio" src="audio.m4a" preload="metadata"></audio>
+
+  <header class="audio-bar">
+    <div class="audio-bar-inner">
+      <button id="playBtn" class="ab-btn primary" title="Play / Pause (Space)">&#9654; Play</button>
+      <button id="prevBtn" class="ab-btn" title="Previous block (Left Arrow)">&lsaquo; Prev</button>
+      <button id="nextBtn" class="ab-btn" title="Next block (Right Arrow)">Next &rsaquo;</button>
+      <div class="ab-scrubber">
+        <div class="ab-meta">
+          <span id="nowLabel" class="ab-now">Ready &mdash; click Play or any sentence</span>
+          <span id="timeLabel">0:00 / 0:00</span>
+        </div>
+        <input id="scrub" class="scrub" type="range" min="0" max="100" step="0.05" value="0" />
+      </div>
+      <button id="speedBtn" class="ab-btn" title="Playback speed">1x</button>
+      <button id="autoScrollBtn" class="ab-btn active" title="Auto-scroll to active sentence">Auto-Scroll: ON</button>
+      <button id="themeBtn" class="ab-btn" title="Toggle theme">Dark</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="side-top">
+        <a class="hub-link" href="../index.html">&larr; All 8 Domains</a>
+        <span class="pill">Weight 17%</span>
+      </div>
+      <div class="side-title">Listening Progress</div>
+      <div class="progress-track"><div id="progressFill" class="progress-fill"></div></div>
+      <div class="side-title">Domain 1 Sections</div>
+      <ul class="toc-list">
+        <li><a href="#top" class="active">Overview &amp; Mental Model</a></li><li><a href="#sec-1">Multi-Agent Topologies, Context Isolation, and Human-in-the-Loop</a></li><li><a href="#sec-2">Sessions, Checkpointing, Resumability, and Model Version Continuity</a></li><li><a href="#sec-3">Evolving Between Workflows and Agents, and Selecting the Right Harness</a></li><li><a href="#sec-4">Compaction, Context Editing, Persistent Memory, and Tool Context Scaling</a></li><li><a href="#scenarios">Exam Practice Scenarios</a></li>
+      </ul>
+      <div class="domain-nav">
+        <span></span>
+        <a href="../002-production-integration-grounding/index.html">Domain 2 &rarr;</a>
+      </div>
+    </aside>
+
+    <main id="top">
+      <section class="hero" data-seg-id="intro">
+        <div class="seg-top">
+          <div class="badge-row">
+            <span class="pill">CCDV-P Domain 1 of 8</span>
+            <span class="pill neutral">Exam Weight: 17%</span>
+            <span class="pill neutral">Voice: Kokoro Neural (af_heart)</span>
+          </div>
+          <button class="seg-play-btn" data-jump-seg="intro"><span class="pulse-dot"></span>&#9654; Play intro</button>
+        </div>
+        <h1>Advanced Agent Architecture and Orchestration</h1>
+        <p class="tagline">Designing, orchestrating, and evolving durable, context-efficient multi-agent Claude systems that survive real-world failures, restarts, and scale.</p>
+        <div class="mental-model">
+          <strong>Staff Engineer Mental Model:</strong> On the CCDV-P exam, Domain 1 tests whether you operate like a Staff Platform Engineer rather than a prompt tinkerer. You treat context as a finite attention budget, default to the simplest workflow that meets quality and cost SLOs, isolate subagent state cleanly, and engineer every long-running agent to survive crashes, human delays, and model upgrades without losing work or invalidating caches.
+        </div>
+        <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="intro-s0" data-start="0.0" title="Click to jump here"><span class="w">Domain</span> <span class="w">1:</span> <span class="w">Advanced</span> <span class="w">Agent</span> <span class="w">Architecture</span> <span class="w">and</span> <span class="w">Orchestration.</span></span> <span class="sent" data-sent-id="intro-s1" data-start="3.852" title="Click to jump here"><span class="w">Exam</span> <span class="w">weight:</span> <span class="w">17%.</span></span> <span class="sent" data-sent-id="intro-s2" data-start="5.933" title="Click to jump here"><span class="w">Designing,</span> <span class="w">orchestrating,</span> <span class="w">and</span> <span class="w">evolving</span> <span class="w">durable,</span> <span class="w">context-efficient</span> <span class="w">multi-agent</span> <span class="w">Claude</span> <span class="w">systems</span> <span class="w">that</span> <span class="w">survive</span> <span class="w">real-world</span> <span class="w">failures,</span> <span class="w">restarts,</span> <span class="w">and</span> <span class="w">scale.</span></span> <span class="sent" data-sent-id="intro-s3" data-start="15.503" title="Click to jump here"><span class="w">On</span> <span class="w">the</span> <span class="w">CCDV-P</span> <span class="w">exam,</span> <span class="w">Domain</span> <span class="w">1</span> <span class="w">tests</span> <span class="w">whether</span> <span class="w">you</span> <span class="w">operate</span> <span class="w">like</span> <span class="w">a</span> <span class="w">Staff</span> <span class="w">Platform</span> <span class="w">Engineer</span> <span class="w">rather</span> <span class="w">than</span> <span class="w">a</span> <span class="w">prompt</span> <span class="w">tinkerer.</span></span> <span class="sent" data-sent-id="intro-s4" data-start="23.173" title="Click to jump here"><span class="w">You</span> <span class="w">treat</span> <span class="w">context</span> <span class="w">as</span> <span class="w">a</span> <span class="w">finite</span> <span class="w">attention</span> <span class="w">budget,</span> <span class="w">default</span> <span class="w">to</span> <span class="w">the</span> <span class="w">simplest</span> <span class="w">workflow</span> <span class="w">that</span> <span class="w">meets</span> <span class="w">quality</span> <span class="w">and</span> <span class="w">cost</span> <span class="w">SLOs,</span> <span class="w">isolate</span> <span class="w">subagent</span> <span class="w">state</span> <span class="w">cleanly,</span> <span class="w">and</span> <span class="w">engineer</span> <span class="w">every</span> <span class="w">long-running</span> <span class="w">agent</span> <span class="w">to</span> <span class="w">survive</span> <span class="w">crashes,</span> <span class="w">human</span> <span class="w">delays,</span> <span class="w">and</span> <span class="w">model</span> <span class="w">upgrades</span> <span class="w">without</span> <span class="w">losing</span> <span class="w">work</span> <span class="w">or</span> <span class="w">invalidating</span> <span class="w">caches.</span></span></div></div>
+      </section>
+
+      
+        <section class="section-block" id="sec-1">
+          <div class="section-header">
+            <div class="section-obj">Multi-Agent Orchestration</div>
+            <h2>Multi-Agent Topologies, Context Isolation, and Human-in-the-Loop</h2>
+          </div>
+          
+            <article class="seg kind-prose" data-seg-id="s1-1">
+              <div class="seg-top">
+                <span class="seg-label">KEY CONCEPT</span>
+                <button class="seg-play-btn" data-jump-seg="s1-1"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>When Multi-Agent Architectures Earn Their Token Budget</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s1-1-s0" data-start="41.9" title="Click to jump here"><span class="w">Multi-agent</span> <span class="w">systems</span> <span class="w">shine</span> <span class="w">when</span> <span class="w">work</span> <span class="w">fans</span> <span class="w">out</span> <span class="w">in</span> <span class="w">parallel</span> <span class="w">across</span> <span class="w">independent</span> <span class="w">sources</span> <span class="w">or</span> <span class="w">exceeds</span> <span class="w">a</span> <span class="w">single</span> <span class="w">context</span> <span class="w">window.</span></span> <span class="sent" data-sent-id="s1-1-s1" data-start="50.104" title="Click to jump here"><span class="w">Anthropic&#x27;s</span> <span class="w">research</span> <span class="w">benchmarks</span> <span class="w">showed</span> <span class="w">an</span> <span class="w">Opus</span> <span class="w">lead</span> <span class="w">with</span> <span class="w">Sonnet</span> <span class="w">workers</span> <span class="w">beating</span> <span class="w">a</span> <span class="w">single</span> <span class="w">Opus</span> <span class="w">agent</span> <span class="w">by</span> <span class="w">ninety</span> <span class="w">percent.</span></span> <span class="sent" data-sent-id="s1-1-s2" data-start="57.775" title="Click to jump here"><span class="w">The</span> <span class="w">catch</span> <span class="w">is</span> <span class="w">cost:</span> <span class="w">multi-agent</span> <span class="w">systems</span> <span class="w">burn</span> <span class="w">roughly</span> <span class="w">fifteen</span> <span class="w">times</span> <span class="w">more</span> <span class="w">tokens</span> <span class="w">than</span> <span class="w">chat,</span> <span class="w">so</span> <span class="w">only</span> <span class="w">reach</span> <span class="w">for</span> <span class="w">them</span> <span class="w">when</span> <span class="w">task</span> <span class="w">value</span> <span class="w">justifies</span> <span class="w">the</span> <span class="w">spend</span> <span class="w">and</span> <span class="w">subtasks</span> <span class="w">truly</span> <span class="w">decouple.</span></span></div></div>
+              <div class="ref-notes"><p>Multi-agent systems excel at <strong>breadth-first, parallelizable exploration</strong> where information exceeds a single context window or requires distinct toolsets. In Anthropic's internal research evaluations, an orchestrator-worker design (Claude Opus lead with Claude Sonnet subagents) outperformed a single Opus agent by <strong>90.2%</strong>, largely because token usage alone explained <strong>80%</strong> of performance variance on complex search benchmarks.</p><p>The tradeoff is steep: single agents consume roughly <strong>4&times;</strong> the tokens of standard chat, while multi-agent systems consume roughly <strong>15&times;</strong>. Domains with heavy inter-agent dependencies or shared mutable context—like tightly coupled code edits—are poor fits unless subtasks decompose cleanly.</p></div>
+            </article>
+            <article class="seg kind-table" data-seg-id="s1-2">
+              <div class="seg-top">
+                <span class="seg-label">ARCHITECTURE PATTERN</span>
+                <button class="seg-play-btn" data-jump-seg="s1-2"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Orchestration Patterns in Claude Managed Agents &amp; Agent SDK</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s1-2-s0" data-start="69.932" title="Click to jump here"><span class="w">Modern</span> <span class="w">Claude</span> <span class="w">orchestration</span> <span class="w">gives</span> <span class="w">you</span> <span class="w">three</span> <span class="w">distinct</span> <span class="w">patterns</span> <span class="w">under</span> <span class="w">the</span> <span class="w">multi-agent</span> <span class="w">block.</span></span> <span class="sent" data-sent-id="s1-2-s1" data-start="75.405" title="Click to jump here"><span class="w">Use</span> <span class="w">subagents</span> <span class="w">when</span> <span class="w">the</span> <span class="w">lead</span> <span class="w">needs</span> <span class="w">back-and-forth</span> <span class="w">follow-up</span> <span class="w">with</span> <span class="w">specialists—remembering</span> <span class="w">Managed</span> <span class="w">Agents</span> <span class="w">caps</span> <span class="w">delegation</span> <span class="w">at</span> <span class="w">one</span> <span class="w">level</span> <span class="w">deep</span> <span class="w">and</span> <span class="w">twenty-five</span> <span class="w">child</span> <span class="w">threads.</span></span> <span class="sent" data-sent-id="s1-2-s2" data-start="85.636" title="Click to jump here"><span class="w">Use</span> <span class="w">dynamic</span> <span class="w">workflows</span> <span class="w">for</span> <span class="w">large</span> <span class="w">multi-phase</span> <span class="w">fan-outs</span> <span class="w">with</span> <span class="w">a</span> <span class="w">strict</span> <span class="w">session</span> <span class="w">budget.</span></span> <span class="sent" data-sent-id="s1-2-s3" data-start="90.704" title="Click to jump here"><span class="w">Or</span> <span class="w">attach</span> <span class="w">an</span> <span class="w">advisor</span> <span class="w">when</span> <span class="w">one</span> <span class="w">primary</span> <span class="w">agent</span> <span class="w">just</span> <span class="w">needs</span> <span class="w">periodic</span> <span class="w">high-judgment</span> <span class="w">review.</span></span></div></div>
+              <div class="ref-notes"><table><thead><tr><th>Pattern</th><th>Mechanism</th><th>Best Fit</th><th>Key Production Constraints</th></tr></thead><tbody><tr><td><strong>Subagents</strong></td><td>Lead delegates via <code>Agent</code> tool (SDK) or <code>multiagent.subagents</code> (Managed Agents); each runs in an isolated thread.</td><td>Follow-up dialogue with specialists that have distinct prompts, models, and restricted tools.</td><td>Managed Agents: <strong>1 level deep</strong>, max <strong>25 child threads</strong> per session (idle included). Setting <code>inline_agents: disabled</code> requires at least one entry in <code>predefined_agents</code> (else 400 error).</td></tr><tr><td><strong>Dynamic Workflows</strong></td><td>Agent writes a program (<code>multiagent.workflows</code>) that runs many agents in background phases and combines results.</td><td>Large audits, migrations, deep research, or cross-checking with many parallel pieces.</td><td>No follow-up messages to run threads; server archives threads at run end. Always set a <strong>session budget</strong> because every worker consumes tokens.</td></tr><tr><td><strong>Advisor Consultation</strong></td><td>Primary thread consults a stronger advisor model mid-turn for planning or review while doing the work itself.</td><td>Single-agent execution needing high-judgment checkpoints without full delegation overhead.</td><td>Only the <strong>primary thread</strong> can consult the advisor; consultations bill at the advisor model's rates.</td></tr></tbody></table></div>
+            </article>
+            <article class="seg kind-bullets" data-seg-id="s1-3">
+              <div class="seg-top">
+                <span class="seg-label">DELEGATION &amp; ISOLATION</span>
+                <button class="seg-play-btn" data-jump-seg="s1-3"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Context-Isolation Boundaries and Avoiding the &#x27;Game of Telephone&#x27;</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s1-3-s0" data-start="96.483" title="Click to jump here"><span class="w">By</span> <span class="w">default,</span> <span class="w">a</span> <span class="w">subagent</span> <span class="w">starts</span> <span class="w">with</span> <span class="w">a</span> <span class="w">clean</span> <span class="w">context</span> <span class="w">window—it</span> <span class="w">never</span> <span class="w">sees</span> <span class="w">the</span> <span class="w">parent&#x27;s</span> <span class="w">conversation</span> <span class="w">history</span> <span class="w">or</span> <span class="w">tool</span> <span class="w">results.</span></span> <span class="sent" data-sent-id="s1-3-s1" data-start="104.367" title="Click to jump here"><span class="w">That</span> <span class="w">means</span> <span class="w">your</span> <span class="w">delegation</span> <span class="w">prompt</span> <span class="w">must</span> <span class="w">carry</span> <span class="w">the</span> <span class="w">full</span> <span class="w">contract:</span> <span class="w">objective,</span> <span class="w">output</span> <span class="w">format,</span> <span class="w">tools,</span> <span class="w">boundaries,</span> <span class="w">and</span> <span class="w">effort</span> <span class="w">budget.</span></span> <span class="sent" data-sent-id="s1-3-s2" data-start="112.272" title="Click to jump here"><span class="w">For</span> <span class="w">large</span> <span class="w">artifacts</span> <span class="w">like</span> <span class="w">code</span> <span class="w">or</span> <span class="w">reports,</span> <span class="w">have</span> <span class="w">subagents</span> <span class="w">write</span> <span class="w">directly</span> <span class="w">to</span> <span class="w">the</span> <span class="w">filesystem</span> <span class="w">and</span> <span class="w">pass</span> <span class="w">back</span> <span class="w">lightweight</span> <span class="w">references</span> <span class="w">so</span> <span class="w">you</span> <span class="w">avoid</span> <span class="w">a</span> <span class="w">costly</span> <span class="w">game</span> <span class="w">of</span> <span class="w">telephone</span> <span class="w">through</span> <span class="w">the</span> <span class="w">coordinator.</span></span></div></div>
+              <div class="ref-notes"><ul><li><strong>Fresh Context by Default:</strong> Non-fork subagents do <em>not</em> inherit parent conversation history, tool results, or the parent's system prompt. They receive only their own <code>AgentDefinition.prompt</code>, the <code>Agent</code> tool prompt string, their tool subset, and project <code>CLAUDE.md</code> (unless <code>omitClaudeMd: true</code>).</li><li><strong>Explicit Delegation Contracts:</strong> Vague prompts cause duplicated searches and missed gaps. Every delegation must specify: (1) objective, (2) output format, (3) tool/source guidance, (4) clear task boundaries, and (5) effort-scaling rules (e.g., 1 agent for simple lookups, 2–4 for comparisons, 10+ for deep research).</li><li><strong>Bypass the Coordinator for Large Artifacts:</strong> To prevent the 'game of telephone' and token bloat, have subagents write structured outputs (code, reports, datasets) directly to a shared filesystem or artifact store and return lightweight references to the lead agent.</li><li><strong>Forks &amp; Output Scanning:</strong> Forked subagents (<code>subagent_type: "fork"</code>) copy parent history instead of starting fresh—block them with <code>disallowedTools: ["Agent(fork)"]</code> if strict isolation is required. Claude Code also scans subagent final messages to neutralize imitated control tags (like <code>&lt;system-reminder&gt;</code>) and fake turn markers (<code>Human:</code> / <code>Assistant:</code>).</li></ul></div>
+            </article>
+            <article class="seg kind-code" data-seg-id="s1-4">
+              <div class="seg-top">
+                <span class="seg-label">CODE PATTERN</span>
+                <button class="seg-play-btn" data-jump-seg="s1-4"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Least-Privilege Subagent Definition in the Agent SDK</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s1-4-s0" data-start="124.429" title="Click to jump here"><span class="w">In</span> <span class="w">the</span> <span class="w">Agent</span> <span class="w">SDK,</span> <span class="w">you</span> <span class="w">define</span> <span class="w">specialized</span> <span class="w">subagents</span> <span class="w">programmatically</span> <span class="w">with</span> <span class="w">AgentDefinition.</span></span> <span class="sent" data-sent-id="s1-4-s1" data-start="130.329" title="Click to jump here"><span class="w">Notice</span> <span class="w">the</span> <span class="w">production</span> <span class="w">guardrails</span> <span class="w">here:</span> <span class="w">a</span> <span class="w">crisp</span> <span class="w">description</span> <span class="w">so</span> <span class="w">the</span> <span class="w">lead</span> <span class="w">routes</span> <span class="w">accurately,</span> <span class="w">read-only</span> <span class="w">tools</span> <span class="w">for</span> <span class="w">least</span> <span class="w">privilege,</span> <span class="w">a</span> <span class="w">Sonnet</span> <span class="w">model</span> <span class="w">override</span> <span class="w">to</span> <span class="w">control</span> <span class="w">cost,</span> <span class="w">max</span> <span class="w">turns</span> <span class="w">to</span> <span class="w">cap</span> <span class="w">runaway</span> <span class="w">loops,</span> <span class="w">and</span> <span class="w">disallowed</span> <span class="w">tools</span> <span class="w">blocking</span> <span class="w">Agent</span> <span class="w">fork</span> <span class="w">when</span> <span class="w">you</span> <span class="w">need</span> <span class="w">strict</span> <span class="w">isolation.</span></span></div></div>
+              <div class="ref-notes"><pre><code>from claude_agent_sdk import query, ClaudeAgentOptions, AgentDefinition
+
+options = ClaudeAgentOptions(
+    allowed_tools=["Read", "Grep", "Glob", "Agent"],
+    disallowed_tools=["Agent(fork)"],  # Enforce strict context isolation
+    agents={
+        "security-reviewer": AgentDefinition(
+            description="Audits auth and crypto code for vulnerabilities.",
+            prompt="Review for OWASP flaws. Return file:line findings only.",
+            tools=["Read", "Grep", "Glob"],  # Read-only least privilege
+            model="sonnet",
+            maxTurns=12,      # Bound runaway loops; returns partial if hit
+            background=True,  # Non-blocking async_launched execution
+        )
+    },
+)</code></pre></div>
+            </article>
+            <article class="seg kind-callout" data-seg-id="s1-5">
+              <div class="seg-top">
+                <span class="seg-label">EXAM TRAP</span>
+                <button class="seg-play-btn" data-jump-seg="s1-5"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Inter-Agent Failure Modes: Sync Bottlenecks &amp; Emergent Drift</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s1-5-s0" data-start="147.415" title="Click to jump here"><span class="w">Watch</span> <span class="w">out</span> <span class="w">for</span> <span class="w">two</span> <span class="w">classic</span> <span class="w">exam</span> <span class="w">traps</span> <span class="w">in</span> <span class="w">multi-agent</span> <span class="w">operations.</span></span> <span class="sent" data-sent-id="s1-5-s1" data-start="151.864" title="Click to jump here"><span class="w">First,</span> <span class="w">synchronous</span> <span class="w">subagent</span> <span class="w">waits</span> <span class="w">let</span> <span class="w">a</span> <span class="w">single</span> <span class="w">slow</span> <span class="w">worker</span> <span class="w">stall</span> <span class="w">the</span> <span class="w">entire</span> <span class="w">pipeline,</span> <span class="w">while</span> <span class="w">async</span> <span class="w">fan-out</span> <span class="w">demands</span> <span class="w">explicit</span> <span class="w">error</span> <span class="w">handling</span> <span class="w">because</span> <span class="w">API</span> <span class="w">errors</span> <span class="w">aborting</span> <span class="w">a</span> <span class="w">subagent</span> <span class="w">are</span> <span class="w">never</span> <span class="w">returned</span> <span class="w">as</span> <span class="w">normal</span> <span class="w">output.</span></span> <span class="sent" data-sent-id="s1-5-s2" data-start="166.041" title="Click to jump here"><span class="w">Second,</span> <span class="w">never</span> <span class="w">swap</span> <span class="w">code</span> <span class="w">underneath</span> <span class="w">running</span> <span class="w">stateful</span> <span class="w">agents—use</span> <span class="w">rainbow</span> <span class="w">deployments</span> <span class="w">so</span> <span class="w">in-flight</span> <span class="w">sessions</span> <span class="w">finish</span> <span class="w">on</span> <span class="w">their</span> <span class="w">original</span> <span class="w">version.</span></span></div></div>
+              <div class="ref-notes"><p><strong>Synchronous fan-out bottlenecks:</strong> Waiting synchronously for every subagent batch simplifies coordination, but one slow worker blocks the entire lead agent and prevents mid-flight steering. Asynchronous execution unlocks concurrency, yet introduces state consistency and error-propagation hazards—note that in the Agent SDK, an API error (like a rate limit) ending a subagent early is <em>never</em> delivered as its normal result.</p><p><strong>Production deployment hazard:</strong> Never hard-restart live multi-agent fleets during a release. Use <strong>rainbow deployments</strong> to shift new traffic gradually while existing stateful sessions drain on their original version.</p></div>
+            </article>
+            <article class="seg kind-bullets" data-seg-id="s1-6">
+              <div class="seg-top">
+                <span class="seg-label">HUMAN-IN-THE-LOOP</span>
+                <button class="seg-play-btn" data-jump-seg="s1-6"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Approval Gates, Clarifying Questions, and Long-Delay Deferral</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s1-6-s0" data-start="174.657" title="Click to jump here"><span class="w">Human-in-the-loop</span> <span class="w">flows</span> <span class="w">in</span> <span class="w">the</span> <span class="w">Agent</span> <span class="w">SDK</span> <span class="w">center</span> <span class="w">on</span> <span class="w">the</span> <span class="w">can</span> <span class="w">use</span> <span class="w">tool</span> <span class="w">callback,</span> <span class="w">which</span> <span class="w">pauses</span> <span class="w">execution</span> <span class="w">for</span> <span class="w">both</span> <span class="w">tool</span> <span class="w">approvals</span> <span class="w">and</span> <span class="w">Ask</span> <span class="w">User</span> <span class="w">Question</span> <span class="w">prompts.</span></span> <span class="sent" data-sent-id="s1-6-s1" data-start="184.653" title="Click to jump here"><span class="w">Remember</span> <span class="w">that</span> <span class="w">deny</span> <span class="w">rules,</span> <span class="w">permission</span> <span class="w">modes,</span> <span class="w">and</span> <span class="w">allow</span> <span class="w">rules</span> <span class="w">run</span> <span class="w">before</span> <span class="w">can</span> <span class="w">use</span> <span class="w">tool—so</span> <span class="w">use</span> <span class="w">a</span> <span class="w">Pre</span> <span class="w">Tool</span> <span class="w">Use</span> <span class="w">hook</span> <span class="w">to</span> <span class="w">intercept</span> <span class="w">everything</span> <span class="w">else.</span></span> <span class="sent" data-sent-id="s1-6-s2" data-start="193.263" title="Click to jump here"><span class="w">And</span> <span class="w">if</span> <span class="w">a</span> <span class="w">human</span> <span class="w">might</span> <span class="w">take</span> <span class="w">hours</span> <span class="w">to</span> <span class="w">approve,</span> <span class="w">return</span> <span class="w">defer</span> <span class="w">from</span> <span class="w">Pre</span> <span class="w">Tool</span> <span class="w">Use</span> <span class="w">so</span> <span class="w">your</span> <span class="w">worker</span> <span class="w">can</span> <span class="w">exit</span> <span class="w">and</span> <span class="w">resume</span> <span class="w">later.</span></span></div></div>
+              <div class="ref-notes"><ul><li><strong><code>canUseTool</code> Callback:</strong> Fires in two cases: (1) a tool needs approval after earlier permission checks, or (2) Claude invokes <code>AskUserQuestion</code> to ask clarifying questions. Execution pauses until the callback returns <code>allow</code> (optionally with <code>updatedInput</code>) or <code>deny</code> (with a message Claude sees).</li><li><strong>Permission Evaluation Order:</strong> Deny rules, permission mode (e.g., <code>dontAsk</code>), and allow rules evaluate <em>before</em> <code>canUseTool</code>. To inspect or gate calls that bypass <code>canUseTool</code> (such as working-directory reads), attach a <strong><code>PreToolUse</code> hook</strong>.</li><li><strong>Async Human Delays:</strong> Although <code>canUseTool</code> can wait indefinitely, holding a serverless worker or container open for hours is brittle. Instead, return a <strong><code>defer</code></strong> decision from a <code>PreToolUse</code> hook so the process can exit cleanly and resume later from the persisted session, pairing it with a <code>PermissionRequest</code> hook to ping Slack or email.</li></ul></div>
+            </article>
+        </section>
+        <section class="section-block" id="sec-2">
+          <div class="section-header">
+            <div class="section-obj">Durable Execution and State Management</div>
+            <h2>Sessions, Checkpointing, Resumability, and Model Version Continuity</h2>
+          </div>
+          
+            <article class="seg kind-prose" data-seg-id="s2-1">
+              <div class="seg-top">
+                <span class="seg-label">KEY CONCEPT</span>
+                <button class="seg-play-btn" data-jump-seg="s2-1"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Designing Agents That Survive Crashes and Compounding Errors</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s2-1-s0" data-start="200.981" title="Click to jump here"><span class="w">Long-running</span> <span class="w">agents</span> <span class="w">accumulate</span> <span class="w">state</span> <span class="w">across</span> <span class="w">dozens</span> <span class="w">of</span> <span class="w">tool</span> <span class="w">calls,</span> <span class="w">so</span> <span class="w">restarting</span> <span class="w">from</span> <span class="w">scratch</span> <span class="w">after</span> <span class="w">a</span> <span class="w">crash</span> <span class="w">or</span> <span class="w">timeout</span> <span class="w">is</span> <span class="w">unacceptable</span> <span class="w">in</span> <span class="w">production.</span></span> <span class="sent" data-sent-id="s2-1-s1" data-start="210.465" title="Click to jump here"><span class="w">Durable</span> <span class="w">execution</span> <span class="w">pairs</span> <span class="w">deterministic</span> <span class="w">infrastructure—persisted</span> <span class="w">sessions,</span> <span class="w">file</span> <span class="w">checkpoints,</span> <span class="w">and</span> <span class="w">bounded</span> <span class="w">retries—with</span> <span class="w">Claude&#x27;s</span> <span class="w">own</span> <span class="w">adaptability</span> <span class="w">when</span> <span class="w">you</span> <span class="w">surface</span> <span class="w">structured</span> <span class="w">tool</span> <span class="w">failures</span> <span class="w">back</span> <span class="w">into</span> <span class="w">the</span> <span class="w">loop.</span></span></div></div>
+              <div class="ref-notes"><p>Long-running agents maintain rich state across dozens or hundreds of tool calls. Restarting from scratch after a transient API timeout, host preemption, or tool failure wastes tokens and degrades user trust. Durable execution combines <strong>deterministic safeguards</strong>—external session persistence, regular state checkpoints, and bounded retries—with <strong>model adaptability</strong>, feeding structured tool-failure signals back to Claude so it can recover gracefully.</p></div>
+            </article>
+            <article class="seg kind-table" data-seg-id="s2-2">
+              <div class="seg-top">
+                <span class="seg-label">STATE PERSISTENCE</span>
+                <button class="seg-play-btn" data-jump-seg="s2-2"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Session Persistence Across Agent SDK and Managed Agents</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s2-2-s0" data-start="223.497" title="Click to jump here"><span class="w">Session</span> <span class="w">persistence</span> <span class="w">depends</span> <span class="w">on</span> <span class="w">your</span> <span class="w">deployment</span> <span class="w">topology.</span></span> <span class="sent" data-sent-id="s2-2-s1" data-start="226.859" title="Click to jump here"><span class="w">On</span> <span class="w">one</span> <span class="w">host,</span> <span class="w">the</span> <span class="w">Agent</span> <span class="w">SDK</span> <span class="w">writes</span> <span class="w">local</span> <span class="w">JSONL</span> <span class="w">transcripts</span> <span class="w">you</span> <span class="w">can</span> <span class="w">continue,</span> <span class="w">resume</span> <span class="w">by</span> <span class="w">session</span> <span class="w">ID,</span> <span class="w">or</span> <span class="w">fork.</span></span> <span class="sent" data-sent-id="s2-2-s2" data-start="234.721" title="Click to jump here"><span class="w">Across</span> <span class="w">serverless</span> <span class="w">or</span> <span class="w">autoscaled</span> <span class="w">workers,</span> <span class="w">implement</span> <span class="w">the</span> <span class="w">Session</span> <span class="w">Store</span> <span class="w">adapter</span> <span class="w">with</span> <span class="w">append,</span> <span class="w">load,</span> <span class="w">and</span> <span class="w">list</span> <span class="w">subkeys</span> <span class="w">so</span> <span class="w">any</span> <span class="w">replica</span> <span class="w">can</span> <span class="w">resume</span> <span class="w">a</span> <span class="w">session.</span></span> <span class="sent" data-sent-id="s2-2-s3" data-start="243.971" title="Click to jump here"><span class="w">Managed</span> <span class="w">Agents</span> <span class="w">persists</span> <span class="w">sessions</span> <span class="w">server-side</span> <span class="w">automatically,</span> <span class="w">but</span> <span class="w">remember</span> <span class="w">it</span> <span class="w">is</span> <span class="w">not</span> <span class="w">Zero</span> <span class="w">Data</span> <span class="w">Retention</span> <span class="w">eligible</span> <span class="w">unless</span> <span class="w">you</span> <span class="w">self-host</span> <span class="w">it.</span></span></div></div>
+              <div class="ref-notes"><table><thead><tr><th>Runtime</th><th>Persistence Mechanism</th><th>Multi-Host &amp; Resumability Pattern</th><th>Data Retention &amp; ZDR Note</th></tr></thead><tbody><tr><td><strong>Agent SDK (Single Host)</strong></td><td>Auto-writes JSONL transcripts under <code>~/.claude/projects/</code>.</td><td><code>ClaudeSDKClient</code> (Python) or <code>continue: true</code> (TS) for latest session; capture <code>session_id</code> from <code>ResultMessage</code> for <code>resume</code> or <code>fork</code>.</td><td>Suppress disk writes via <code>persistSession: false</code> (TS) or <code>CLAUDE_CODE_SKIP_PROMPT_HISTORY</code> (Python).</td></tr><tr><td><strong>Agent SDK (Multi-Host)</strong></td><td>Custom <strong><code>SessionStore</code></strong> adapter (S3, Redis, Postgres).</td><td>Implement required <code>append</code> &amp; <code>load</code>, plus optional <code>listSessions</code>, <code>listSessionSummaries</code> (via <code>foldSessionSummary</code>), <code>listSubkeys</code>, and cascading <code>delete</code>. Keyed by <code>projectKey</code> (working dir) or <code>CLAUDE_CODE_PROJECT_DIR_NAME</code>.</td><td>Full customer control over retention, encryption, and audit compliance.</td></tr><tr><td><strong>Claude Managed Agents</strong></td><td>Stateful server-side sessions (<code>/v1/sessions</code>) with full SSE event history.</td><td>Reference version-pinned <code>agent</code> (<code>{id, version}</code>) + <code>environment_id</code>; steer or interrupt via events; resume cleanly after pauses.</td><td><strong>Not ZDR or HIPAA eligible</strong> in Anthropic-hosted cloud (transcripts persist until deleted). <strong>Self-hosted Managed Agents</strong> is the ZDR exception.</td></tr></tbody></table></div>
+            </article>
+            <article class="seg kind-code" data-seg-id="s2-3">
+              <div class="seg-top">
+                <span class="seg-label">CODE PATTERN</span>
+                <button class="seg-play-btn" data-jump-seg="s2-3"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>File Checkpointing and Rewinding in the Agent SDK</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s2-3-s0" data-start="253.013" title="Click to jump here"><span class="w">To</span> <span class="w">roll</span> <span class="w">back</span> <span class="w">risky</span> <span class="w">file</span> <span class="w">mutations</span> <span class="w">in</span> <span class="w">the</span> <span class="w">Agent</span> <span class="w">SDK,</span> <span class="w">enable</span> <span class="w">file</span> <span class="w">checkpointing</span> <span class="w">and</span> <span class="w">pass</span> <span class="w">replay</span> <span class="w">user</span> <span class="w">messages</span> <span class="w">in</span> <span class="w">extra</span> <span class="w">args</span> <span class="w">so</span> <span class="w">turn-start</span> <span class="w">user</span> <span class="w">messages</span> <span class="w">carry</span> <span class="w">a</span> <span class="w">checkpoint</span> <span class="w">UUID.</span></span> <span class="sent" data-sent-id="s2-3-s1" data-start="265.825" title="Click to jump here"><span class="w">Capture</span> <span class="w">that</span> <span class="w">UUID</span> <span class="w">alongside</span> <span class="w">the</span> <span class="w">session</span> <span class="w">ID.</span></span> <span class="sent" data-sent-id="s2-3-s2" data-start="269.059" title="Click to jump here"><span class="w">If</span> <span class="w">validation</span> <span class="w">fails</span> <span class="w">later,</span> <span class="w">resume</span> <span class="w">the</span> <span class="w">session</span> <span class="w">with</span> <span class="w">an</span> <span class="w">empty</span> <span class="w">prompt</span> <span class="w">and</span> <span class="w">call</span> <span class="w">rewind</span> <span class="w">files</span> <span class="w">to</span> <span class="w">restore</span> <span class="w">tracked</span> <span class="w">files</span> <span class="w">to</span> <span class="w">that</span> <span class="w">exact</span> <span class="w">snapshot.</span></span></div></div>
+              <div class="ref-notes"><pre><code># 1. Enable checkpointing + replay-user-messages to receive restore UUIDs
+opts = ClaudeAgentOptions(
+    enable_file_checkpointing=True,
+    permission_mode="acceptEdits",
+    extra_args={"replay-user-messages": None},
+)
+checkpoint_id, session_id = None, None
+async with ClaudeSDKClient(opts) as client:
+    await client.query("Refactor auth module")
+    async for msg in client.receive_response():
+        if isinstance(msg, UserMessage) and msg.uuid and not checkpoint_id:
+            checkpoint_id = msg.uuid      # Turn-start prompt UUID
+        if isinstance(msg, ResultMessage):
+            session_id = msg.session_id
+
+# 2. Rewind later by resuming with an empty prompt and calling rewind_files
+async with ClaudeSDKClient(
+    ClaudeAgentOptions(enable_file_checkpointing=True, resume=session_id)
+) as client:
+    await client.query("")
+    async for _ in client.receive_response():
+        await client.rewind_files(checkpoint_id)
+        break</code></pre></div>
+            </article>
+            <article class="seg kind-callout" data-seg-id="s2-4">
+              <div class="seg-top">
+                <span class="seg-label">EXAM TRAP</span>
+                <button class="seg-play-btn" data-jump-seg="s2-4"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>What Sessions and File Checkpointing Do NOT Track</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s2-4-s0" data-start="277.888" title="Click to jump here"><span class="w">This</span> <span class="w">distinction</span> <span class="w">is</span> <span class="w">a</span> <span class="w">favorite</span> <span class="w">exam</span> <span class="w">trap:</span> <span class="w">sessions</span> <span class="w">persist</span> <span class="w">conversation</span> <span class="w">history,</span> <span class="w">not</span> <span class="w">disk</span> <span class="w">state,</span> <span class="w">while</span> <span class="w">rewind</span> <span class="w">files</span> <span class="w">restores</span> <span class="w">disk</span> <span class="w">state</span> <span class="w">without</span> <span class="w">rewinding</span> <span class="w">conversation</span> <span class="w">history.</span></span> <span class="sent" data-sent-id="s2-4-s1" data-start="289.356" title="Click to jump here"><span class="w">Even</span> <span class="w">more</span> <span class="w">importantly,</span> <span class="w">file</span> <span class="w">checkpointing</span> <span class="w">only</span> <span class="w">tracks</span> <span class="w">Write,</span> <span class="w">Edit,</span> <span class="w">and</span> <span class="w">Notebook</span> <span class="w">Edit</span> <span class="w">in</span> <span class="w">the</span> <span class="w">main</span> <span class="w">conversation.</span></span> <span class="sent" data-sent-id="s2-4-s2" data-start="296.195" title="Click to jump here"><span class="w">It</span> <span class="w">will</span> <span class="w">not</span> <span class="w">undo</span> <span class="w">Bash</span> <span class="w">commands</span> <span class="w">like</span> <span class="w">sed</span> <span class="w">in</span> <span class="w">place,</span> <span class="w">it</span> <span class="w">ignores</span> <span class="w">subagent</span> <span class="w">edits,</span> <span class="w">and</span> <span class="w">it</span> <span class="w">skips</span> <span class="w">symlinks.</span></span></div></div>
+              <div class="ref-notes"><p><strong>Two separate planes of state:</strong> Sessions persist the <em>conversation</em>, not the filesystem. Conversely, <code>rewindFiles()</code> restores <em>files on disk</em> while leaving conversation history intact.</p><p><strong>Blind spots in file checkpointing:</strong> Checkpointing only backs up files modified by <code>Write</code>, <code>Edit</code>, and <code>NotebookEdit</code> in the main conversation. It does <strong>not</strong> undo changes made via <code>Bash</code> (such as <code>sed -i</code> or shell scripts) unless those files were already tracked, does <strong>not</strong> track subagent edits, and safely skips symlinks, hard links, or moved parent directories (reported in <code>RewindFilesResult.skippedLinks</code>).</p></div>
+            </article>
+            <article class="seg kind-bullets" data-seg-id="s2-5">
+              <div class="seg-top">
+                <span class="seg-label">MODEL CONTINUITY</span>
+                <button class="seg-play-btn" data-jump-seg="s2-5"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Surviving Model Version Upgrades and Cross-Model Fallbacks</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s2-5-s0" data-start="302.272" title="Click to jump here"><span class="w">Durable</span> <span class="w">agents</span> <span class="w">must</span> <span class="w">also</span> <span class="w">survive</span> <span class="w">model</span> <span class="w">version</span> <span class="w">upgrades</span> <span class="w">and</span> <span class="w">fallbacks</span> <span class="w">mid-session.</span></span> <span class="sent" data-sent-id="s2-5-s1" data-start="307.468" title="Click to jump here"><span class="w">Always</span> <span class="w">keep</span> <span class="w">sending</span> <span class="w">the</span> <span class="w">full</span> <span class="w">unmodified</span> <span class="w">history:</span> <span class="w">if</span> <span class="w">a</span> <span class="w">fallback</span> <span class="w">model</span> <span class="w">cannot</span> <span class="w">read</span> <span class="w">prior</span> <span class="w">thinking</span> <span class="w">blocks,</span> <span class="w">the</span> <span class="w">API</span> <span class="w">drops</span> <span class="w">them</span> <span class="w">silently</span> <span class="w">for</span> <span class="w">that</span> <span class="w">turn</span> <span class="w">and</span> <span class="w">restores</span> <span class="w">them</span> <span class="w">when</span> <span class="w">you</span> <span class="w">switch</span> <span class="w">back.</span></span> <span class="sent" data-sent-id="s2-5-s2" data-start="318.829" title="Click to jump here"><span class="w">Just</span> <span class="w">remember</span> <span class="w">to</span> <span class="w">replace</span> <span class="w">thinking</span> <span class="w">type</span> <span class="w">enabled</span> <span class="w">with</span> <span class="w">adaptive</span> <span class="w">on</span> <span class="w">preserved-thinking</span> <span class="w">models,</span> <span class="w">or</span> <span class="w">you</span> <span class="w">will</span> <span class="w">hit</span> <span class="w">a</span> <span class="w">four</span> <span class="w">hundred</span> <span class="w">error.</span></span></div></div>
+              <div class="ref-notes"><ul><li><strong>Never Strip Thinking Blocks on Model Switches:</strong> On models with <strong>preserved thinking</strong> (e.g., Claude Opus 5.5, Sonnet 5.5, Haiku 5.5, Fable/Mythos 5.1–5.2), keep sending the full unmodified conversation when switching models or cloud accounts. If the target model cannot read an earlier model's thinking blocks, the API drops them silently for that turn without error or billing—and reads them again if you switch back.</li><li><strong>Adaptive vs. Enabled Thinking:</strong> Preserved-thinking models return a <strong>400 error</strong> if you send <code>thinking: {"type": "enabled"}</code>. When migrating a live session from an older model, switch to <code>thinking: {"type": "adaptive"}</code> (or omit <code>thinking</code>).</li><li><strong>Cross-Model System Message Parity:</strong> If a fallback routes to a model that does not accept mid-conversation system messages (such as Claude Sonnet 5), omit those messages <em>only</em> from that request while keeping them in your stored transcript. Returning to a supporting model without them mutates the prefix and triggers a 400 prefix-check error.</li><li><strong>Version Pinning in Managed Agents:</strong> Pass <code>{"type": "agent", "id": agent.id, "version": 2}</code> when creating sessions or listing predefined subagents so live runs stay pinned while you stage new agent versions independently.</li></ul></div>
+            </article>
+        </section>
+        <section class="section-block" id="sec-3">
+          <div class="section-header">
+            <div class="section-obj">Architecture Selection at Scale</div>
+            <h2>Evolving Between Workflows and Agents, and Selecting the Right Harness</h2>
+          </div>
+          
+            <article class="seg kind-prose" data-seg-id="s3-1">
+              <div class="seg-top">
+                <span class="seg-label">KEY CONCEPT</span>
+                <button class="seg-play-btn" data-jump-seg="s3-1"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Workflows vs. Agents: Earn Every Layer of Autonomy</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s3-1-s0" data-start="326.847" title="Click to jump here"><span class="w">Anthropic</span> <span class="w">draws</span> <span class="w">a</span> <span class="w">sharp</span> <span class="w">boundary</span> <span class="w">between</span> <span class="w">workflows</span> <span class="w">and</span> <span class="w">agents.</span></span> <span class="sent" data-sent-id="s3-1-s1" data-start="330.699" title="Click to jump here"><span class="w">Workflows</span> <span class="w">orchestrate</span> <span class="w">Claude</span> <span class="w">along</span> <span class="w">predefined</span> <span class="w">code</span> <span class="w">paths,</span> <span class="w">giving</span> <span class="w">you</span> <span class="w">predictable</span> <span class="w">latency,</span> <span class="w">lower</span> <span class="w">cost,</span> <span class="w">and</span> <span class="w">tight</span> <span class="w">control.</span></span> <span class="sent" data-sent-id="s3-1-s2" data-start="338.156" title="Click to jump here"><span class="w">Agents</span> <span class="w">let</span> <span class="w">Claude</span> <span class="w">drive</span> <span class="w">its</span> <span class="w">own</span> <span class="w">tool</span> <span class="w">loop</span> <span class="w">from</span> <span class="w">environmental</span> <span class="w">ground</span> <span class="w">truth.</span></span> <span class="sent" data-sent-id="s3-1-s3" data-start="342.477" title="Click to jump here"><span class="w">As</span> <span class="w">a</span> <span class="w">staff</span> <span class="w">engineer,</span> <span class="w">you</span> <span class="w">start</span> <span class="w">with</span> <span class="w">the</span> <span class="w">simplest</span> <span class="w">augmented</span> <span class="w">LLM</span> <span class="w">or</span> <span class="w">workflow</span> <span class="w">and</span> <span class="w">only</span> <span class="w">pay</span> <span class="w">the</span> <span class="w">autonomy</span> <span class="w">tax</span> <span class="w">when</span> <span class="w">production</span> <span class="w">quality</span> <span class="w">data</span> <span class="w">proves</span> <span class="w">a</span> <span class="w">fixed</span> <span class="w">path</span> <span class="w">cannot</span> <span class="w">handle</span> <span class="w">the</span> <span class="w">task.</span></span></div></div>
+              <div class="ref-notes"><p>Anthropic draws a sharp architectural line between <strong>workflows</strong> (LLMs and tools orchestrated through predefined code paths) and <strong>agents</strong> (LLMs dynamically directing their own loop and tool usage based on environment ground truth). Start with the simplest solution—often a single augmented LLM call with retrieval and tools—and only escalate complexity when production quality data proves simpler patterns fall short.</p><p>Workflows win on predictability, bounded latency, and unit cost for well-defined tasks. Agents win when step counts are unpredictable, tasks are open-ended, and environment feedback (test suites, tool outputs) lets Claude verify progress and recover autonomously.</p></div>
+            </article>
+            <article class="seg kind-table" data-seg-id="s3-2">
+              <div class="seg-top">
+                <span class="seg-label">WORKFLOW PATTERNS</span>
+                <button class="seg-play-btn" data-jump-seg="s3-2"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Five Compositional Workflow Patterns Before Full Autonomy</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s3-2-s0" data-start="353.973" title="Click to jump here"><span class="w">Before</span> <span class="w">building</span> <span class="w">an</span> <span class="w">open-ended</span> <span class="w">agent,</span> <span class="w">check</span> <span class="w">if</span> <span class="w">one</span> <span class="w">of</span> <span class="w">five</span> <span class="w">compositional</span> <span class="w">workflows</span> <span class="w">solves</span> <span class="w">the</span> <span class="w">problem.</span></span> <span class="sent" data-sent-id="s3-2-s1" data-start="360.001" title="Click to jump here"><span class="w">Prompt</span> <span class="w">chaining</span> <span class="w">adds</span> <span class="w">deterministic</span> <span class="w">gates</span> <span class="w">between</span> <span class="w">fixed</span> <span class="w">steps.</span></span> <span class="sent" data-sent-id="s3-2-s2" data-start="363.661" title="Click to jump here"><span class="w">Routing</span> <span class="w">separates</span> <span class="w">distinct</span> <span class="w">intents</span> <span class="w">and</span> <span class="w">model</span> <span class="w">tiers.</span></span> <span class="sent" data-sent-id="s3-2-s3" data-start="366.831" title="Click to jump here"><span class="w">Parallelization</span> <span class="w">handles</span> <span class="w">independent</span> <span class="w">sectioning</span> <span class="w">or</span> <span class="w">consensus</span> <span class="w">voting.</span></span> <span class="sent" data-sent-id="s3-2-s4" data-start="371.195" title="Click to jump here"><span class="w">Orchestrator-workers</span> <span class="w">dynamically</span> <span class="w">breaks</span> <span class="w">down</span> <span class="w">unpredictable</span> <span class="w">subtasks,</span> <span class="w">and</span> <span class="w">evaluator-optimizer</span> <span class="w">refines</span> <span class="w">outputs</span> <span class="w">against</span> <span class="w">a</span> <span class="w">clear</span> <span class="w">rubric.</span></span></div></div>
+              <div class="ref-notes"><table><thead><tr><th>Workflow Pattern</th><th>How It Works</th><th>When to Choose It</th></tr></thead><tbody><tr><td><strong>Prompt Chaining</strong></td><td>Sequential LLM calls where each step processes the prior output, optionally separated by programmatic <strong>gates</strong>.</td><td>Task decomposes cleanly into fixed subtasks; trade slight latency for higher per-step accuracy.</td></tr><tr><td><strong>Routing</strong></td><td>Classify input and dispatch to specialized prompts, tools, or model tiers (e.g., Haiku for simple, Opus/Sonnet for complex).</td><td>Distinct input categories where optimizing one prompt degrades performance on others.</td></tr><tr><td><strong>Parallelization</strong></td><td><strong>Sectioning</strong> (independent subtasks concurrently) or <strong>Voting</strong> (multiple attempts/perspectives aggregated).</td><td>Need lower wall-clock latency, separated guardrail screening, or higher confidence via consensus.</td></tr><tr><td><strong>Orchestrator-Workers</strong></td><td>Central LLM dynamically decomposes subtasks, delegates to worker LLMs, and synthesizes results.</td><td>Subtasks cannot be hardcoded in advance (e.g., multi-file code changes or multi-source search).</td></tr><tr><td><strong>Evaluator-Optimizer</strong></td><td>Generator LLM iterates against structured critique from an evaluator LLM in a bounded loop.</td><td>Clear evaluation rubric exists and iterative human-like critique demonstrably improves output.</td></tr></tbody></table></div>
+            </article>
+            <article class="seg kind-table" data-seg-id="s3-3">
+              <div class="seg-top">
+                <span class="seg-label">HARNESS SELECTION</span>
+                <button class="seg-play-btn" data-jump-seg="s3-3"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Messages API vs. Agent SDK vs. Claude Managed Agents</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s3-3-s0" data-start="379.939" title="Click to jump here"><span class="w">Choosing</span> <span class="w">the</span> <span class="w">right</span> <span class="w">harness</span> <span class="w">is</span> <span class="w">a</span> <span class="w">core</span> <span class="w">scaling</span> <span class="w">decision.</span></span> <span class="sent" data-sent-id="s3-3-s1" data-start="382.895" title="Click to jump here"><span class="w">Use</span> <span class="w">the</span> <span class="w">Messages</span> <span class="w">API</span> <span class="w">when</span> <span class="w">you</span> <span class="w">want</span> <span class="w">full</span> <span class="w">control</span> <span class="w">over</span> <span class="w">custom</span> <span class="w">workflows,</span> <span class="w">latency,</span> <span class="w">or</span> <span class="w">strict</span> <span class="w">Zero</span> <span class="w">Data</span> <span class="w">Retention</span> <span class="w">and</span> <span class="w">HIPAA</span> <span class="w">compliance.</span></span> <span class="sent" data-sent-id="s3-3-s2" data-start="391.995" title="Click to jump here"><span class="w">Use</span> <span class="w">the</span> <span class="w">Agent</span> <span class="w">SDK</span> <span class="w">to</span> <span class="w">embed</span> <span class="w">Claude</span> <span class="w">Code&#x27;s</span> <span class="w">proven</span> <span class="w">loop,</span> <span class="w">hooks,</span> <span class="w">and</span> <span class="w">permissions</span> <span class="w">inside</span> <span class="w">your</span> <span class="w">own</span> <span class="w">Python</span> <span class="w">or</span> <span class="w">TypeScript</span> <span class="w">service.</span></span> <span class="sent" data-sent-id="s3-3-s3" data-start="399.836" title="Click to jump here"><span class="w">Choose</span> <span class="w">Managed</span> <span class="w">Agents</span> <span class="w">for</span> <span class="w">long-running</span> <span class="w">async</span> <span class="w">jobs</span> <span class="w">when</span> <span class="w">you</span> <span class="w">want</span> <span class="w">hosted</span> <span class="w">sandboxes</span> <span class="w">and</span> <span class="w">stateful</span> <span class="w">sessions—keeping</span> <span class="w">its</span> <span class="w">compliance</span> <span class="w">boundaries</span> <span class="w">in</span> <span class="w">mind.</span></span></div></div>
+              <div class="ref-notes"><table><thead><tr><th>Dimension</th><th>Messages API / Client SDK</th><th>Claude Agent SDK</th><th>Claude Managed Agents</th></tr></thead><tbody><tr><td><strong>Who runs the loop</strong></td><td>Your code (or beta <code>tool_runner</code>).</td><td>Embedded Claude Code binary in your Python/TS process.</td><td>Anthropic-hosted harness (<code>managed-agents-2026-04-01</code>) or self-hosted service.</td></tr><tr><td><strong>Execution runtime</strong></td><td>Your infrastructure &amp; tool handlers.</td><td>Your host/container with built-in file, Bash, web, MCP, hooks, subagents.</td><td>Managed cloud sandbox or self-hosted sandbox; supports cron scheduled deployments.</td></tr><tr><td><strong>Best fit</strong></td><td>Custom workflows, strict latency/token control, non-Python/TS stacks, fine-grained orchestration.</td><td>Embedding Claude Code's battle-tested agent loop, permissions, and sessions inside your own app.</td><td>Long-running async tasks (minutes to hours) with minimal infrastructure and stateful server-side sessions.</td></tr><tr><td><strong>ZDR &amp; HIPAA</strong></td><td><strong>Eligible</strong> (subject to specific tools/covered models).</td><td><strong>Eligible</strong> (inherits API eligibility; transcripts stored locally or in your <code>SessionStore</code>).</td><td><strong>Not eligible</strong> for hosted cloud; <strong>ZDR only</strong> on self-hosted Managed Agents.</td></tr></tbody></table></div>
+            </article>
+            <article class="seg kind-bullets" data-seg-id="s3-4">
+              <div class="seg-top">
+                <span class="seg-label">REUSABLE STANDARDS</span>
+                <button class="seg-play-btn" data-jump-seg="s3-4"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Framework Discipline and Agent-Computer Interface (ACI) Standards</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s3-4-s0" data-start="409.113" title="Click to jump here"><span class="w">When</span> <span class="w">setting</span> <span class="w">team</span> <span class="w">standards,</span> <span class="w">resist</span> <span class="w">heavy</span> <span class="w">third-party</span> <span class="w">frameworks</span> <span class="w">that</span> <span class="w">hide</span> <span class="w">raw</span> <span class="w">prompts</span> <span class="w">and</span> <span class="w">break</span> <span class="w">cache</span> <span class="w">visibility.</span></span> <span class="sent" data-sent-id="s3-4-s1" data-start="415.632" title="Click to jump here"><span class="w">Instead,</span> <span class="w">invest</span> <span class="w">in</span> <span class="w">your</span> <span class="w">Agent-Computer</span> <span class="w">Interface.</span></span> <span class="sent" data-sent-id="s3-4-s2" data-start="418.695" title="Click to jump here"><span class="w">Keep</span> <span class="w">tool</span> <span class="w">sets</span> <span class="w">minimal</span> <span class="w">and</span> <span class="w">non-overlapping,</span> <span class="w">poka-yoke</span> <span class="w">parameters</span> <span class="w">like</span> <span class="w">requiring</span> <span class="w">absolute</span> <span class="w">file</span> <span class="w">paths,</span> <span class="w">and</span> <span class="w">avoid</span> <span class="w">awkward</span> <span class="w">escaping</span> <span class="w">overhead.</span></span> <span class="sent" data-sent-id="s3-4-s3" data-start="427.624" title="Click to jump here"><span class="w">Anthropic</span> <span class="w">even</span> <span class="w">found</span> <span class="w">that</span> <span class="w">having</span> <span class="w">an</span> <span class="w">agent</span> <span class="w">test</span> <span class="w">and</span> <span class="w">rewrite</span> <span class="w">unclear</span> <span class="w">MCP</span> <span class="w">tool</span> <span class="w">descriptions</span> <span class="w">cut</span> <span class="w">task</span> <span class="w">completion</span> <span class="w">time</span> <span class="w">by</span> <span class="w">forty</span> <span class="w">percent.</span></span></div></div>
+              <div class="ref-notes"><ul><li><strong>Avoid Opaque Framework Bloat:</strong> Heavy third-party frameworks often obscure exact prompts, tool schemas, and cache boundaries, slowing production debugging. Standardize on thin, transparent abstractions directly over the Claude APIs or Agent SDK so engineers understand what crosses the wire.</li><li><strong>Invest in the Agent-Computer Interface (ACI):</strong> Treat tool definitions with the same rigor as human-computer interfaces. Give every tool a distinct, non-overlapping purpose, concrete examples, edge-case notes, and clear boundaries.</li><li><strong>Poka-Yoke Tool Parameters:</strong> Design arguments so mistakes are structurally impossible—for example, requiring <em>absolute filepaths</em> instead of relative paths, avoiding brittle line-count diff headers, and avoiding JSON-escaped code strings where natural formats work better.</li><li><strong>Test Tools with Agents:</strong> Running an automated tool-testing agent to exercise flawed MCP tools and rewrite their descriptions cut downstream task completion time by <strong>40%</strong> in Anthropic's research.</li></ul></div>
+            </article>
+            <article class="seg kind-callout" data-seg-id="s3-5">
+              <div class="seg-top">
+                <span class="seg-label">EXAM TRAP</span>
+                <button class="seg-play-btn" data-jump-seg="s3-5"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>De-Escalating an Agent Back to a Workflow</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s3-5-s0" data-start="437.051" title="Click to jump here"><span class="w">Do</span> <span class="w">not</span> <span class="w">assume</span> <span class="w">architecture</span> <span class="w">evolution</span> <span class="w">only</span> <span class="w">moves</span> <span class="w">toward</span> <span class="w">more</span> <span class="w">autonomy.</span></span> <span class="sent" data-sent-id="s3-5-s1" data-start="441.436" title="Click to jump here"><span class="w">If</span> <span class="w">production</span> <span class="w">traces</span> <span class="w">show</span> <span class="w">an</span> <span class="w">expensive</span> <span class="w">autonomous</span> <span class="w">agent</span> <span class="w">executing</span> <span class="w">the</span> <span class="w">exact</span> <span class="w">same</span> <span class="w">three</span> <span class="w">tool</span> <span class="w">calls</span> <span class="w">ninety-five</span> <span class="w">percent</span> <span class="w">of</span> <span class="w">the</span> <span class="w">time,</span> <span class="w">the</span> <span class="w">staff-level</span> <span class="w">move</span> <span class="w">is</span> <span class="w">to</span> <span class="w">de-escalate</span> <span class="w">it</span> <span class="w">into</span> <span class="w">a</span> <span class="w">deterministic</span> <span class="w">routing</span> <span class="w">and</span> <span class="w">prompt-chaining</span> <span class="w">workflow,</span> <span class="w">reserving</span> <span class="w">the</span> <span class="w">agent</span> <span class="w">loop</span> <span class="w">strictly</span> <span class="w">for</span> <span class="w">the</span> <span class="w">unpredictable</span> <span class="w">five</span> <span class="w">percent</span> <span class="w">tail.</span></span></div></div>
+              <div class="ref-notes"><p>Architecture evolution is <strong>bidirectional</strong>. On the exam, if production telemetry shows an autonomous agent following the exact same three-step tool sequence on 95% of requests while burning excess tokens and missing p95 latency SLOs, the right move is to <strong>demote it to a deterministic workflow</strong> (such as Routing + Prompt Chaining) and reserve the agentic path only for the 5% long-tail exceptions.</p><p>Conversely, escalate a workflow to an agent only when branching logic becomes unmaintainable, tasks are genuinely path-dependent, and objective ground-truth verification exists.</p></div>
+            </article>
+        </section>
+        <section class="section-block" id="sec-4">
+          <div class="section-header">
+            <div class="section-obj">Context and Memory Architecture</div>
+            <h2>Compaction, Context Editing, Persistent Memory, and Tool Context Scaling</h2>
+          </div>
+          
+            <article class="seg kind-prose" data-seg-id="s4-1">
+              <div class="seg-top">
+                <span class="seg-label">KEY CONCEPT</span>
+                <button class="seg-play-btn" data-jump-seg="s4-1"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Combating Context Rot with Just-in-Time Context Engineering</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s4-1-s0" data-start="460.568" title="Click to jump here"><span class="w">Waiting</span> <span class="w">for</span> <span class="w">larger</span> <span class="w">context</span> <span class="w">windows</span> <span class="w">does</span> <span class="w">not</span> <span class="w">solve</span> <span class="w">context</span> <span class="w">rot.</span></span> <span class="sent" data-sent-id="s4-1-s1" data-start="464.719" title="Click to jump here"><span class="w">Because</span> <span class="w">transformer</span> <span class="w">attention</span> <span class="w">stretches</span> <span class="w">across</span> <span class="w">every</span> <span class="w">token</span> <span class="w">pair,</span> <span class="w">recall</span> <span class="w">degrades</span> <span class="w">well</span> <span class="w">before</span> <span class="w">you</span> <span class="w">hit</span> <span class="w">the</span> <span class="w">hard</span> <span class="w">limit.</span></span> <span class="sent" data-sent-id="s4-1-s2" data-start="471.728" title="Click to jump here"><span class="w">Treat</span> <span class="w">context</span> <span class="w">as</span> <span class="w">a</span> <span class="w">finite</span> <span class="w">attention</span> <span class="w">budget:</span> <span class="w">write</span> <span class="w">right-altitude</span> <span class="w">system</span> <span class="w">prompts,</span> <span class="w">and</span> <span class="w">favor</span> <span class="w">just-in-time</span> <span class="w">retrieval</span> <span class="w">where</span> <span class="w">agents</span> <span class="w">hold</span> <span class="w">lightweight</span> <span class="w">pointers</span> <span class="w">and</span> <span class="w">pull</span> <span class="w">details</span> <span class="w">on</span> <span class="w">demand.</span></span></div></div>
+              <div class="ref-notes"><p>Because transformer attention scales quadratically (<em>n</em>&sup2; pairwise token relationships), every model experiences <strong>context rot</strong>: recall accuracy and reasoning precision degrade gradually as token count grows, long before hitting the hard context limit. Context engineering treats the window as a finite <strong>attention budget</strong>, curating the smallest set of high-signal tokens at every turn.</p><p>Write system prompts at the <strong>right altitude</strong>—neither brittle hardcoded if-else scripts nor vague platitudes—and prefer <strong>just-in-time retrieval</strong> (holding lightweight file paths or queries and loading details on demand via progressive disclosure) or a <strong>hybrid strategy</strong> (like Claude Code loading <code>CLAUDE.md</code> upfront while exploring files via <code>Glob</code> and <code>Grep</code>).</p></div>
+            </article>
+            <article class="seg kind-table" data-seg-id="s4-2">
+              <div class="seg-top">
+                <span class="seg-label">COMPACTION &amp; EDITING</span>
+                <button class="seg-play-btn" data-jump-seg="s4-2"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Server-Side Compaction vs. Context Editing Strategies</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s4-2-s0" data-start="483.608" title="Click to jump here"><span class="w">When</span> <span class="w">conversations</span> <span class="w">grow</span> <span class="w">long,</span> <span class="w">you</span> <span class="w">have</span> <span class="w">two</span> <span class="w">server-side</span> <span class="w">levers.</span></span> <span class="sent" data-sent-id="s4-2-s1" data-start="487.268" title="Click to jump here"><span class="w">Compaction</span> <span class="w">summarizes</span> <span class="w">older</span> <span class="w">turns—prefer</span> <span class="w">on-demand</span> <span class="w">compaction</span> <span class="w">with</span> <span class="w">the</span> <span class="w">compact</span> <span class="w">twenty</span> <span class="w">twenty-six</span> <span class="w">zero</span> <span class="w">nine</span> <span class="w">zero</span> <span class="w">four</span> <span class="w">beta</span> <span class="w">header</span> <span class="w">because</span> <span class="w">it</span> <span class="w">runs</span> <span class="w">in</span> <span class="w">the</span> <span class="w">background,</span> <span class="w">keeps</span> <span class="w">recent</span> <span class="w">turns</span> <span class="w">word</span> <span class="w">for</span> <span class="w">word,</span> <span class="w">and</span> <span class="w">preserves</span> <span class="w">their</span> <span class="w">thinking</span> <span class="w">blocks.</span></span> <span class="sent" data-sent-id="s4-2-s2" data-start="502.277" title="Click to jump here"><span class="w">For</span> <span class="w">lighter</span> <span class="w">trimming,</span> <span class="w">server-side</span> <span class="w">context</span> <span class="w">editing</span> <span class="w">clears</span> <span class="w">stale</span> <span class="w">tool</span> <span class="w">results</span> <span class="w">or</span> <span class="w">old</span> <span class="w">thinking</span> <span class="w">blocks</span> <span class="w">without</span> <span class="w">breaking</span> <span class="w">preserved</span> <span class="w">thinking,</span> <span class="w">and</span> <span class="w">clear</span> <span class="w">at</span> <span class="w">least</span> <span class="w">ensures</span> <span class="w">prompt</span> <span class="w">cache</span> <span class="w">rewrites</span> <span class="w">stay</span> <span class="w">economical.</span></span></div></div>
+              <div class="ref-notes"><table><thead><tr><th>Technique</th><th>Header / Type</th><th>How It Works</th><th>Cache &amp; Preserved Thinking Impact</th></tr></thead><tbody><tr><td><strong>On-Demand Compaction</strong> (Recommended)</td><td><code>compact-2026-09-04</code>, top-level <code>compaction</code> param</td><td>App triggers summary; swaps returned compaction block to start of <code>messages</code>. Supports <strong>keeping recent turns verbatim</strong> and <strong>background compaction</strong>.</td><td><strong>Preserves thinking blocks</strong> in kept turns (under preserved-thinking rules). Supports custom summarization prompts.</td></tr><tr><td><strong>Threshold Compaction</strong></td><td>Automatic trigger at token threshold</td><td>API summarizes inline inside the request that crosses your token trigger and drops older turns.</td><td>Runs inline (adds latency on trigger turn); reinserted turns lose valid thinking unless dropped via <code>prefix_mismatch_behavior: "drop_block"</code>.</td></tr><tr><td><strong>Tool Result Clearing</strong></td><td><code>context-management-2025-06-27</code>, <code>clear_tool_uses_20250919</code></td><td>Server-side clears oldest <code>tool_result</code> blocks (and optionally inputs via <code>clear_tool_inputs: true</code>) while client keeps full history.</td><td><strong>Never invalidates preserved thinking</strong> (unlike client-side edits). Invalidates prompt cache—set <code>clear_at_least</code> so cache rewrite pays off.</td></tr><tr><td><strong>Thinking Block Clearing</strong></td><td><code>context-management-2025-06-27</code>, <code>clear_thinking_20251015</code></td><td>Controls how many prior assistant thinking blocks stay in context via <code>keep</code> (overrides per-model defaults).</td><td>Keeping thinking preserves cache hits; clearing invalidates cache at the clearing point.</td></tr></tbody></table></div>
+            </article>
+            <article class="seg kind-bullets" data-seg-id="s4-3">
+              <div class="seg-top">
+                <span class="seg-label">PERSISTENT MEMORY</span>
+                <button class="seg-play-btn" data-jump-seg="s4-3"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Cross-Session Memory: Memory Tool, Memory Stores, and Dreams</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s4-3-s0" data-start="514.541" title="Click to jump here"><span class="w">To</span> <span class="w">persist</span> <span class="w">knowledge</span> <span class="w">across</span> <span class="w">sessions,</span> <span class="w">pick</span> <span class="w">the</span> <span class="w">memory</span> <span class="w">layer</span> <span class="w">that</span> <span class="w">fits</span> <span class="w">your</span> <span class="w">runtime.</span></span> <span class="sent" data-sent-id="s4-3-s1" data-start="519.033" title="Click to jump here"><span class="w">On</span> <span class="w">the</span> <span class="w">Messages</span> <span class="w">API,</span> <span class="w">the</span> <span class="w">client-side</span> <span class="w">memory</span> <span class="w">tool</span> <span class="w">is</span> <span class="w">Zero</span> <span class="w">Data</span> <span class="w">Retention</span> <span class="w">eligible</span> <span class="w">and</span> <span class="w">stores</span> <span class="w">files</span> <span class="w">under</span> <span class="w">slash</span> <span class="w">memories—just</span> <span class="w">enforce</span> <span class="w">path</span> <span class="w">traversal</span> <span class="w">protection</span> <span class="w">in</span> <span class="w">your</span> <span class="w">handler.</span></span> <span class="sent" data-sent-id="s4-3-s2" data-start="530.971" title="Click to jump here"><span class="w">In</span> <span class="w">Managed</span> <span class="w">Agents,</span> <span class="w">memory</span> <span class="w">stores</span> <span class="w">provide</span> <span class="w">versioned,</span> <span class="w">auditable</span> <span class="w">storage—never</span> <span class="w">combine</span> <span class="w">the</span> <span class="w">agent</span> <span class="w">memory</span> <span class="w">and</span> <span class="w">managed</span> <span class="w">agents</span> <span class="w">beta</span> <span class="w">headers</span> <span class="w">on</span> <span class="w">store</span> <span class="w">calls,</span> <span class="w">or</span> <span class="w">you</span> <span class="w">get</span> <span class="w">a</span> <span class="w">four</span> <span class="w">hundred</span> <span class="w">error—and</span> <span class="w">Dreams</span> <span class="w">asynchronously</span> <span class="w">deduplicates</span> <span class="w">memories</span> <span class="w">across</span> <span class="w">up</span> <span class="w">to</span> <span class="w">one</span> <span class="w">hundred</span> <span class="w">sessions</span> <span class="w">into</span> <span class="w">a</span> <span class="w">fresh</span> <span class="w">reviewable</span> <span class="w">store.</span></span></div></div>
+              <div class="ref-notes"><ul><li><strong>Client-Side Memory Tool (<code>memory_20250818</code>):</strong> Anthropic-provided tool (<code>name: "memory"</code>, no schema needed) where Claude issues file commands under <code>/memories</code> and your app executes them against your own store. <strong>ZDR-eligible</strong>; your handler <em>must</em> enforce strict path-traversal protection restricting all operations to <code>/memories</code>.</li><li><strong>Managed Agents Memory Stores (<code>agent-memory-2026-07-22</code>):</strong> Workspace-scoped document collections mounted into the sandbox (synced on self-hosted sandboxes). Every write creates an <strong>immutable memory version</strong> for audit trails and point-in-time recovery. <em>Gotcha:</em> sending <code>managed-agents-2026-04-01</code> together with <code>agent-memory-2026-07-22</code> on memory store calls returns a <strong>400 error</strong>—replace the header on store endpoints, keep <code>managed-agents-2026-04-01</code> on session endpoints.</li><li><strong>Managed Agents Dreams (<code>dreaming-2026-04-21</code>):</strong> Asynchronous consolidation job (research preview) that reads an existing memory store plus <strong>1 to 100 past sessions</strong> to merge duplicates, resolve contradictions, and surface new insights into a <em>new output memory store</em>—never mutating the input store so you can review before promoting.</li></ul></div>
+            </article>
+            <article class="seg kind-code" data-seg-id="s4-4">
+              <div class="seg-top">
+                <span class="seg-label">CODE PATTERN</span>
+                <button class="seg-play-btn" data-jump-seg="s4-4"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Cache-Safe Mid-Conversation Instructions and Tool Toggles</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s4-4-s0" data-start="549.869" title="Click to jump here"><span class="w">Editing</span> <span class="w">the</span> <span class="w">top-level</span> <span class="w">system</span> <span class="w">prompt</span> <span class="w">or</span> <span class="w">tools</span> <span class="w">array</span> <span class="w">mid-conversation</span> <span class="w">busts</span> <span class="w">the</span> <span class="w">entire</span> <span class="w">prompt</span> <span class="w">cache</span> <span class="w">and</span> <span class="w">fails</span> <span class="w">preserved-thinking</span> <span class="w">prefix</span> <span class="w">checks.</span></span> <span class="sent" data-sent-id="s4-4-s1" data-start="558.948" title="Click to jump here"><span class="w">Instead,</span> <span class="w">declare</span> <span class="w">your</span> <span class="w">tool</span> <span class="w">catalog</span> <span class="w">upfront</span> <span class="w">and</span> <span class="w">append</span> <span class="w">a</span> <span class="w">role</span> <span class="w">system</span> <span class="w">message</span> <span class="w">right</span> <span class="w">where</span> <span class="w">the</span> <span class="w">change</span> <span class="w">applies—using</span> <span class="w">tool</span> <span class="w">addition</span> <span class="w">and</span> <span class="w">tool</span> <span class="w">removal</span> <span class="w">blocks</span> <span class="w">under</span> <span class="w">the</span> <span class="w">inline</span> <span class="w">tools</span> <span class="w">beta</span> <span class="w">header.</span></span> <span class="sent" data-sent-id="s4-4-s2" data-start="570.523" title="Click to jump here"><span class="w">The</span> <span class="w">earlier</span> <span class="w">prefix</span> <span class="w">stays</span> <span class="w">byte-identical,</span> <span class="w">so</span> <span class="w">your</span> <span class="w">cache</span> <span class="w">still</span> <span class="w">hits.</span></span></div></div>
+              <div class="ref-notes"><pre><code># Declare full tool catalog upfront (with defer_loading: true for hidden tools)
+# Never edit top-level `system` or `tools` mid-session!
+response = client.beta.messages.create(
+    model="claude-opus-5-5",
+    max_tokens=1024,
+    betas=["inline-tools-2026-09-15"],
+    tools=[weather_tool, billing_tool_deferred],
+    messages=[
+        {"role": "user", "content": "Check my account status."},
+        assistant_turn,
+        # Append a mid-conversation system message: cached prefix stays 100% intact!
+        {
+            "role": "system",
+            "content": [
+                {"type": "text", "text": "User verified MFA. Refund policy applies."},
+                {"type": "tool_removal", "tool": {"type": "tool_reference", "name": "get_weather"}},
+                {"type": "tool_addition", "tool": {"type": "tool_reference", "name": "issue_refund"}},
+            ],
+        },
+    ],
+)</code></pre></div>
+            </article>
+            <article class="seg kind-table" data-seg-id="s4-5">
+              <div class="seg-top">
+                <span class="seg-label">TOOL CONTEXT SCALING</span>
+                <button class="seg-play-btn" data-jump-seg="s4-5"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Keeping Large Tool Catalogs and Chained Results Out of Context</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s4-5-s0" data-start="574.531" title="Click to jump here"><span class="w">When</span> <span class="w">an</span> <span class="w">agent</span> <span class="w">connects</span> <span class="w">to</span> <span class="w">dozens</span> <span class="w">or</span> <span class="w">hundreds</span> <span class="w">of</span> <span class="w">tools,</span> <span class="w">two</span> <span class="w">techniques</span> <span class="w">keep</span> <span class="w">context</span> <span class="w">lean.</span></span> <span class="sent" data-sent-id="s4-5-s1" data-start="579.471" title="Click to jump here"><span class="w">Tool</span> <span class="w">search</span> <span class="w">marks</span> <span class="w">definitions</span> <span class="w">with</span> <span class="w">defer</span> <span class="w">loading</span> <span class="w">set</span> <span class="w">to</span> <span class="w">true</span> <span class="w">and</span> <span class="w">lets</span> <span class="w">Claude</span> <span class="w">discover</span> <span class="w">only</span> <span class="w">the</span> <span class="w">three</span> <span class="w">to</span> <span class="w">five</span> <span class="w">tools</span> <span class="w">it</span> <span class="w">needs</span> <span class="w">via</span> <span class="w">regex</span> <span class="w">or</span> <span class="w">BM25,</span> <span class="w">cutting</span> <span class="w">schema</span> <span class="w">bloat</span> <span class="w">by</span> <span class="w">over</span> <span class="w">eighty-five</span> <span class="w">percent</span> <span class="w">while</span> <span class="w">staying</span> <span class="w">Zero</span> <span class="w">Data</span> <span class="w">Retention</span> <span class="w">eligible.</span></span> <span class="sent" data-sent-id="s4-5-s2" data-start="595.419" title="Click to jump here"><span class="w">Programmatic</span> <span class="w">tool</span> <span class="w">calling</span> <span class="w">collapses</span> <span class="w">repetitive</span> <span class="w">tool</span> <span class="w">chains</span> <span class="w">into</span> <span class="w">a</span> <span class="w">single</span> <span class="w">sandbox</span> <span class="w">script,</span> <span class="w">filtering</span> <span class="w">intermediate</span> <span class="w">payloads</span> <span class="w">before</span> <span class="w">they</span> <span class="w">ever</span> <span class="w">enter</span> <span class="w">context—just</span> <span class="w">remember</span> <span class="w">code</span> <span class="w">execution</span> <span class="w">containers</span> <span class="w">are</span> <span class="w">not</span> <span class="w">ZDR</span> <span class="w">eligible.</span></span></div></div>
+              <div class="ref-notes"><table><thead><tr><th>Technique</th><th>Configuration</th><th>What It Solves</th><th>Impact &amp; Constraints</th></tr></thead><tbody><tr><td><strong>Tool Search Tool</strong></td><td>Include <code>tool_search_tool_regex_20251119</code> or <code>tool_search_tool_bm25_20251119</code>; mark catalog tools <code>defer_loading: true</code>.</td><td><strong>Context bloat</strong> (~55k tokens for multi-server MCP catalogs) &amp; <strong>selection degradation</strong> above 30–50 tools.</td><td>Cuts definition tokens by <strong>&gt;85%</strong> (loads only 3–5 matching <code>tool_reference</code> blocks on demand). <strong>ZDR-eligible</strong>; supported on Claude 4.5+ (not Opus 4.1 or earlier).</td></tr><tr><td><strong>Programmatic Tool Calling</strong></td><td>Include <code>code_execution_20260120</code>; add <code>allowed_callers: ["code_execution_20260120"]</code> to callable tools.</td><td><strong><code>tool_result</code> roundtrips &amp; payload bloat</strong> across repetitive multi-tool chains (e.g., checking 20 employees).</td><td>Claude writes one sandbox script that loops and filters intermediate data before returning results: <strong>+11%</strong> accuracy, <strong>-24%</strong> input tokens. <strong>Not ZDR-eligible</strong> (30-day container retention); not supported on Haiku 4.5.</td></tr><tr><td><strong>Prompt Caching</strong></td><td>Cache stable tool definitions &amp; system prefix.</td><td><strong>Repeated token cost</strong> when a fixed tool catalog is reused across thousands of requests.</td><td>25% cache-write markup pays back on the second hit. Combine with Tool Search and Context Editing for layered savings.</td></tr></tbody></table></div>
+            </article>
+            <article class="seg kind-callout" data-seg-id="s4-6">
+              <div class="seg-top">
+                <span class="seg-label">EXAM TRAP</span>
+                <button class="seg-play-btn" data-jump-seg="s4-6"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Preserved Thinking Prefix Checks and Sensitive Content Redaction</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s4-6-s0" data-start="610.115" title="Click to jump here"><span class="w">Here</span> <span class="w">is</span> <span class="w">a</span> <span class="w">subtle</span> <span class="w">production</span> <span class="w">trap:</span> <span class="w">on</span> <span class="w">preserved-thinking</span> <span class="w">models,</span> <span class="w">thinking</span> <span class="w">blocks</span> <span class="w">are</span> <span class="w">cryptographically</span> <span class="w">tied</span> <span class="w">to</span> <span class="w">everything</span> <span class="w">before</span> <span class="w">them.</span></span> <span class="sent" data-sent-id="s4-6-s1" data-start="617.444" title="Click to jump here"><span class="w">If</span> <span class="w">your</span> <span class="w">client</span> <span class="w">code</span> <span class="w">edits</span> <span class="w">an</span> <span class="w">earlier</span> <span class="w">message,</span> <span class="w">system</span> <span class="w">prompt,</span> <span class="w">or</span> <span class="w">tool</span> <span class="w">schema,</span> <span class="w">you</span> <span class="w">trigger</span> <span class="w">a</span> <span class="w">four</span> <span class="w">hundred</span> <span class="w">error</span> <span class="w">saying</span> <span class="w">the</span> <span class="w">block</span> <span class="w">is</span> <span class="w">bound</span> <span class="w">to</span> <span class="w">a</span> <span class="w">different</span> <span class="w">conversation.</span></span> <span class="sent" data-sent-id="s4-6-s2" data-start="626.8" title="Click to jump here"><span class="w">Always</span> <span class="w">use</span> <span class="w">server-side</span> <span class="w">context</span> <span class="w">management</span> <span class="w">or</span> <span class="w">append-only</span> <span class="w">system</span> <span class="w">messages—and</span> <span class="w">if</span> <span class="w">you</span> <span class="w">ever</span> <span class="w">redact</span> <span class="w">secrets</span> <span class="w">from</span> <span class="w">history,</span> <span class="w">strip</span> <span class="w">all</span> <span class="w">subsequent</span> <span class="w">thinking</span> <span class="w">blocks</span> <span class="w">too.</span></span></div></div>
+              <div class="ref-notes"><p><strong>Why client-side history rewrites break preserved thinking:</strong> On preserved-thinking models, every thinking block is cryptographically bound to the exact <code>system</code>, <code>tools</code>, and prior messages before it. Mutating earlier turns client-side fails the prefix check and throws a <strong>400 error</strong> (<code>The block is bound to a different conversation</code>) unless you either use server-side context editing/compaction, append mid-conversation system messages, or set <code>prefix_mismatch_behavior: "drop_block"</code> (auditing drops via <code>input_transformations</code>).</p><p><strong>Redacting secrets or prompt injections:</strong> If you must scrub secrets, PII, or injected text from an earlier turn, you must also remove <em>every thinking block after the first place that sensitive content appeared</em>.</p></div>
+            </article>
+        </section>
+
+      <section class="quiz-section" id="scenarios">
+        <div class="section-header">
+          <div class="section-obj">CCDV-P Scenario Practice</div>
+          <h2>Production Scenario Questions</h2>
+        </div>
+        
+        <div class="scenario-card" data-correct="B">
+          <h3>Scenario 1: Multi-Agent Approval Bottleneck &amp; Context Bloat</h3>
+          <p class="scenario-prompt">A platform team runs an Agent SDK incident-triage service inside autoscaled serverless containers with a 15-minute execution timeout. When the lead agent spawns a remediation subagent that needs human approval for a production database change, the container blocks inside the `canUseTool` callback and times out before the on-call engineer responds. Meanwhile, traces show the lead agent&#x27;s context window is filling up because subagents return 40KB raw log dumps in their final messages. Which architectural change resolves both issues?</p>
+          <div class="opt-list"><button class="opt-btn" data-key="A"><strong>A.</strong> Increase the serverless timeout to 2 hours and enable `Agent(fork)` so subagents share the lead agent&#x27;s prompt cache and avoid repeating log analysis.</button><button class="opt-btn" data-key="B"><strong>B.</strong> Return a `defer` decision from a `PreToolUse` hook with a shared `SessionStore` so the container exits and resumes after approval, and have subagents write raw logs to shared storage while returning concise artifact references.</button><button class="opt-btn" data-key="C"><strong>C.</strong> Set `permissionMode: &quot;dontAsk&quot;` so `canUseTool` never blocks, and switch to `clear_thinking_20251015` to free space in the lead agent&#x27;s context window.</button><button class="opt-btn" data-key="D"><strong>D.</strong> Move the entire workload to Anthropic-hosted Claude Managed Agents with `inline_agents: disabled`, keeping `canUseTool` callbacks in-memory inside the sandbox.</button></div>
+          <div class="rationale">
+            <strong>Answer: B</strong> &mdash; Returning `defer` from a `PreToolUse` hook lets the serverless process exit cleanly while waiting for an asynchronous human approval, and a shared `SessionStore` (implementing `append`, `load`, and `listSubkeys`) allows any container replica to resume the session once approved. Having subagents write bulky raw logs to external/shared storage and pass lightweight references eliminates the &#x27;game of telephone&#x27; context bloat. (A) wastes compute and `Agent(fork)` worsens context bloat; (C) removes the required human approval guardrail; (D) mixes SDK `canUseTool` semantics with Managed Agents and does not address the 40KB subagent payload bloat.
+          </div>
+        </div>
+        <div class="scenario-card" data-correct="C">
+          <h3>Scenario 2: Cache Thrashing &amp; 400 Errors on a Preserved-Thinking Agent</h3>
+          <p class="scenario-prompt">A financial compliance agent on `claude-opus-5-5` connects to 80 internal MCP tools and runs 40-turn investigations. Mid-session, once a user completes step-up authentication, the backend updates the top-level `system` prompt with new policy rules, adds 3 privileged tools to the top-level `tools` array, and strips old `tool_result` blocks from the client&#x27;s `messages` array to save tokens. After migrating to `claude-opus-5-5`, prompt cache hit rates dropped near zero and requests began failing with HTTP 400 (`The block is bound to a different conversation`). What is the best fix?</p>
+          <div class="opt-list"><button class="opt-btn" data-key="A"><strong>A.</strong> Switch `thinking` to `{&quot;type&quot;: &quot;enabled&quot;}` and strip all thinking blocks from `messages` on every turn before sending the request.</button><button class="opt-btn" data-key="B"><strong>B.</strong> Keep mutating the top-level `system` and `tools` fields, but set `prefix_mismatch_behavior: &quot;drop_block&quot;` so the API silently ignores all broken thinking blocks.</button><button class="opt-btn" data-key="C"><strong>C.</strong> Declare all tools upfront with `defer_loading: true` plus Tool Search, append a mid-conversation `role: &quot;system&quot;` message with `tool_addition` blocks after authentication, and replace client-side trimming with server-side `clear_tool_uses_20250919` or on-demand compaction.</button><button class="opt-btn" data-key="D"><strong>D.</strong> Split the investigation into a brand-new session after step-up authentication and inject a custom client-side summary of the prior turns as the first user message.</button></div>
+          <div class="rationale">
+            <strong>Answer: C</strong> &mdash; Editing top-level `system`, `tools`, or earlier `messages` client-side both invalidates the cached prefix and breaks the preserved-thinking prefix check on `claude-opus-5-5`. Declaring the tool catalog upfront with `defer_loading: true` (and Tool Search for the 80-tool catalog), applying post-auth policy and tool changes via an appended `role: &quot;system&quot;` message with `tool_addition` blocks, and using server-side context editing (`clear_tool_uses_20250919`) or on-demand compaction keeps the prefix intact, preserves thinking blocks, and restores cache hits. (A) triggers a 400 error because preserved-thinking models reject `thinking: {&quot;type&quot;: &quot;enabled&quot;}`; (B) still destroys prompt caching and loses reasoning; (D) drops full conversation continuity and cache reuse.
+          </div>
+        </div>
+        <div class="scenario-card" data-correct="A">
+          <h3>Scenario 3: File Rewind Gap &amp; Architecture De-Escalation</h3>
+          <p class="scenario-prompt">An engineering team built a multi-agent code-remediation service using the Agent SDK with `enable_file_checkpointing=True`. Post-incident review reveals two problems: (1) when a validation check failed and the service called `rewind_files(checkpoint_id)`, edits made by a worker subagent and by a `Bash` command running `sed -i` remained on disk; (2) trace analysis shows 96% of tickets follow the exact same 3-step sequence (classify ticket, run static rule fix, open PR) yet cost 12x more than budget. What should the team do?</p>
+          <div class="opt-list"><button class="opt-btn" data-key="A"><strong>A.</strong> Isolate repository mutations in git branches/worktrees or sandboxes so rollback does not rely solely on `rewind_files()` for Bash/subagent edits, and refactor the 96% predictable path into a deterministic Routing + Prompt Chaining workflow while reserving the agent loop for the 4% complex tail.</button><button class="opt-btn" data-key="B"><strong>B.</strong> Add `extra_args={&quot;replay-user-messages&quot;: None}` so `rewind_files()` automatically tracks `Bash` and subagent mutations, and upgrade the lead agent to a stronger model so it finishes in fewer turns.</button><button class="opt-btn" data-key="C"><strong>C.</strong> Disable file checkpointing and rely on Agent SDK session `fork` to roll back both the conversation and the filesystem simultaneously.</button><button class="opt-btn" data-key="D"><strong>D.</strong> Replace the Agent SDK with Programmatic Tool Calling inside `code_execution_20260120` so all 96% of tickets execute as a single multi-agent dynamic workflow.</button></div>
+          <div class="rationale">
+            <strong>Answer: A</strong> &mdash; Agent SDK file checkpointing only tracks `Write`, `Edit`, and `NotebookEdit` in the main conversation—it never undoes `Bash` (`sed -i`) commands or subagent file edits—so deterministic VCS/sandbox isolation (like git worktrees) is required for complete rollback. Simultaneously, production telemetry showing 96% identical 3-step execution is a textbook signal to de-escalate the common path to a predictable, low-cost Routing + Prompt Chaining workflow while keeping the agent for genuinely open-ended edge cases. (B) is factually false about `replay-user-messages`; (C) confuses conversation sessions with filesystem state; (D) does not fix local repo rollback or remove unnecessary agentic overhead.
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+<script>
+const TIMELINE = {"duration":636.827,"segments":[{"id":"intro","section":"Overview","start":0.0,"end":41.2,"sentences":[{"id":"intro-s0","start":0.0,"end":3.712,"words":[{"t":"Domain","s":0.0,"e":0.427},{"t":"1:","s":0.427,"e":0.69},{"t":"Advanced","s":0.69,"e":1.259},{"t":"Agent","s":1.259,"e":1.614},{"t":"Architecture","s":1.614,"e":2.468},{"t":"and","s":2.468,"e":2.681},{"t":"Orchestration.","s":2.681,"e":3.712}]},{"id":"intro-s1","start":3.852,"end":5.793,"words":[{"t":"Exam","s":3.852,"e":4.347},{"t":"weight:","s":4.347,"e":5.36},{"t":"17%.","s":5.36,"e":5.793}]},{"id":"intro-s2","start":5.933,"end":15.363,"words":[{"t":"Designing,","s":5.933,"e":6.712},{"t":"orchestrating,","s":6.712,"e":7.77},{"t":"and","s":7.77,"e":7.979},{"t":"evolving","s":7.979,"e":8.536},{"t":"durable,","s":8.536,"e":9.176},{"t":"context-efficient","s":9.176,"e":10.29},{"t":"multi-agent","s":10.29,"e":10.986},{"t":"Claude","s":10.986,"e":11.403},{"t":"systems","s":11.403,"e":11.89},{"t":"that","s":11.89,"e":12.169},{"t":"survive","s":12.169,"e":12.656},{"t":"real-world","s":12.656,"e":13.282},{"t":"failures,","s":13.282,"e":13.992},{"t":"restarts,","s":13.992,"e":14.702},{"t":"and","s":14.702,"e":14.911},{"t":"scale.","s":14.911,"e":15.363}]},{"id":"intro-s3","start":15.503,"end":23.033,"words":[{"t":"On","s":15.503,"e":15.655},{"t":"the","s":15.655,"e":15.883},{"t":"CCDV-P","s":15.883,"e":16.262},{"t":"exam,","s":16.262,"e":16.733},{"t":"Domain","s":16.733,"e":17.188},{"t":"1","s":17.188,"e":17.302},{"t":"tests","s":17.302,"e":17.682},{"t":"whether","s":17.682,"e":18.213},{"t":"you","s":18.213,"e":18.441},{"t":"operate","s":18.441,"e":18.972},{"t":"like","s":18.972,"e":19.276},{"t":"a","s":19.276,"e":19.389},{"t":"Staff","s":19.389,"e":19.769},{"t":"Platform","s":19.769,"e":20.376},{"t":"Engineer","s":20.376,"e":20.984},{"t":"rather","s":20.984,"e":21.439},{"t":"than","s":21.439,"e":21.743},{"t":"a","s":21.743,"e":21.856},{"t":"prompt","s":21.856,"e":22.312},{"t":"tinkerer.","s":22.312,"e":23.033}]},{"id":"intro-s4","start":23.173,"end":41.2,"words":[{"t":"You","s":23.173,"e":23.393},{"t":"treat","s":23.393,"e":23.759},{"t":"context","s":23.759,"e":24.272},{"t":"as","s":24.272,"e":24.419},{"t":"a","s":24.419,"e":24.529},{"t":"finite","s":24.529,"e":24.968},{"t":"attention","s":24.968,"e":25.628},{"t":"budget,","s":25.628,"e":26.229},{"t":"default","s":26.229,"e":26.742},{"t":"to","s":26.742,"e":26.888},{"t":"the","s":26.888,"e":27.108},{"t":"simplest","s":27.108,"e":27.694},{"t":"workflow","s":27.694,"e":28.281},{"t":"that","s":28.281,"e":28.574},{"t":"meets","s":28.574,"e":28.94},{"t":"quality","s":28.94,"e":29.453},{"t":"and","s":29.453,"e":29.673},{"t":"cost","s":29.673,"e":29.966},{"t":"SLOs,","s":29.966,"e":30.42},{"t":"isolate","s":30.42,"e":30.933},{"t":"subagent","s":30.933,"e":31.52},{"t":"state","s":31.52,"e":31.886},{"t":"cleanly,","s":31.886,"e":32.56},{"t":"and","s":32.56,"e":32.78},{"t":"engineer","s":32.78,"e":33.366},{"t":"every","s":33.366,"e":33.733},{"t":"long-running","s":33.733,"e":34.539},{"t":"agent","s":34.539,"e":34.905},{"t":"to","s":34.905,"e":35.052},{"t":"survive","s":35.052,"e":35.565},{"t":"crashes,","s":35.565,"e":36.239},{"t":"human","s":36.239,"e":36.605},{"t":"delays,","s":36.605,"e":37.206},{"t":"and","s":37.206,"e":37.426},{"t":"model","s":37.426,"e":37.792},{"t":"upgrades","s":37.792,"e":38.379},{"t":"without","s":38.379,"e":38.892},{"t":"losing","s":38.892,"e":39.331},{"t":"work","s":39.331,"e":39.624},{"t":"or","s":39.624,"e":39.771},{"t":"invalidating","s":39.771,"e":40.65},{"t":"caches.","s":40.65,"e":41.2}]}]},{"id":"s1-1","section":"Multi-Agent Topologies, Context Isolation, and Human-in-the-Loop","start":41.9,"end":69.572,"sentences":[{"id":"s1-1-s0","start":41.9,"end":49.964,"words":[{"t":"Multi-agent","s":41.9,"e":42.691},{"t":"systems","s":42.691,"e":43.244},{"t":"shine","s":43.244,"e":43.639},{"t":"when","s":43.639,"e":43.956},{"t":"work","s":43.956,"e":44.272},{"t":"fans","s":44.272,"e":44.588},{"t":"out","s":44.588,"e":44.825},{"t":"in","s":44.825,"e":44.983},{"t":"parallel","s":44.983,"e":45.616},{"t":"across","s":45.616,"e":46.09},{"t":"independent","s":46.09,"e":46.96},{"t":"sources","s":46.96,"e":47.513},{"t":"or","s":47.513,"e":47.671},{"t":"exceeds","s":47.671,"e":48.225},{"t":"a","s":48.225,"e":48.343},{"t":"single","s":48.343,"e":48.818},{"t":"context","s":48.818,"e":49.371},{"t":"window.","s":49.371,"e":49.964}]},{"id":"s1-1-s1","start":50.104,"end":57.635,"words":[{"t":"Anthropic's","s":50.104,"e":50.85},{"t":"research","s":50.85,"e":51.446},{"t":"benchmarks","s":51.446,"e":52.192},{"t":"showed","s":52.192,"e":52.639},{"t":"an","s":52.639,"e":52.788},{"t":"Opus","s":52.788,"e":53.087},{"t":"lead","s":53.087,"e":53.385},{"t":"with","s":53.385,"e":53.683},{"t":"Sonnet","s":53.683,"e":54.13},{"t":"workers","s":54.13,"e":54.652},{"t":"beating","s":54.652,"e":55.174},{"t":"a","s":55.174,"e":55.286},{"t":"single","s":55.286,"e":55.734},{"t":"Opus","s":55.734,"e":56.032},{"t":"agent","s":56.032,"e":56.405},{"t":"by","s":56.405,"e":56.554},{"t":"ninety","s":56.554,"e":57.001},{"t":"percent.","s":57.001,"e":57.635}]},{"id":"s1-1-s2","start":57.775,"end":69.572,"words":[{"t":"The","s":57.775,"e":58.011},{"t":"catch","s":58.011,"e":58.405},{"t":"is","s":58.405,"e":58.562},{"t":"cost:","s":58.562,"e":59.05},{"t":"multi-agent","s":59.05,"e":59.837},{"t":"systems","s":59.837,"e":60.388},{"t":"burn","s":60.388,"e":60.703},{"t":"roughly","s":60.703,"e":61.254},{"t":"fifteen","s":61.254,"e":61.804},{"t":"times","s":61.804,"e":62.198},{"t":"more","s":62.198,"e":62.513},{"t":"tokens","s":62.513,"e":62.985},{"t":"than","s":62.985,"e":63.3},{"t":"chat,","s":63.3,"e":63.788},{"t":"so","s":63.788,"e":63.945},{"t":"only","s":63.945,"e":64.26},{"t":"reach","s":64.26,"e":64.653},{"t":"for","s":64.653,"e":64.889},{"t":"them","s":64.889,"e":65.204},{"t":"when","s":65.204,"e":65.519},{"t":"task","s":65.519,"e":65.834},{"t":"value","s":65.834,"e":66.227},{"t":"justifies","s":66.227,"e":66.936},{"t":"the","s":66.936,"e":67.172},{"t":"spend","s":67.172,"e":67.565},{"t":"and","s":67.565,"e":67.801},{"t":"subtasks","s":67.801,"e":68.431},{"t":"truly","s":68.431,"e":68.824},{"t":"decouple.","s":68.824,"e":69.572}]}]},{"id":"s1-2","section":"Multi-Agent Topologies, Context Isolation, and Human-in-the-Loop","start":69.932,"end":96.123,"sentences":[{"id":"s1-2-s0","start":69.932,"end":75.265,"words":[{"t":"Modern","s":69.932,"e":70.34},{"t":"Claude","s":70.34,"e":70.747},{"t":"orchestration","s":70.747,"e":71.63},{"t":"gives","s":71.63,"e":71.97},{"t":"you","s":71.97,"e":72.174},{"t":"three","s":72.174,"e":72.514},{"t":"distinct","s":72.514,"e":73.057},{"t":"patterns","s":73.057,"e":73.601},{"t":"under","s":73.601,"e":73.94},{"t":"the","s":73.94,"e":74.144},{"t":"multi-agent","s":74.144,"e":74.823},{"t":"block.","s":74.823,"e":75.265}]},{"id":"s1-2-s1","start":75.405,"end":85.496,"words":[{"t":"Use","s":75.405,"e":75.619},{"t":"subagents","s":75.619,"e":76.261},{"t":"when","s":76.261,"e":76.546},{"t":"the","s":76.546,"e":76.76},{"t":"lead","s":76.76,"e":77.045},{"t":"needs","s":77.045,"e":77.402},{"t":"back-and-forth","s":77.402,"e":78.258},{"t":"follow-up","s":78.258,"e":78.828},{"t":"with","s":78.828,"e":79.113},{"t":"specialists\u2014remembering","s":79.113,"e":80.682},{"t":"Managed","s":80.682,"e":81.181},{"t":"Agents","s":81.181,"e":81.609},{"t":"caps","s":81.609,"e":81.895},{"t":"delegation","s":81.895,"e":82.608},{"t":"at","s":82.608,"e":82.75},{"t":"one","s":82.75,"e":82.964},{"t":"level","s":82.964,"e":83.321},{"t":"deep","s":83.321,"e":83.606},{"t":"and","s":83.606,"e":83.82},{"t":"twenty-five","s":83.82,"e":84.533},{"t":"child","s":84.533,"e":84.89},{"t":"threads.","s":84.89,"e":85.496}]},{"id":"s1-2-s2","start":85.636,"end":90.564,"words":[{"t":"Use","s":85.636,"e":85.847},{"t":"dynamic","s":85.847,"e":86.34},{"t":"workflows","s":86.34,"e":86.974},{"t":"for","s":86.974,"e":87.185},{"t":"large","s":87.185,"e":87.537},{"t":"multi-phase","s":87.537,"e":88.241},{"t":"fan-outs","s":88.241,"e":88.734},{"t":"with","s":88.734,"e":89.015},{"t":"a","s":89.015,"e":89.121},{"t":"strict","s":89.121,"e":89.543},{"t":"session","s":89.543,"e":90.036},{"t":"budget.","s":90.036,"e":90.564}]},{"id":"s1-2-s3","start":90.704,"end":96.123,"words":[{"t":"Or","s":90.704,"e":90.853},{"t":"attach","s":90.853,"e":91.302},{"t":"an","s":91.302,"e":91.451},{"t":"advisor","s":91.451,"e":91.975},{"t":"when","s":91.975,"e":92.274},{"t":"one","s":92.274,"e":92.498},{"t":"primary","s":92.498,"e":93.021},{"t":"agent","s":93.021,"e":93.395},{"t":"just","s":93.395,"e":93.694},{"t":"needs","s":93.694,"e":94.068},{"t":"periodic","s":94.068,"e":94.665},{"t":"high-judgment","s":94.665,"e":95.562},{"t":"review.","s":95.562,"e":96.123}]}]},{"id":"s1-3","section":"Multi-Agent Topologies, Context Isolation, and Human-in-the-Loop","start":96.483,"end":124.069,"sentences":[{"id":"s1-3-s0","start":96.483,"end":104.227,"words":[{"t":"By","s":96.483,"e":96.631},{"t":"default,","s":96.631,"e":97.311},{"t":"a","s":97.311,"e":97.422},{"t":"subagent","s":97.422,"e":98.014},{"t":"starts","s":98.014,"e":98.458},{"t":"with","s":98.458,"e":98.754},{"t":"a","s":98.754,"e":98.865},{"t":"clean","s":98.865,"e":99.234},{"t":"context","s":99.234,"e":99.752},{"t":"window\u2014it","s":99.752,"e":100.344},{"t":"never","s":100.344,"e":100.714},{"t":"sees","s":100.714,"e":101.01},{"t":"the","s":101.01,"e":101.231},{"t":"parent's","s":101.231,"e":101.749},{"t":"conversation","s":101.749,"e":102.637},{"t":"history","s":102.637,"e":103.155},{"t":"or","s":103.155,"e":103.302},{"t":"tool","s":103.302,"e":103.598},{"t":"results.","s":103.598,"e":104.227}]},{"id":"s1-3-s1","start":104.367,"end":112.132,"words":[{"t":"That","s":104.367,"e":104.634},{"t":"means","s":104.634,"e":104.967},{"t":"your","s":104.967,"e":105.233},{"t":"delegation","s":105.233,"e":105.9},{"t":"prompt","s":105.9,"e":106.3},{"t":"must","s":106.3,"e":106.567},{"t":"carry","s":106.567,"e":106.9},{"t":"the","s":106.9,"e":107.1},{"t":"full","s":107.1,"e":107.366},{"t":"contract:","s":107.366,"e":108.046},{"t":"objective,","s":108.046,"e":108.793},{"t":"output","s":108.793,"e":109.193},{"t":"format,","s":109.193,"e":109.739},{"t":"tools,","s":109.739,"e":110.219},{"t":"boundaries,","s":110.219,"e":111.032},{"t":"and","s":111.032,"e":111.232},{"t":"effort","s":111.232,"e":111.632},{"t":"budget.","s":111.632,"e":112.132}]},{"id":"s1-3-s2","start":112.272,"end":124.069,"words":[{"t":"For","s":112.272,"e":112.488},{"t":"large","s":112.488,"e":112.847},{"t":"artifacts","s":112.847,"e":113.493},{"t":"like","s":113.493,"e":113.781},{"t":"code","s":113.781,"e":114.068},{"t":"or","s":114.068,"e":114.212},{"t":"reports,","s":114.212,"e":114.873},{"t":"have","s":114.873,"e":115.16},{"t":"subagents","s":115.16,"e":115.807},{"t":"write","s":115.807,"e":116.166},{"t":"directly","s":116.166,"e":116.741},{"t":"to","s":116.741,"e":116.884},{"t":"the","s":116.884,"e":117.1},{"t":"filesystem","s":117.1,"e":117.818},{"t":"and","s":117.818,"e":118.034},{"t":"pass","s":118.034,"e":118.321},{"t":"back","s":118.321,"e":118.609},{"t":"lightweight","s":118.609,"e":119.399},{"t":"references","s":119.399,"e":120.118},{"t":"so","s":120.118,"e":120.261},{"t":"you","s":120.261,"e":120.477},{"t":"avoid","s":120.477,"e":120.836},{"t":"a","s":120.836,"e":120.944},{"t":"costly","s":120.944,"e":121.375},{"t":"game","s":121.375,"e":121.662},{"t":"of","s":121.662,"e":121.806},{"t":"telephone","s":121.806,"e":122.452},{"t":"through","s":122.452,"e":122.955},{"t":"the","s":122.955,"e":123.171},{"t":"coordinator.","s":123.171,"e":124.069}]}]},{"id":"s1-4","section":"Multi-Agent Topologies, Context Isolation, and Human-in-the-Loop","start":124.429,"end":147.055,"sentences":[{"id":"s1-4-s0","start":124.429,"end":130.189,"words":[{"t":"In","s":124.429,"e":124.572},{"t":"the","s":124.572,"e":124.786},{"t":"Agent","s":124.786,"e":125.143},{"t":"SDK,","s":125.143,"e":125.514},{"t":"you","s":125.514,"e":125.728},{"t":"define","s":125.728,"e":126.156},{"t":"specialized","s":126.156,"e":126.941},{"t":"subagents","s":126.941,"e":127.584},{"t":"programmatically","s":127.584,"e":128.726},{"t":"with","s":128.726,"e":129.011},{"t":"AgentDefinition.","s":129.011,"e":130.189}]},{"id":"s1-4-s1","start":130.329,"end":147.055,"words":[{"t":"Notice","s":130.329,"e":130.752},{"t":"the","s":130.752,"e":130.963},{"t":"production","s":130.963,"e":131.667},{"t":"guardrails","s":131.667,"e":132.371},{"t":"here:","s":132.371,"e":132.808},{"t":"a","s":132.808,"e":132.914},{"t":"crisp","s":132.914,"e":133.266},{"t":"description","s":133.266,"e":134.04},{"t":"so","s":134.04,"e":134.181},{"t":"the","s":134.181,"e":134.393},{"t":"lead","s":134.393,"e":134.674},{"t":"routes","s":134.674,"e":135.097},{"t":"accurately,","s":135.097,"e":135.956},{"t":"read-only","s":135.956,"e":136.519},{"t":"tools","s":136.519,"e":136.872},{"t":"for","s":136.872,"e":137.083},{"t":"least","s":137.083,"e":137.435},{"t":"privilege,","s":137.435,"e":138.224},{"t":"a","s":138.224,"e":138.329},{"t":"Sonnet","s":138.329,"e":138.752},{"t":"model","s":138.752,"e":139.104},{"t":"override","s":139.104,"e":139.667},{"t":"to","s":139.667,"e":139.808},{"t":"control","s":139.808,"e":140.301},{"t":"cost,","s":140.301,"e":140.738},{"t":"max","s":140.738,"e":140.949},{"t":"turns","s":140.949,"e":141.301},{"t":"to","s":141.301,"e":141.442},{"t":"cap","s":141.442,"e":141.653},{"t":"runaway","s":141.653,"e":142.146},{"t":"loops,","s":142.146,"e":142.653},{"t":"and","s":142.653,"e":142.865},{"t":"disallowed","s":142.865,"e":143.569},{"t":"tools","s":143.569,"e":143.921},{"t":"blocking","s":143.921,"e":144.484},{"t":"Agent","s":144.484,"e":144.837},{"t":"fork","s":144.837,"e":145.118},{"t":"when","s":145.118,"e":145.4},{"t":"you","s":145.4,"e":145.611},{"t":"need","s":145.611,"e":145.893},{"t":"strict","s":145.893,"e":146.316},{"t":"isolation.","s":146.316,"e":147.055}]}]},{"id":"s1-5","section":"Multi-Agent Topologies, Context Isolation, and Human-in-the-Loop","start":147.415,"end":174.297,"sentences":[{"id":"s1-5-s0","start":147.415,"end":151.724,"words":[{"t":"Watch","s":147.415,"e":147.818},{"t":"out","s":147.818,"e":148.059},{"t":"for","s":148.059,"e":148.301},{"t":"two","s":148.301,"e":148.543},{"t":"classic","s":148.543,"e":149.106},{"t":"exam","s":149.106,"e":149.429},{"t":"traps","s":149.429,"e":149.831},{"t":"in","s":149.831,"e":149.992},{"t":"multi-agent","s":149.992,"e":150.798},{"t":"operations.","s":150.798,"e":151.724}]},{"id":"s1-5-s1","start":151.864,"end":165.901,"words":[{"t":"First,","s":151.864,"e":152.411},{"t":"synchronous","s":152.411,"e":153.246},{"t":"subagent","s":153.246,"e":153.853},{"t":"waits","s":153.853,"e":154.233},{"t":"let","s":154.233,"e":154.46},{"t":"a","s":154.46,"e":154.574},{"t":"single","s":154.574,"e":155.03},{"t":"slow","s":155.03,"e":155.333},{"t":"worker","s":155.333,"e":155.789},{"t":"stall","s":155.789,"e":156.168},{"t":"the","s":156.168,"e":156.396},{"t":"entire","s":156.396,"e":156.852},{"t":"pipeline,","s":156.852,"e":157.626},{"t":"while","s":157.626,"e":158.006},{"t":"async","s":158.006,"e":158.385},{"t":"fan-out","s":158.385,"e":158.841},{"t":"demands","s":158.841,"e":159.372},{"t":"explicit","s":159.372,"e":159.979},{"t":"error","s":159.979,"e":160.359},{"t":"handling","s":160.359,"e":160.966},{"t":"because","s":160.966,"e":161.498},{"t":"API","s":161.498,"e":161.726},{"t":"errors","s":161.726,"e":162.181},{"t":"aborting","s":162.181,"e":162.788},{"t":"a","s":162.788,"e":162.902},{"t":"subagent","s":162.902,"e":163.51},{"t":"are","s":163.51,"e":163.737},{"t":"never","s":163.737,"e":164.117},{"t":"returned","s":164.117,"e":164.724},{"t":"as","s":164.724,"e":164.876},{"t":"normal","s":164.876,"e":165.332},{"t":"output.","s":165.332,"e":165.901}]},{"id":"s1-5-s2","start":166.041,"end":174.297,"words":[{"t":"Second,","s":166.041,"e":166.602},{"t":"never","s":166.602,"e":166.944},{"t":"swap","s":166.944,"e":167.217},{"t":"code","s":167.217,"e":167.491},{"t":"underneath","s":167.491,"e":168.175},{"t":"running","s":168.175,"e":168.654},{"t":"stateful","s":168.654,"e":169.201},{"t":"agents\u2014use","s":169.201,"e":169.817},{"t":"rainbow","s":169.817,"e":170.296},{"t":"deployments","s":170.296,"e":171.048},{"t":"so","s":171.048,"e":171.185},{"t":"in-flight","s":171.185,"e":171.732},{"t":"sessions","s":171.732,"e":172.279},{"t":"finish","s":172.279,"e":172.69},{"t":"on","s":172.69,"e":172.826},{"t":"their","s":172.826,"e":173.168},{"t":"original","s":173.168,"e":173.716},{"t":"version.","s":173.716,"e":174.297}]}]},{"id":"s1-6","section":"Multi-Agent Topologies, Context Isolation, and Human-in-the-Loop","start":174.657,"end":200.281,"sentences":[{"id":"s1-6-s0","start":174.657,"end":184.513,"words":[{"t":"Human-in-the-loop","s":174.657,"e":175.721},{"t":"flows","s":175.721,"e":176.101},{"t":"in","s":176.101,"e":176.253},{"t":"the","s":176.253,"e":176.481},{"t":"Agent","s":176.481,"e":176.861},{"t":"SDK","s":176.861,"e":177.089},{"t":"center","s":177.089,"e":177.545},{"t":"on","s":177.545,"e":177.697},{"t":"the","s":177.697,"e":177.925},{"t":"can","s":177.925,"e":178.153},{"t":"use","s":178.153,"e":178.381},{"t":"tool","s":178.381,"e":178.685},{"t":"callback,","s":178.685,"e":179.46},{"t":"which","s":179.46,"e":179.84},{"t":"pauses","s":179.84,"e":180.296},{"t":"execution","s":180.296,"e":180.979},{"t":"for","s":180.979,"e":181.207},{"t":"both","s":181.207,"e":181.511},{"t":"tool","s":181.511,"e":181.815},{"t":"approvals","s":181.815,"e":182.499},{"t":"and","s":182.499,"e":182.727},{"t":"Ask","s":182.727,"e":182.955},{"t":"User","s":182.955,"e":183.259},{"t":"Question","s":183.259,"e":183.867},{"t":"prompts.","s":183.867,"e":184.513}]},{"id":"s1-6-s1","start":184.653,"end":193.123,"words":[{"t":"Remember","s":184.653,"e":185.221},{"t":"that","s":185.221,"e":185.504},{"t":"deny","s":185.504,"e":185.788},{"t":"rules,","s":185.788,"e":186.299},{"t":"permission","s":186.299,"e":187.008},{"t":"modes,","s":187.008,"e":187.519},{"t":"and","s":187.519,"e":187.732},{"t":"allow","s":187.732,"e":188.086},{"t":"rules","s":188.086,"e":188.441},{"t":"run","s":188.441,"e":188.654},{"t":"before","s":188.654,"e":189.08},{"t":"can","s":189.08,"e":189.292},{"t":"use","s":189.292,"e":189.505},{"t":"tool\u2014so","s":189.505,"e":189.931},{"t":"use","s":189.931,"e":190.144},{"t":"a","s":190.144,"e":190.25},{"t":"Pre","s":190.25,"e":190.463},{"t":"Tool","s":190.463,"e":190.747},{"t":"Use","s":190.747,"e":190.959},{"t":"hook","s":190.959,"e":191.243},{"t":"to","s":191.243,"e":191.385},{"t":"intercept","s":191.385,"e":192.023},{"t":"everything","s":192.023,"e":192.733},{"t":"else.","s":192.733,"e":193.123}]},{"id":"s1-6-s2","start":193.263,"end":200.281,"words":[{"t":"And","s":193.263,"e":193.482},{"t":"if","s":193.482,"e":193.628},{"t":"a","s":193.628,"e":193.737},{"t":"human","s":193.737,"e":194.102},{"t":"might","s":194.102,"e":194.467},{"t":"take","s":194.467,"e":194.759},{"t":"hours","s":194.759,"e":195.123},{"t":"to","s":195.123,"e":195.269},{"t":"approve,","s":195.269,"e":195.94},{"t":"return","s":195.94,"e":196.378},{"t":"defer","s":196.378,"e":196.743},{"t":"from","s":196.743,"e":197.035},{"t":"Pre","s":197.035,"e":197.253},{"t":"Tool","s":197.253,"e":197.545},{"t":"Use","s":197.545,"e":197.764},{"t":"so","s":197.764,"e":197.91},{"t":"your","s":197.91,"e":198.202},{"t":"worker","s":198.202,"e":198.64},{"t":"can","s":198.64,"e":198.858},{"t":"exit","s":198.858,"e":199.15},{"t":"and","s":199.15,"e":199.369},{"t":"resume","s":199.369,"e":199.807},{"t":"later.","s":199.807,"e":200.281}]}]},{"id":"s2-1","section":"Sessions, Checkpointing, Resumability, and Model Version Continuity","start":200.981,"end":223.137,"sentences":[{"id":"s2-1-s0","start":200.981,"end":210.325,"words":[{"t":"Long-running","s":200.981,"e":201.783},{"t":"agents","s":201.783,"e":202.22},{"t":"accumulate","s":202.22,"e":202.949},{"t":"state","s":202.949,"e":203.313},{"t":"across","s":203.313,"e":203.751},{"t":"dozens","s":203.751,"e":204.188},{"t":"of","s":204.188,"e":204.334},{"t":"tool","s":204.334,"e":204.625},{"t":"calls,","s":204.625,"e":205.15},{"t":"so","s":205.15,"e":205.296},{"t":"restarting","s":205.296,"e":206.025},{"t":"from","s":206.025,"e":206.316},{"t":"scratch","s":206.316,"e":206.826},{"t":"after","s":206.826,"e":207.191},{"t":"a","s":207.191,"e":207.3},{"t":"crash","s":207.3,"e":207.665},{"t":"or","s":207.665,"e":207.81},{"t":"timeout","s":207.81,"e":208.321},{"t":"is","s":208.321,"e":208.466},{"t":"unacceptable","s":208.466,"e":209.341},{"t":"in","s":209.341,"e":209.487},{"t":"production.","s":209.487,"e":210.325}]},{"id":"s2-1-s1","start":210.465,"end":223.137,"words":[{"t":"Durable","s":210.465,"e":210.958},{"t":"execution","s":210.958,"e":211.592},{"t":"pairs","s":211.592,"e":211.944},{"t":"deterministic","s":211.944,"e":212.86},{"t":"infrastructure\u2014persisted","s":212.86,"e":214.48},{"t":"sessions,","s":214.48,"e":215.199},{"t":"file","s":215.199,"e":215.48},{"t":"checkpoints,","s":215.48,"e":216.41},{"t":"and","s":216.41,"e":216.621},{"t":"bounded","s":216.621,"e":217.114},{"t":"retries\u2014with","s":217.114,"e":217.889},{"t":"Claude's","s":217.889,"e":218.382},{"t":"own","s":218.382,"e":218.594},{"t":"adaptability","s":218.594,"e":219.439},{"t":"when","s":219.439,"e":219.721},{"t":"you","s":219.721,"e":219.932},{"t":"surface","s":219.932,"e":220.425},{"t":"structured","s":220.425,"e":221.129},{"t":"tool","s":221.129,"e":221.411},{"t":"failures","s":221.411,"e":221.975},{"t":"back","s":221.975,"e":222.257},{"t":"into","s":222.257,"e":222.538},{"t":"the","s":222.538,"e":222.75},{"t":"loop.","s":222.75,"e":223.137}]}]},{"id":"s2-2","section":"Sessions, Checkpointing, Resumability, and Model Version Continuity","start":223.497,"end":252.653,"sentences":[{"id":"s2-2-s0","start":223.497,"end":226.719,"words":[{"t":"Session","s":223.497,"e":223.944},{"t":"persistence","s":223.944,"e":224.645},{"t":"depends","s":224.645,"e":225.092},{"t":"on","s":225.092,"e":225.22},{"t":"your","s":225.22,"e":225.475},{"t":"deployment","s":225.475,"e":226.113},{"t":"topology.","s":226.113,"e":226.719}]},{"id":"s2-2-s1","start":226.859,"end":234.581,"words":[{"t":"On","s":226.859,"e":227.027},{"t":"one","s":227.027,"e":227.278},{"t":"host,","s":227.278,"e":227.798},{"t":"the","s":227.798,"e":228.05},{"t":"Agent","s":228.05,"e":228.469},{"t":"SDK","s":228.469,"e":228.72},{"t":"writes","s":228.72,"e":229.223},{"t":"local","s":229.223,"e":229.643},{"t":"JSONL","s":229.643,"e":230.062},{"t":"transcripts","s":230.062,"e":230.984},{"t":"you","s":230.984,"e":231.236},{"t":"can","s":231.236,"e":231.487},{"t":"continue,","s":231.487,"e":232.342},{"t":"resume","s":232.342,"e":232.845},{"t":"by","s":232.845,"e":233.013},{"t":"session","s":233.013,"e":233.6},{"t":"ID,","s":233.6,"e":233.952},{"t":"or","s":233.952,"e":234.12},{"t":"fork.","s":234.12,"e":234.581}]},{"id":"s2-2-s2","start":234.721,"end":243.831,"words":[{"t":"Across","s":234.721,"e":235.136},{"t":"serverless","s":235.136,"e":235.829},{"t":"or","s":235.829,"e":235.967},{"t":"autoscaled","s":235.967,"e":236.659},{"t":"workers,","s":236.659,"e":237.296},{"t":"implement","s":237.296,"e":237.919},{"t":"the","s":237.919,"e":238.127},{"t":"Session","s":238.127,"e":238.611},{"t":"Store","s":238.611,"e":238.958},{"t":"adapter","s":238.958,"e":239.442},{"t":"with","s":239.442,"e":239.719},{"t":"append,","s":239.719,"e":240.287},{"t":"load,","s":240.287,"e":240.716},{"t":"and","s":240.716,"e":240.924},{"t":"list","s":240.924,"e":241.2},{"t":"subkeys","s":241.2,"e":241.685},{"t":"so","s":241.685,"e":241.823},{"t":"any","s":241.823,"e":242.031},{"t":"replica","s":242.031,"e":242.516},{"t":"can","s":242.516,"e":242.723},{"t":"resume","s":242.723,"e":243.139},{"t":"a","s":243.139,"e":243.243},{"t":"session.","s":243.243,"e":243.831}]},{"id":"s2-2-s3","start":243.971,"end":252.653,"words":[{"t":"Managed","s":243.971,"e":244.487},{"t":"Agents","s":244.487,"e":244.93},{"t":"persists","s":244.93,"e":245.52},{"t":"sessions","s":245.52,"e":246.11},{"t":"server-side","s":246.11,"e":246.848},{"t":"automatically,","s":246.848,"e":247.969},{"t":"but","s":247.969,"e":248.19},{"t":"remember","s":248.19,"e":248.78},{"t":"it","s":248.78,"e":248.928},{"t":"is","s":248.928,"e":249.075},{"t":"not","s":249.075,"e":249.297},{"t":"Zero","s":249.297,"e":249.592},{"t":"Data","s":249.592,"e":249.887},{"t":"Retention","s":249.887,"e":250.551},{"t":"eligible","s":250.551,"e":251.141},{"t":"unless","s":251.141,"e":251.583},{"t":"you","s":251.583,"e":251.805},{"t":"self-host","s":251.805,"e":252.395},{"t":"it.","s":252.395,"e":252.653}]}]},{"id":"s2-3","section":"Sessions, Checkpointing, Resumability, and Model Version Continuity","start":253.013,"end":277.528,"sentences":[{"id":"s2-3-s0","start":253.013,"end":265.685,"words":[{"t":"To","s":253.013,"e":253.185},{"t":"roll","s":253.185,"e":253.53},{"t":"back","s":253.53,"e":253.874},{"t":"risky","s":253.874,"e":254.304},{"t":"file","s":254.304,"e":254.649},{"t":"mutations","s":254.649,"e":255.423},{"t":"in","s":255.423,"e":255.596},{"t":"the","s":255.596,"e":255.854},{"t":"Agent","s":255.854,"e":256.284},{"t":"SDK,","s":256.284,"e":256.732},{"t":"enable","s":256.732,"e":257.248},{"t":"file","s":257.248,"e":257.593},{"t":"checkpointing","s":257.593,"e":258.712},{"t":"and","s":258.712,"e":258.97},{"t":"pass","s":258.97,"e":259.315},{"t":"replay","s":259.315,"e":259.831},{"t":"user","s":259.831,"e":260.175},{"t":"messages","s":260.175,"e":260.864},{"t":"in","s":260.864,"e":261.036},{"t":"extra","s":261.036,"e":261.467},{"t":"args","s":261.467,"e":261.811},{"t":"so","s":261.811,"e":261.983},{"t":"turn-start","s":261.983,"e":262.758},{"t":"user","s":262.758,"e":263.102},{"t":"messages","s":263.102,"e":263.791},{"t":"carry","s":263.791,"e":264.222},{"t":"a","s":264.222,"e":264.351},{"t":"checkpoint","s":264.351,"e":265.212},{"t":"UUID.","s":265.212,"e":265.685}]},{"id":"s2-3-s1","start":265.825,"end":268.919,"words":[{"t":"Capture","s":265.825,"e":266.403},{"t":"that","s":266.403,"e":266.733},{"t":"UUID","s":266.733,"e":267.063},{"t":"alongside","s":267.063,"e":267.805},{"t":"the","s":267.805,"e":268.053},{"t":"session","s":268.053,"e":268.63},{"t":"ID.","s":268.63,"e":268.919}]},{"id":"s2-3-s2","start":269.059,"end":277.528,"words":[{"t":"If","s":269.059,"e":269.204},{"t":"validation","s":269.204,"e":269.93},{"t":"fails","s":269.93,"e":270.293},{"t":"later,","s":270.293,"e":270.815},{"t":"resume","s":270.815,"e":271.251},{"t":"the","s":271.251,"e":271.468},{"t":"session","s":271.468,"e":271.976},{"t":"with","s":271.976,"e":272.267},{"t":"an","s":272.267,"e":272.412},{"t":"empty","s":272.412,"e":272.775},{"t":"prompt","s":272.775,"e":273.21},{"t":"and","s":273.21,"e":273.428},{"t":"call","s":273.428,"e":273.718},{"t":"rewind","s":273.718,"e":274.153},{"t":"files","s":274.153,"e":274.516},{"t":"to","s":274.516,"e":274.661},{"t":"restore","s":274.661,"e":275.169},{"t":"tracked","s":275.169,"e":275.677},{"t":"files","s":275.677,"e":276.04},{"t":"to","s":276.04,"e":276.185},{"t":"that","s":276.185,"e":276.476},{"t":"exact","s":276.476,"e":276.839},{"t":"snapshot.","s":276.839,"e":277.528}]}]},{"id":"s2-4","section":"Sessions, Checkpointing, Resumability, and Model Version Continuity","start":277.888,"end":301.912,"sentences":[{"id":"s2-4-s0","start":277.888,"end":289.216,"words":[{"t":"This","s":277.888,"e":278.177},{"t":"distinction","s":278.177,"e":278.973},{"t":"is","s":278.973,"e":279.118},{"t":"a","s":279.118,"e":279.226},{"t":"favorite","s":279.226,"e":279.805},{"t":"exam","s":279.805,"e":280.094},{"t":"trap:","s":280.094,"e":280.543},{"t":"sessions","s":280.543,"e":281.121},{"t":"persist","s":281.121,"e":281.628},{"t":"conversation","s":281.628,"e":282.496},{"t":"history,","s":282.496,"e":283.161},{"t":"not","s":283.161,"e":283.378},{"t":"disk","s":283.378,"e":283.668},{"t":"state,","s":283.668,"e":284.189},{"t":"while","s":284.189,"e":284.55},{"t":"rewind","s":284.55,"e":284.984},{"t":"files","s":284.984,"e":285.346},{"t":"restores","s":285.346,"e":285.925},{"t":"disk","s":285.925,"e":286.214},{"t":"state","s":286.214,"e":286.576},{"t":"without","s":286.576,"e":287.082},{"t":"rewinding","s":287.082,"e":287.733},{"t":"conversation","s":287.733,"e":288.601},{"t":"history.","s":288.601,"e":289.216}]},{"id":"s2-4-s1","start":289.356,"end":296.055,"words":[{"t":"Even","s":289.356,"e":289.626},{"t":"more","s":289.626,"e":289.897},{"t":"importantly,","s":289.897,"e":290.789},{"t":"file","s":290.789,"e":291.059},{"t":"checkpointing","s":291.059,"e":291.938},{"t":"only","s":291.938,"e":292.209},{"t":"tracks","s":292.209,"e":292.614},{"t":"Write,","s":292.614,"e":293.101},{"t":"Edit,","s":293.101,"e":293.52},{"t":"and","s":293.52,"e":293.723},{"t":"Notebook","s":293.723,"e":294.264},{"t":"Edit","s":294.264,"e":294.534},{"t":"in","s":294.534,"e":294.669},{"t":"the","s":294.669,"e":294.872},{"t":"main","s":294.872,"e":295.142},{"t":"conversation.","s":295.142,"e":296.055}]},{"id":"s2-4-s2","start":296.195,"end":301.912,"words":[{"t":"It","s":296.195,"e":296.33},{"t":"will","s":296.33,"e":296.599},{"t":"not","s":296.599,"e":296.801},{"t":"undo","s":296.801,"e":297.07},{"t":"Bash","s":297.07,"e":297.34},{"t":"commands","s":297.34,"e":297.878},{"t":"like","s":297.878,"e":298.148},{"t":"sed","s":298.148,"e":298.35},{"t":"in","s":298.35,"e":298.484},{"t":"place,","s":298.484,"e":298.969},{"t":"it","s":298.969,"e":299.104},{"t":"ignores","s":299.104,"e":299.575},{"t":"subagent","s":299.575,"e":300.114},{"t":"edits,","s":300.114,"e":300.599},{"t":"and","s":300.599,"e":300.801},{"t":"it","s":300.801,"e":300.936},{"t":"skips","s":300.936,"e":301.272},{"t":"symlinks.","s":301.272,"e":301.912}]}]},{"id":"s2-5","section":"Sessions, Checkpointing, Resumability, and Model Version Continuity","start":302.272,"end":326.147,"sentences":[{"id":"s2-5-s0","start":302.272,"end":307.328,"words":[{"t":"Durable","s":302.272,"e":302.767},{"t":"agents","s":302.767,"e":303.191},{"t":"must","s":303.191,"e":303.474},{"t":"also","s":303.474,"e":303.757},{"t":"survive","s":303.757,"e":304.252},{"t":"model","s":304.252,"e":304.606},{"t":"version","s":304.606,"e":305.101},{"t":"upgrades","s":305.101,"e":305.666},{"t":"and","s":305.666,"e":305.878},{"t":"fallbacks","s":305.878,"e":306.515},{"t":"mid-session.","s":306.515,"e":307.328}]},{"id":"s2-5-s1","start":307.468,"end":318.689,"words":[{"t":"Always","s":307.468,"e":307.893},{"t":"keep","s":307.893,"e":308.176},{"t":"sending","s":308.176,"e":308.672},{"t":"the","s":308.672,"e":308.885},{"t":"full","s":308.885,"e":309.168},{"t":"unmodified","s":309.168,"e":309.877},{"t":"history:","s":309.877,"e":310.528},{"t":"if","s":310.528,"e":310.67},{"t":"a","s":310.67,"e":310.776},{"t":"fallback","s":310.776,"e":311.343},{"t":"model","s":311.343,"e":311.697},{"t":"cannot","s":311.697,"e":312.122},{"t":"read","s":312.122,"e":312.406},{"t":"prior","s":312.406,"e":312.76},{"t":"thinking","s":312.76,"e":313.326},{"t":"blocks,","s":313.326,"e":313.907},{"t":"the","s":313.907,"e":314.12},{"t":"API","s":314.12,"e":314.332},{"t":"drops","s":314.332,"e":314.687},{"t":"them","s":314.687,"e":314.97},{"t":"silently","s":314.97,"e":315.537},{"t":"for","s":315.537,"e":315.749},{"t":"that","s":315.749,"e":316.033},{"t":"turn","s":316.033,"e":316.316},{"t":"and","s":316.316,"e":316.528},{"t":"restores","s":316.528,"e":317.095},{"t":"them","s":317.095,"e":317.378},{"t":"when","s":317.378,"e":317.662},{"t":"you","s":317.662,"e":317.874},{"t":"switch","s":317.874,"e":318.299},{"t":"back.","s":318.299,"e":318.689}]},{"id":"s2-5-s2","start":318.829,"end":326.147,"words":[{"t":"Just","s":318.829,"e":319.095},{"t":"remember","s":319.095,"e":319.626},{"t":"to","s":319.626,"e":319.759},{"t":"replace","s":319.759,"e":320.224},{"t":"thinking","s":320.224,"e":320.755},{"t":"type","s":320.755,"e":321.02},{"t":"enabled","s":321.02,"e":321.485},{"t":"with","s":321.485,"e":321.751},{"t":"adaptive","s":321.751,"e":322.282},{"t":"on","s":322.282,"e":322.415},{"t":"preserved-thinking","s":322.415,"e":323.544},{"t":"models,","s":323.544,"e":324.088},{"t":"or","s":324.088,"e":324.221},{"t":"you","s":324.221,"e":324.42},{"t":"will","s":324.42,"e":324.686},{"t":"hit","s":324.686,"e":324.885},{"t":"a","s":324.885,"e":324.985},{"t":"four","s":324.985,"e":325.251},{"t":"hundred","s":325.251,"e":325.715},{"t":"error.","s":325.715,"e":326.147}]}]},{"id":"s3-1","section":"Evolving Between Workflows and Agents, and Selecting the Right Harness","start":326.847,"end":353.613,"sentences":[{"id":"s3-1-s0","start":326.847,"end":330.559,"words":[{"t":"Anthropic","s":326.847,"e":327.454},{"t":"draws","s":327.454,"e":327.792},{"t":"a","s":327.792,"e":327.893},{"t":"sharp","s":327.893,"e":328.231},{"t":"boundary","s":328.231,"e":328.77},{"t":"between","s":328.77,"e":329.243},{"t":"workflows","s":329.243,"e":329.85},{"t":"and","s":329.85,"e":330.053},{"t":"agents.","s":330.053,"e":330.559}]},{"id":"s3-1-s1","start":330.699,"end":338.016,"words":[{"t":"Workflows","s":330.699,"e":331.303},{"t":"orchestrate","s":331.303,"e":332.04},{"t":"Claude","s":332.04,"e":332.443},{"t":"along","s":332.443,"e":332.778},{"t":"predefined","s":332.778,"e":333.449},{"t":"code","s":333.449,"e":333.717},{"t":"paths,","s":333.717,"e":334.2},{"t":"giving","s":334.2,"e":334.602},{"t":"you","s":334.602,"e":334.803},{"t":"predictable","s":334.803,"e":335.541},{"t":"latency,","s":335.541,"e":336.158},{"t":"lower","s":336.158,"e":336.494},{"t":"cost,","s":336.494,"e":336.909},{"t":"and","s":336.909,"e":337.111},{"t":"tight","s":337.111,"e":337.446},{"t":"control.","s":337.446,"e":338.016}]},{"id":"s3-1-s2","start":338.156,"end":342.337,"words":[{"t":"Agents","s":338.156,"e":338.551},{"t":"let","s":338.551,"e":338.749},{"t":"Claude","s":338.749,"e":339.144},{"t":"drive","s":339.144,"e":339.473},{"t":"its","s":339.473,"e":339.67},{"t":"own","s":339.67,"e":339.868},{"t":"tool","s":339.868,"e":340.131},{"t":"loop","s":340.131,"e":340.395},{"t":"from","s":340.395,"e":340.658},{"t":"environmental","s":340.658,"e":341.514},{"t":"ground","s":341.514,"e":341.909},{"t":"truth.","s":341.909,"e":342.337}]},{"id":"s3-1-s3","start":342.477,"end":353.613,"words":[{"t":"As","s":342.477,"e":342.626},{"t":"a","s":342.626,"e":342.737},{"t":"staff","s":342.737,"e":343.109},{"t":"engineer,","s":343.109,"e":343.868},{"t":"you","s":343.868,"e":344.091},{"t":"start","s":344.091,"e":344.463},{"t":"with","s":344.463,"e":344.761},{"t":"the","s":344.761,"e":344.984},{"t":"simplest","s":344.984,"e":345.579},{"t":"augmented","s":345.579,"e":346.249},{"t":"LLM","s":346.249,"e":346.472},{"t":"or","s":346.472,"e":346.62},{"t":"workflow","s":346.62,"e":347.216},{"t":"and","s":347.216,"e":347.439},{"t":"only","s":347.439,"e":347.736},{"t":"pay","s":347.736,"e":347.959},{"t":"the","s":347.959,"e":348.183},{"t":"autonomy","s":348.183,"e":348.778},{"t":"tax","s":348.778,"e":349.001},{"t":"when","s":349.001,"e":349.298},{"t":"production","s":349.298,"e":350.042},{"t":"quality","s":350.042,"e":350.563},{"t":"data","s":350.563,"e":350.861},{"t":"proves","s":350.861,"e":351.307},{"t":"a","s":351.307,"e":351.419},{"t":"fixed","s":351.419,"e":351.79},{"t":"path","s":351.79,"e":352.088},{"t":"cannot","s":352.088,"e":352.534},{"t":"handle","s":352.534,"e":352.981},{"t":"the","s":352.981,"e":353.204},{"t":"task.","s":353.204,"e":353.613}]}]},{"id":"s3-2","section":"Evolving Between Workflows and Agents, and Selecting the Right Harness","start":353.973,"end":379.579,"sentences":[{"id":"s3-2-s0","start":353.973,"end":359.861,"words":[{"t":"Before","s":353.973,"e":354.376},{"t":"building","s":354.376,"e":354.913},{"t":"an","s":354.913,"e":355.047},{"t":"open-ended","s":355.047,"e":355.651},{"t":"agent,","s":355.651,"e":356.135},{"t":"check","s":356.135,"e":356.471},{"t":"if","s":356.471,"e":356.605},{"t":"one","s":356.605,"e":356.806},{"t":"of","s":356.806,"e":356.94},{"t":"five","s":356.94,"e":357.209},{"t":"compositional","s":357.209,"e":358.082},{"t":"workflows","s":358.082,"e":358.686},{"t":"solves","s":358.686,"e":359.089},{"t":"the","s":359.089,"e":359.29},{"t":"problem.","s":359.29,"e":359.861}]},{"id":"s3-2-s1","start":360.001,"end":363.521,"words":[{"t":"Prompt","s":360.001,"e":360.389},{"t":"chaining","s":360.389,"e":360.905},{"t":"adds","s":360.905,"e":361.164},{"t":"deterministic","s":361.164,"e":362.003},{"t":"gates","s":362.003,"e":362.326},{"t":"between","s":362.326,"e":362.778},{"t":"fixed","s":362.778,"e":363.101},{"t":"steps.","s":363.101,"e":363.521}]},{"id":"s3-2-s2","start":363.661,"end":366.691,"words":[{"t":"Routing","s":363.661,"e":364.127},{"t":"separates","s":364.127,"e":364.726},{"t":"distinct","s":364.726,"e":365.259},{"t":"intents","s":365.259,"e":365.725},{"t":"and","s":365.725,"e":365.925},{"t":"model","s":365.925,"e":366.258},{"t":"tiers.","s":366.258,"e":366.691}]},{"id":"s3-2-s3","start":366.831,"end":371.055,"words":[{"t":"Parallelization","s":366.831,"e":367.861},{"t":"handles","s":367.861,"e":368.342},{"t":"independent","s":368.342,"e":369.098},{"t":"sectioning","s":369.098,"e":369.784},{"t":"or","s":369.784,"e":369.922},{"t":"consensus","s":369.922,"e":370.54},{"t":"voting.","s":370.54,"e":371.055}]},{"id":"s3-2-s4","start":371.195,"end":379.579,"words":[{"t":"Orchestrator-workers","s":371.195,"e":372.531},{"t":"dynamically","s":372.531,"e":373.305},{"t":"breaks","s":373.305,"e":373.727},{"t":"down","s":373.727,"e":374.008},{"t":"unpredictable","s":374.008,"e":374.923},{"t":"subtasks,","s":374.923,"e":375.64},{"t":"and","s":375.64,"e":375.851},{"t":"evaluator-optimizer","s":375.851,"e":377.117},{"t":"refines","s":377.117,"e":377.61},{"t":"outputs","s":377.61,"e":378.102},{"t":"against","s":378.102,"e":378.594},{"t":"a","s":378.594,"e":378.7},{"t":"clear","s":378.7,"e":379.051},{"t":"rubric.","s":379.051,"e":379.579}]}]},{"id":"s3-3","section":"Evolving Between Workflows and Agents, and Selecting the Right Harness","start":379.939,"end":408.753,"sentences":[{"id":"s3-3-s0","start":379.939,"end":382.755,"words":[{"t":"Choosing","s":379.939,"e":380.418},{"t":"the","s":380.418,"e":380.598},{"t":"right","s":380.598,"e":380.898},{"t":"harness","s":380.898,"e":381.317},{"t":"is","s":381.317,"e":381.437},{"t":"a","s":381.437,"e":381.527},{"t":"core","s":381.527,"e":381.766},{"t":"scaling","s":381.766,"e":382.186},{"t":"decision.","s":382.186,"e":382.755}]},{"id":"s3-3-s1","start":382.895,"end":391.855,"words":[{"t":"Use","s":382.895,"e":383.131},{"t":"the","s":383.131,"e":383.367},{"t":"Messages","s":383.367,"e":383.996},{"t":"API","s":383.996,"e":384.232},{"t":"when","s":384.232,"e":384.547},{"t":"you","s":384.547,"e":384.783},{"t":"want","s":384.783,"e":385.098},{"t":"full","s":385.098,"e":385.412},{"t":"control","s":385.412,"e":385.963},{"t":"over","s":385.963,"e":386.278},{"t":"custom","s":386.278,"e":386.75},{"t":"workflows,","s":386.75,"e":387.631},{"t":"latency,","s":387.631,"e":388.354},{"t":"or","s":388.354,"e":388.512},{"t":"strict","s":388.512,"e":388.984},{"t":"Zero","s":388.984,"e":389.298},{"t":"Data","s":389.298,"e":389.613},{"t":"Retention","s":389.613,"e":390.321},{"t":"and","s":390.321,"e":390.557},{"t":"HIPAA","s":390.557,"e":390.95},{"t":"compliance.","s":390.95,"e":391.855}]},{"id":"s3-3-s2","start":391.995,"end":399.696,"words":[{"t":"Use","s":391.995,"e":392.215},{"t":"the","s":392.215,"e":392.435},{"t":"Agent","s":392.435,"e":392.803},{"t":"SDK","s":392.803,"e":393.023},{"t":"to","s":393.023,"e":393.17},{"t":"embed","s":393.17,"e":393.537},{"t":"Claude","s":393.537,"e":393.977},{"t":"Code's","s":393.977,"e":394.344},{"t":"proven","s":394.344,"e":394.785},{"t":"loop,","s":394.785,"e":395.24},{"t":"hooks,","s":395.24,"e":395.768},{"t":"and","s":395.768,"e":395.989},{"t":"permissions","s":395.989,"e":396.796},{"t":"inside","s":396.796,"e":397.237},{"t":"your","s":397.237,"e":397.53},{"t":"own","s":397.53,"e":397.751},{"t":"Python","s":397.751,"e":398.191},{"t":"or","s":398.191,"e":398.338},{"t":"TypeScript","s":398.338,"e":399.072},{"t":"service.","s":399.072,"e":399.696}]},{"id":"s3-3-s3","start":399.836,"end":408.753,"words":[{"t":"Choose","s":399.836,"e":400.266},{"t":"Managed","s":400.266,"e":400.767},{"t":"Agents","s":400.767,"e":401.197},{"t":"for","s":401.197,"e":401.412},{"t":"long-running","s":401.412,"e":402.2},{"t":"async","s":402.2,"e":402.558},{"t":"jobs","s":402.558,"e":402.844},{"t":"when","s":402.844,"e":403.131},{"t":"you","s":403.131,"e":403.346},{"t":"want","s":403.346,"e":403.632},{"t":"hosted","s":403.632,"e":404.062},{"t":"sandboxes","s":404.062,"e":404.706},{"t":"and","s":404.706,"e":404.921},{"t":"stateful","s":404.921,"e":405.494},{"t":"sessions\u2014keeping","s":405.494,"e":406.569},{"t":"its","s":406.569,"e":406.783},{"t":"compliance","s":406.783,"e":407.5},{"t":"boundaries","s":407.5,"e":408.216},{"t":"in","s":408.216,"e":408.359},{"t":"mind.","s":408.359,"e":408.753}]}]},{"id":"s3-4","section":"Evolving Between Workflows and Agents, and Selecting the Right Harness","start":409.113,"end":436.691,"sentences":[{"id":"s3-4-s0","start":409.113,"end":415.492,"words":[{"t":"When","s":409.113,"e":409.369},{"t":"setting","s":409.369,"e":409.817},{"t":"team","s":409.817,"e":410.073},{"t":"standards,","s":410.073,"e":410.789},{"t":"resist","s":410.789,"e":411.173},{"t":"heavy","s":411.173,"e":411.493},{"t":"third-party","s":411.493,"e":412.133},{"t":"frameworks","s":412.133,"e":412.773},{"t":"that","s":412.773,"e":413.029},{"t":"hide","s":413.029,"e":413.285},{"t":"raw","s":413.285,"e":413.477},{"t":"prompts","s":413.477,"e":413.924},{"t":"and","s":413.924,"e":414.116},{"t":"break","s":414.116,"e":414.436},{"t":"cache","s":414.436,"e":414.756},{"t":"visibility.","s":414.756,"e":415.492}]},{"id":"s3-4-s1","start":415.632,"end":418.555,"words":[{"t":"Instead,","s":415.632,"e":416.234},{"t":"invest","s":416.234,"e":416.626},{"t":"in","s":416.626,"e":416.757},{"t":"your","s":416.757,"e":417.018},{"t":"Agent-Computer","s":417.018,"e":417.868},{"t":"Interface.","s":417.868,"e":418.555}]},{"id":"s3-4-s2","start":418.695,"end":427.484,"words":[{"t":"Keep","s":418.695,"e":418.986},{"t":"tool","s":418.986,"e":419.277},{"t":"sets","s":419.277,"e":419.567},{"t":"minimal","s":419.567,"e":420.076},{"t":"and","s":420.076,"e":420.294},{"t":"non-overlapping,","s":420.294,"e":421.472},{"t":"poka-yoke","s":421.472,"e":422.054},{"t":"parameters","s":422.054,"e":422.781},{"t":"like","s":422.781,"e":423.071},{"t":"requiring","s":423.071,"e":423.726},{"t":"absolute","s":423.726,"e":424.307},{"t":"file","s":424.307,"e":424.598},{"t":"paths,","s":424.598,"e":425.121},{"t":"and","s":425.121,"e":425.339},{"t":"avoid","s":425.339,"e":425.703},{"t":"awkward","s":425.703,"e":426.212},{"t":"escaping","s":426.212,"e":426.793},{"t":"overhead.","s":426.793,"e":427.484}]},{"id":"s3-4-s3","start":427.624,"end":436.691,"words":[{"t":"Anthropic","s":427.624,"e":428.356},{"t":"even","s":428.356,"e":428.681},{"t":"found","s":428.681,"e":429.088},{"t":"that","s":429.088,"e":429.413},{"t":"having","s":429.413,"e":429.901},{"t":"an","s":429.901,"e":430.064},{"t":"agent","s":430.064,"e":430.47},{"t":"test","s":430.47,"e":430.795},{"t":"and","s":430.795,"e":431.039},{"t":"rewrite","s":431.039,"e":431.609},{"t":"unclear","s":431.609,"e":432.178},{"t":"MCP","s":432.178,"e":432.422},{"t":"tool","s":432.422,"e":432.747},{"t":"descriptions","s":432.747,"e":433.723},{"t":"cut","s":433.723,"e":433.967},{"t":"task","s":433.967,"e":434.292},{"t":"completion","s":434.292,"e":435.105},{"t":"time","s":435.105,"e":435.431},{"t":"by","s":435.431,"e":435.593},{"t":"forty","s":435.593,"e":436.0},{"t":"percent.","s":436.0,"e":436.691}]}]},{"id":"s3-5","section":"Evolving Between Workflows and Agents, and Selecting the Right Harness","start":437.051,"end":459.868,"sentences":[{"id":"s3-5-s0","start":437.051,"end":441.296,"words":[{"t":"Do","s":437.051,"e":437.191},{"t":"not","s":437.191,"e":437.402},{"t":"assume","s":437.402,"e":437.823},{"t":"architecture","s":437.823,"e":438.665},{"t":"evolution","s":438.665,"e":439.296},{"t":"only","s":439.296,"e":439.577},{"t":"moves","s":439.577,"e":439.928},{"t":"toward","s":439.928,"e":440.349},{"t":"more","s":440.349,"e":440.629},{"t":"autonomy.","s":440.629,"e":441.296}]},{"id":"s3-5-s1","start":441.436,"end":459.868,"words":[{"t":"If","s":441.436,"e":441.577},{"t":"production","s":441.577,"e":442.282},{"t":"traces","s":442.282,"e":442.705},{"t":"show","s":442.705,"e":442.987},{"t":"an","s":442.987,"e":443.128},{"t":"expensive","s":443.128,"e":443.763},{"t":"autonomous","s":443.763,"e":444.468},{"t":"agent","s":444.468,"e":444.821},{"t":"executing","s":444.821,"e":445.455},{"t":"the","s":445.455,"e":445.667},{"t":"exact","s":445.667,"e":446.019},{"t":"same","s":446.019,"e":446.301},{"t":"three","s":446.301,"e":446.654},{"t":"tool","s":446.654,"e":446.936},{"t":"calls","s":446.936,"e":447.289},{"t":"ninety-five","s":447.289,"e":447.994},{"t":"percent","s":447.994,"e":448.487},{"t":"of","s":448.487,"e":448.628},{"t":"the","s":448.628,"e":448.84},{"t":"time,","s":448.84,"e":449.277},{"t":"the","s":449.277,"e":449.489},{"t":"staff-level","s":449.489,"e":450.194},{"t":"move","s":450.194,"e":450.476},{"t":"is","s":450.476,"e":450.617},{"t":"to","s":450.617,"e":450.758},{"t":"de-escalate","s":450.758,"e":451.463},{"t":"it","s":451.463,"e":451.604},{"t":"into","s":451.604,"e":451.886},{"t":"a","s":451.886,"e":451.992},{"t":"deterministic","s":451.992,"e":452.908},{"t":"routing","s":452.908,"e":453.402},{"t":"and","s":453.402,"e":453.614},{"t":"prompt-chaining","s":453.614,"e":454.601},{"t":"workflow,","s":454.601,"e":455.32},{"t":"reserving","s":455.32,"e":455.955},{"t":"the","s":455.955,"e":456.166},{"t":"agent","s":456.166,"e":456.519},{"t":"loop","s":456.519,"e":456.801},{"t":"strictly","s":456.801,"e":457.365},{"t":"for","s":457.365,"e":457.576},{"t":"the","s":457.576,"e":457.788},{"t":"unpredictable","s":457.788,"e":458.705},{"t":"five","s":458.705,"e":458.987},{"t":"percent","s":458.987,"e":459.48},{"t":"tail.","s":459.48,"e":459.868}]}]},{"id":"s4-1","section":"Compaction, Context Editing, Persistent Memory, and Tool Context Scaling","start":460.568,"end":483.248,"sentences":[{"id":"s4-1-s0","start":460.568,"end":464.579,"words":[{"t":"Waiting","s":460.568,"e":461.093},{"t":"for","s":461.093,"e":461.318},{"t":"larger","s":461.318,"e":461.768},{"t":"context","s":461.768,"e":462.292},{"t":"windows","s":462.292,"e":462.817},{"t":"does","s":462.817,"e":463.117},{"t":"not","s":463.117,"e":463.342},{"t":"solve","s":463.342,"e":463.717},{"t":"context","s":463.717,"e":464.242},{"t":"rot.","s":464.242,"e":464.579}]},{"id":"s4-1-s1","start":464.719,"end":471.588,"words":[{"t":"Because","s":464.719,"e":465.192},{"t":"transformer","s":465.192,"e":465.935},{"t":"attention","s":465.935,"e":466.543},{"t":"stretches","s":466.543,"e":467.151},{"t":"across","s":467.151,"e":467.556},{"t":"every","s":467.556,"e":467.893},{"t":"token","s":467.893,"e":468.231},{"t":"pair,","s":468.231,"e":468.65},{"t":"recall","s":468.65,"e":469.055},{"t":"degrades","s":469.055,"e":469.596},{"t":"well","s":469.596,"e":469.866},{"t":"before","s":469.866,"e":470.271},{"t":"you","s":470.271,"e":470.474},{"t":"hit","s":470.474,"e":470.676},{"t":"the","s":470.676,"e":470.879},{"t":"hard","s":470.879,"e":471.149},{"t":"limit.","s":471.149,"e":471.588}]},{"id":"s4-1-s2","start":471.728,"end":483.248,"words":[{"t":"Treat","s":471.728,"e":472.096},{"t":"context","s":472.096,"e":472.612},{"t":"as","s":472.612,"e":472.759},{"t":"a","s":472.759,"e":472.87},{"t":"finite","s":472.87,"e":473.312},{"t":"attention","s":473.312,"e":473.975},{"t":"budget:","s":473.975,"e":474.579},{"t":"write","s":474.579,"e":474.947},{"t":"right-altitude","s":474.947,"e":475.904},{"t":"system","s":475.904,"e":476.346},{"t":"prompts,","s":476.346,"e":477.024},{"t":"and","s":477.024,"e":477.245},{"t":"favor","s":477.245,"e":477.613},{"t":"just-in-time","s":477.613,"e":478.35},{"t":"retrieval","s":478.35,"e":479.013},{"t":"where","s":479.013,"e":479.381},{"t":"agents","s":479.381,"e":479.823},{"t":"hold","s":479.823,"e":480.118},{"t":"lightweight","s":480.118,"e":480.928},{"t":"pointers","s":480.928,"e":481.517},{"t":"and","s":481.517,"e":481.738},{"t":"pull","s":481.738,"e":482.033},{"t":"details","s":482.033,"e":482.548},{"t":"on","s":482.548,"e":482.696},{"t":"demand.","s":482.696,"e":483.248}]}]},{"id":"s4-2","section":"Compaction, Context Editing, Persistent Memory, and Tool Context Scaling","start":483.608,"end":514.181,"sentences":[{"id":"s4-2-s0","start":483.608,"end":487.128,"words":[{"t":"When","s":483.608,"e":483.865},{"t":"conversations","s":483.865,"e":484.702},{"t":"grow","s":484.702,"e":484.959},{"t":"long,","s":484.959,"e":485.358},{"t":"you","s":485.358,"e":485.551},{"t":"have","s":485.551,"e":485.809},{"t":"two","s":485.809,"e":486.002},{"t":"server-side","s":486.002,"e":486.645},{"t":"levers.","s":486.645,"e":487.128}]},{"id":"s4-2-s1","start":487.268,"end":502.137,"words":[{"t":"Compaction","s":487.268,"e":488.008},{"t":"summarizes","s":488.008,"e":488.748},{"t":"older","s":488.748,"e":489.118},{"t":"turns\u2014prefer","s":489.118,"e":489.932},{"t":"on-demand","s":489.932,"e":490.525},{"t":"compaction","s":490.525,"e":491.265},{"t":"with","s":491.265,"e":491.561},{"t":"the","s":491.561,"e":491.783},{"t":"compact","s":491.783,"e":492.301},{"t":"twenty","s":492.301,"e":492.745},{"t":"twenty-six","s":492.745,"e":493.411},{"t":"zero","s":493.411,"e":493.707},{"t":"nine","s":493.707,"e":494.003},{"t":"zero","s":494.003,"e":494.299},{"t":"four","s":494.299,"e":494.595},{"t":"beta","s":494.595,"e":494.891},{"t":"header","s":494.891,"e":495.335},{"t":"because","s":495.335,"e":495.853},{"t":"it","s":495.853,"e":496.001},{"t":"runs","s":496.001,"e":496.297},{"t":"in","s":496.297,"e":496.445},{"t":"the","s":496.445,"e":496.668},{"t":"background,","s":496.668,"e":497.57},{"t":"keeps","s":497.57,"e":497.941},{"t":"recent","s":497.941,"e":498.385},{"t":"turns","s":498.385,"e":498.755},{"t":"word","s":498.755,"e":499.051},{"t":"for","s":499.051,"e":499.273},{"t":"word,","s":499.273,"e":499.732},{"t":"and","s":499.732,"e":499.954},{"t":"preserves","s":499.954,"e":500.62},{"t":"their","s":500.62,"e":500.99},{"t":"thinking","s":500.99,"e":501.582},{"t":"blocks.","s":501.582,"e":502.137}]},{"id":"s4-2-s2","start":502.277,"end":514.181,"words":[{"t":"For","s":502.277,"e":502.48},{"t":"lighter","s":502.48,"e":502.954},{"t":"trimming,","s":502.954,"e":503.644},{"t":"server-side","s":503.644,"e":504.321},{"t":"context","s":504.321,"e":504.795},{"t":"editing","s":504.795,"e":505.268},{"t":"clears","s":505.268,"e":505.674},{"t":"stale","s":505.674,"e":506.013},{"t":"tool","s":506.013,"e":506.283},{"t":"results","s":506.283,"e":506.757},{"t":"or","s":506.757,"e":506.892},{"t":"old","s":506.892,"e":507.095},{"t":"thinking","s":507.095,"e":507.637},{"t":"blocks","s":507.637,"e":508.043},{"t":"without","s":508.043,"e":508.517},{"t":"breaking","s":508.517,"e":509.058},{"t":"preserved","s":509.058,"e":509.667},{"t":"thinking,","s":509.667,"e":510.357},{"t":"and","s":510.357,"e":510.56},{"t":"clear","s":510.56,"e":510.899},{"t":"at","s":510.899,"e":511.034},{"t":"least","s":511.034,"e":511.372},{"t":"ensures","s":511.372,"e":511.846},{"t":"prompt","s":511.846,"e":512.252},{"t":"cache","s":512.252,"e":512.591},{"t":"rewrites","s":512.591,"e":513.132},{"t":"stay","s":513.132,"e":513.403},{"t":"economical.","s":513.403,"e":514.181}]}]},{"id":"s4-3","section":"Compaction, Context Editing, Persistent Memory, and Tool Context Scaling","start":514.541,"end":549.509,"sentences":[{"id":"s4-3-s0","start":514.541,"end":518.893,"words":[{"t":"To","s":514.541,"e":514.661},{"t":"persist","s":514.661,"e":515.08},{"t":"knowledge","s":515.08,"e":515.619},{"t":"across","s":515.619,"e":515.978},{"t":"sessions,","s":515.978,"e":516.588},{"t":"pick","s":516.588,"e":516.828},{"t":"the","s":516.828,"e":517.007},{"t":"memory","s":517.007,"e":517.367},{"t":"layer","s":517.367,"e":517.666},{"t":"that","s":517.666,"e":517.905},{"t":"fits","s":517.905,"e":518.145},{"t":"your","s":518.145,"e":518.384},{"t":"runtime.","s":518.384,"e":518.893}]},{"id":"s4-3-s1","start":519.033,"end":530.831,"words":[{"t":"On","s":519.033,"e":519.192},{"t":"the","s":519.192,"e":519.43},{"t":"Messages","s":519.43,"e":520.064},{"t":"API,","s":520.064,"e":520.477},{"t":"the","s":520.477,"e":520.715},{"t":"client-side","s":520.715,"e":521.508},{"t":"memory","s":521.508,"e":521.984},{"t":"tool","s":521.984,"e":522.302},{"t":"is","s":522.302,"e":522.461},{"t":"Zero","s":522.461,"e":522.778},{"t":"Data","s":522.778,"e":523.095},{"t":"Retention","s":523.095,"e":523.809},{"t":"eligible","s":523.809,"e":524.444},{"t":"and","s":524.444,"e":524.682},{"t":"stores","s":524.682,"e":525.158},{"t":"files","s":525.158,"e":525.555},{"t":"under","s":525.555,"e":525.952},{"t":"slash","s":525.952,"e":526.348},{"t":"memories\u2014just","s":526.348,"e":527.3},{"t":"enforce","s":527.3,"e":527.856},{"t":"path","s":527.856,"e":528.173},{"t":"traversal","s":528.173,"e":528.887},{"t":"protection","s":528.887,"e":529.681},{"t":"in","s":529.681,"e":529.839},{"t":"your","s":529.839,"e":530.157},{"t":"handler.","s":530.157,"e":530.831}]},{"id":"s4-3-s2","start":530.971,"end":549.509,"words":[{"t":"In","s":530.971,"e":531.117},{"t":"Managed","s":531.117,"e":531.628},{"t":"Agents,","s":531.628,"e":532.226},{"t":"memory","s":532.226,"e":532.664},{"t":"stores","s":532.664,"e":533.101},{"t":"provide","s":533.101,"e":533.612},{"t":"versioned,","s":533.612,"e":534.429},{"t":"auditable","s":534.429,"e":535.086},{"t":"storage\u2014never","s":535.086,"e":535.961},{"t":"combine","s":535.961,"e":536.472},{"t":"the","s":536.472,"e":536.691},{"t":"agent","s":536.691,"e":537.055},{"t":"memory","s":537.055,"e":537.493},{"t":"and","s":537.493,"e":537.712},{"t":"managed","s":537.712,"e":538.223},{"t":"agents","s":538.223,"e":538.661},{"t":"beta","s":538.661,"e":538.952},{"t":"headers","s":538.952,"e":539.463},{"t":"on","s":539.463,"e":539.609},{"t":"store","s":539.609,"e":539.974},{"t":"calls,","s":539.974,"e":540.499},{"t":"or","s":540.499,"e":540.645},{"t":"you","s":540.645,"e":540.864},{"t":"get","s":540.864,"e":541.083},{"t":"a","s":541.083,"e":541.192},{"t":"four","s":541.192,"e":541.484},{"t":"hundred","s":541.484,"e":541.995},{"t":"error\u2014and","s":541.995,"e":542.578},{"t":"Dreams","s":542.578,"e":543.016},{"t":"asynchronously","s":543.016,"e":544.037},{"t":"deduplicates","s":544.037,"e":544.913},{"t":"memories","s":544.913,"e":545.496},{"t":"across","s":545.496,"e":545.934},{"t":"up","s":545.934,"e":546.08},{"t":"to","s":546.08,"e":546.226},{"t":"one","s":546.226,"e":546.445},{"t":"hundred","s":546.445,"e":546.956},{"t":"sessions","s":546.956,"e":547.539},{"t":"into","s":547.539,"e":547.831},{"t":"a","s":547.831,"e":547.94},{"t":"fresh","s":547.94,"e":548.305},{"t":"reviewable","s":548.305,"e":549.035},{"t":"store.","s":549.035,"e":549.509}]}]},{"id":"s4-4","section":"Compaction, Context Editing, Persistent Memory, and Tool Context Scaling","start":549.869,"end":574.171,"sentences":[{"id":"s4-4-s0","start":549.869,"end":558.808,"words":[{"t":"Editing","s":549.869,"e":550.388},{"t":"the","s":550.388,"e":550.611},{"t":"top-level","s":550.611,"e":551.204},{"t":"system","s":551.204,"e":551.649},{"t":"prompt","s":551.649,"e":552.094},{"t":"or","s":552.094,"e":552.243},{"t":"tools","s":552.243,"e":552.614},{"t":"array","s":552.614,"e":552.985},{"t":"mid-conversation","s":552.985,"e":554.097},{"t":"busts","s":554.097,"e":554.468},{"t":"the","s":554.468,"e":554.691},{"t":"entire","s":554.691,"e":555.136},{"t":"prompt","s":555.136,"e":555.581},{"t":"cache","s":555.581,"e":555.952},{"t":"and","s":555.952,"e":556.175},{"t":"fails","s":556.175,"e":556.545},{"t":"preserved-thinking","s":556.545,"e":557.807},{"t":"prefix","s":557.807,"e":558.252},{"t":"checks.","s":558.252,"e":558.808}]},{"id":"s4-4-s1","start":558.948,"end":570.383,"words":[{"t":"Instead,","s":558.948,"e":559.609},{"t":"declare","s":559.609,"e":560.112},{"t":"your","s":560.112,"e":560.399},{"t":"tool","s":560.399,"e":560.686},{"t":"catalog","s":560.686,"e":561.189},{"t":"upfront","s":561.189,"e":561.692},{"t":"and","s":561.692,"e":561.907},{"t":"append","s":561.907,"e":562.338},{"t":"a","s":562.338,"e":562.446},{"t":"role","s":562.446,"e":562.733},{"t":"system","s":562.733,"e":563.164},{"t":"message","s":563.164,"e":563.667},{"t":"right","s":563.667,"e":564.026},{"t":"where","s":564.026,"e":564.385},{"t":"the","s":564.385,"e":564.601},{"t":"change","s":564.601,"e":565.032},{"t":"applies\u2014using","s":565.032,"e":565.894},{"t":"tool","s":565.894,"e":566.181},{"t":"addition","s":566.181,"e":566.756},{"t":"and","s":566.756,"e":566.971},{"t":"tool","s":566.971,"e":567.258},{"t":"removal","s":567.258,"e":567.761},{"t":"blocks","s":567.761,"e":568.192},{"t":"under","s":568.192,"e":568.551},{"t":"the","s":568.551,"e":568.767},{"t":"inline","s":568.767,"e":569.198},{"t":"tools","s":569.198,"e":569.557},{"t":"beta","s":569.557,"e":569.844},{"t":"header.","s":569.844,"e":570.383}]},{"id":"s4-4-s2","start":570.523,"end":574.171,"words":[{"t":"The","s":570.523,"e":570.713},{"t":"earlier","s":570.713,"e":571.155},{"t":"prefix","s":571.155,"e":571.535},{"t":"stays","s":571.535,"e":571.851},{"t":"byte-identical,","s":571.851,"e":572.812},{"t":"so","s":572.812,"e":572.938},{"t":"your","s":572.938,"e":573.191},{"t":"cache","s":573.191,"e":573.507},{"t":"still","s":573.507,"e":573.823},{"t":"hits.","s":573.823,"e":574.171}]}]},{"id":"s4-5","section":"Compaction, Context Editing, Persistent Memory, and Tool Context Scaling","start":574.531,"end":609.755,"sentences":[{"id":"s4-5-s0","start":574.531,"end":579.331,"words":[{"t":"When","s":574.531,"e":574.785},{"t":"an","s":574.785,"e":574.911},{"t":"agent","s":574.911,"e":575.228},{"t":"connects","s":575.228,"e":575.736},{"t":"to","s":575.736,"e":575.863},{"t":"dozens","s":575.863,"e":576.243},{"t":"or","s":576.243,"e":576.37},{"t":"hundreds","s":576.37,"e":576.877},{"t":"of","s":576.877,"e":577.004},{"t":"tools,","s":577.004,"e":577.46},{"t":"two","s":577.46,"e":577.651},{"t":"techniques","s":577.651,"e":578.285},{"t":"keep","s":578.285,"e":578.538},{"t":"context","s":578.538,"e":578.982},{"t":"lean.","s":578.982,"e":579.331}]},{"id":"s4-5-s1","start":579.471,"end":595.279,"words":[{"t":"Tool","s":579.471,"e":579.791},{"t":"search","s":579.791,"e":580.271},{"t":"marks","s":580.271,"e":580.67},{"t":"definitions","s":580.67,"e":581.55},{"t":"with","s":581.55,"e":581.87},{"t":"defer","s":581.87,"e":582.27},{"t":"loading","s":582.27,"e":582.829},{"t":"set","s":582.829,"e":583.069},{"t":"to","s":583.069,"e":583.229},{"t":"true","s":583.229,"e":583.549},{"t":"and","s":583.549,"e":583.789},{"t":"lets","s":583.789,"e":584.109},{"t":"Claude","s":584.109,"e":584.588},{"t":"discover","s":584.588,"e":585.228},{"t":"only","s":585.228,"e":585.548},{"t":"the","s":585.548,"e":585.788},{"t":"three","s":585.788,"e":586.188},{"t":"to","s":586.188,"e":586.348},{"t":"five","s":586.348,"e":586.667},{"t":"tools","s":586.667,"e":587.067},{"t":"it","s":587.067,"e":587.227},{"t":"needs","s":587.227,"e":587.627},{"t":"via","s":587.627,"e":587.867},{"t":"regex","s":587.867,"e":588.267},{"t":"or","s":588.267,"e":588.426},{"t":"BM25,","s":588.426,"e":588.922},{"t":"cutting","s":588.922,"e":589.482},{"t":"schema","s":589.482,"e":589.962},{"t":"bloat","s":589.962,"e":590.361},{"t":"by","s":590.361,"e":590.521},{"t":"over","s":590.521,"e":590.841},{"t":"eighty-five","s":590.841,"e":591.641},{"t":"percent","s":591.641,"e":592.201},{"t":"while","s":592.201,"e":592.6},{"t":"staying","s":592.6,"e":593.16},{"t":"Zero","s":593.16,"e":593.48},{"t":"Data","s":593.48,"e":593.8},{"t":"Retention","s":593.8,"e":594.519},{"t":"eligible.","s":594.519,"e":595.279}]},{"id":"s4-5-s2","start":595.419,"end":609.755,"words":[{"t":"Programmatic","s":595.419,"e":596.338},{"t":"tool","s":596.338,"e":596.644},{"t":"calling","s":596.644,"e":597.18},{"t":"collapses","s":597.18,"e":597.87},{"t":"repetitive","s":597.87,"e":598.635},{"t":"tool","s":598.635,"e":598.942},{"t":"chains","s":598.942,"e":599.401},{"t":"into","s":599.401,"e":599.708},{"t":"a","s":599.708,"e":599.822},{"t":"single","s":599.822,"e":600.282},{"t":"sandbox","s":600.282,"e":600.818},{"t":"script,","s":600.818,"e":601.446},{"t":"filtering","s":601.446,"e":602.135},{"t":"intermediate","s":602.135,"e":603.054},{"t":"payloads","s":603.054,"e":603.667},{"t":"before","s":603.667,"e":604.126},{"t":"they","s":604.126,"e":604.433},{"t":"ever","s":604.433,"e":604.739},{"t":"enter","s":604.739,"e":605.122},{"t":"context\u2014just","s":605.122,"e":605.964},{"t":"remember","s":605.964,"e":606.577},{"t":"code","s":606.577,"e":606.883},{"t":"execution","s":606.883,"e":607.572},{"t":"containers","s":607.572,"e":608.338},{"t":"are","s":608.338,"e":608.568},{"t":"not","s":608.568,"e":608.798},{"t":"ZDR","s":608.798,"e":609.027},{"t":"eligible.","s":609.027,"e":609.755}]}]},{"id":"s4-6","section":"Compaction, Context Editing, Persistent Memory, and Tool Context Scaling","start":610.115,"end":636.827,"sentences":[{"id":"s4-6-s0","start":610.115,"end":617.304,"words":[{"t":"Here","s":610.115,"e":610.358},{"t":"is","s":610.358,"e":610.479},{"t":"a","s":610.479,"e":610.57},{"t":"subtle","s":610.57,"e":610.935},{"t":"production","s":610.935,"e":611.542},{"t":"trap:","s":611.542,"e":611.918},{"t":"on","s":611.918,"e":612.04},{"t":"preserved-thinking","s":612.04,"e":613.072},{"t":"models,","s":613.072,"e":613.57},{"t":"thinking","s":613.57,"e":614.056},{"t":"blocks","s":614.056,"e":614.42},{"t":"are","s":614.42,"e":614.602},{"t":"cryptographically","s":614.602,"e":615.634},{"t":"tied","s":615.634,"e":615.877},{"t":"to","s":615.877,"e":615.999},{"t":"everything","s":615.999,"e":616.606},{"t":"before","s":616.606,"e":616.97},{"t":"them.","s":616.97,"e":617.304}]},{"id":"s4-6-s1","start":617.444,"end":626.66,"words":[{"t":"If","s":617.444,"e":617.574},{"t":"your","s":617.574,"e":617.833},{"t":"client","s":617.833,"e":618.222},{"t":"code","s":618.222,"e":618.482},{"t":"edits","s":618.482,"e":618.806},{"t":"an","s":618.806,"e":618.936},{"t":"earlier","s":618.936,"e":619.39},{"t":"message,","s":619.39,"e":619.986},{"t":"system","s":619.986,"e":620.375},{"t":"prompt,","s":620.375,"e":620.907},{"t":"or","s":620.907,"e":621.037},{"t":"tool","s":621.037,"e":621.296},{"t":"schema,","s":621.296,"e":621.828},{"t":"you","s":621.828,"e":622.023},{"t":"trigger","s":622.023,"e":622.477},{"t":"a","s":622.477,"e":622.574},{"t":"four","s":622.574,"e":622.834},{"t":"hundred","s":622.834,"e":623.288},{"t":"error","s":623.288,"e":623.612},{"t":"saying","s":623.612,"e":624.001},{"t":"the","s":624.001,"e":624.195},{"t":"block","s":624.195,"e":624.52},{"t":"is","s":624.52,"e":624.649},{"t":"bound","s":624.649,"e":624.974},{"t":"to","s":624.974,"e":625.103},{"t":"a","s":625.103,"e":625.201},{"t":"different","s":625.201,"e":625.784},{"t":"conversation.","s":625.784,"e":626.66}]},{"id":"s4-6-s2","start":626.8,"end":636.827,"words":[{"t":"Always","s":626.8,"e":627.24},{"t":"use","s":627.24,"e":627.46},{"t":"server-side","s":627.46,"e":628.194},{"t":"context","s":628.194,"e":628.707},{"t":"management","s":628.707,"e":629.441},{"t":"or","s":629.441,"e":629.587},{"t":"append-only","s":629.587,"e":630.321},{"t":"system","s":630.321,"e":630.761},{"t":"messages\u2014and","s":630.761,"e":631.568},{"t":"if","s":631.568,"e":631.714},{"t":"you","s":631.714,"e":631.935},{"t":"ever","s":631.935,"e":632.228},{"t":"redact","s":632.228,"e":632.668},{"t":"secrets","s":632.668,"e":633.181},{"t":"from","s":633.181,"e":633.475},{"t":"history,","s":633.475,"e":634.15},{"t":"strip","s":634.15,"e":634.516},{"t":"all","s":634.516,"e":634.737},{"t":"subsequent","s":634.737,"e":635.47},{"t":"thinking","s":635.47,"e":636.057},{"t":"blocks","s":636.057,"e":636.497},{"t":"too.","s":636.497,"e":636.827}]}]}]};
+
+(function() {
+  const audio = document.getElementById('voiceAudio');
+  const playBtn = document.getElementById('playBtn');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const scrub = document.getElementById('scrub');
+  const speedBtn = document.getElementById('speedBtn');
+  const autoScrollBtn = document.getElementById('autoScrollBtn');
+  const themeBtn = document.getElementById('themeBtn');
+  const nowLabel = document.getElementById('nowLabel');
+  const timeLabel = document.getElementById('timeLabel');
+  const progressFill = document.getElementById('progressFill');
+
+  const speeds = [0.85, 1.0, 1.15, 1.25, 1.5, 1.75, 2.0];
+  let speedIdx = 1;
+  let autoScroll = true;
+  let activeSegId = null;
+  let activeSentId = null;
+  let activeWordEl = null;
+  let rafId = null;
+
+  const segMap = new Map();
+  const flatSents = [];
+  TIMELINE.segments.forEach((seg, segIdx) => {
+    segMap.set(seg.id, { ...seg, idx: segIdx });
+    (seg.sentences || []).forEach(sent => {
+      flatSents.push({ ...sent, segId: seg.id, segIdx, section: seg.section });
+    });
+  });
+
+  function fmt(sec) {
+    if (!isFinite(sec) || sec < 0) sec = 0;
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  }
+
+  function setPlayUI(playing) {
+    playBtn.innerHTML = playing ? '&#10074;&#10074; Pause' : '&#9654; Play';
+  }
+
+  function findSentenceAt(t) {
+    // Binary search for fast 60fps lookup
+    let lo = 0, hi = flatSents.length - 1, best = null;
+    while (lo <= hi) {
+      const mid = (lo + hi) >> 1;
+      const s = flatSents[mid];
+      if (t >= s.start && t <= s.end) return s;
+      if (t < s.start) hi = mid - 1;
+      else { best = s; lo = mid + 1; }
+    }
+    return best || flatSents[0] || null;
+  }
+
+  function updateHighlights(t) {
+    const sent = findSentenceAt(t);
+    if (!sent) return;
+
+    // 1. Highlight parent block
+    if (activeSegId !== sent.segId) {
+      document.querySelectorAll('.is-speaking').forEach(el => el.classList.remove('is-speaking'));
+      const segEl = document.querySelector(`[data-seg-id="${sent.segId}"]`);
+      if (segEl) segEl.classList.add('is-speaking');
+      activeSegId = sent.segId;
+      nowLabel.textContent = `${sent.section} (${sent.segIdx + 1}/${TIMELINE.segments.length})`;
+
+      const secEl = segEl ? segEl.closest('.section-block') : null;
+      document.querySelectorAll('.toc-list a').forEach(a => a.classList.remove('active'));
+      if (secEl) {
+        const link = document.querySelector(`.toc-list a[href="#${secEl.id}"]`);
+        if (link) link.classList.add('active');
+      } else {
+        const first = document.querySelector('.toc-list a[href="#top"]');
+        if (first) first.classList.add('active');
+      }
+    }
+
+    // 2. Highlight active sentence
+    if (activeSentId !== sent.id) {
+      document.querySelectorAll('.sent.active-sent').forEach(el => {
+        el.classList.remove('active-sent');
+        el.querySelectorAll('.w').forEach(w => w.classList.remove('w-past', 'w-now', 'w-future'));
+      });
+      const sentEl = document.querySelector(`[data-sent-id="${sent.id}"]`);
+      if (sentEl) {
+        sentEl.classList.add('active-sent');
+        if (autoScroll && !audio.paused) {
+          sentEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+      activeSentId = sent.id;
+      activeWordEl = null;
+    }
+
+    // 3. Karaoke word-by-word highlighting inside active sentence
+    const sentEl = document.querySelector(`[data-sent-id="${sent.id}"]`);
+    if (sentEl) {
+      const wordSpans = sentEl.querySelectorAll('.w');
+      const words = sent.words || [];
+      for (let i = 0; i < words.length && i < wordSpans.length; i++) {
+        const w = words[i];
+        const sp = wordSpans[i];
+        if (t >= w.s && t <= w.e) {
+          if (activeWordEl !== sp) {
+            sp.classList.remove('w-past', 'w-future');
+            sp.classList.add('w-now');
+            activeWordEl = sp;
+          }
+        } else if (t > w.e) {
+          sp.classList.remove('w-now', 'w-future');
+          sp.classList.add('w-past');
+        } else {
+          sp.classList.remove('w-now', 'w-past');
+          sp.classList.add('w-future');
+        }
+      }
+    }
+  }
+
+  function syncUI() {
+    const t = audio.currentTime || 0;
+    const dur = audio.duration || TIMELINE.duration || 1;
+    scrub.max = dur;
+    scrub.value = t;
+    timeLabel.textContent = `${fmt(t)} / ${fmt(dur)}`;
+    progressFill.style.width = `${Math.min(100, (t / dur) * 100)}%`;
+    updateHighlights(t);
+  }
+
+  function tick() {
+    syncUI();
+    if (!audio.paused && !audio.ended) {
+      rafId = requestAnimationFrame(tick);
+    }
+  }
+
+  function jumpToTime(t, autoPlay = true) {
+    audio.currentTime = Math.max(0, t + 0.005);
+    syncUI();
+    if (autoPlay) audio.play().catch(() => {});
+  }
+
+  // Click any sentence to jump directly to that exact sentence!
+  document.querySelectorAll('.sent[data-start]').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      jumpToTime(parseFloat(el.dataset.start), true);
+    });
+  });
+
+  // Click block Play button to jump to start of block
+  document.querySelectorAll('.seg-play-btn[data-jump-seg]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const seg = segMap.get(btn.dataset.jumpSeg);
+      if (seg) jumpToTime(seg.start, true);
+    });
+  });
+
+  playBtn.addEventListener('click', () => {
+    if (audio.paused) audio.play().catch(() => {});
+    else audio.pause();
+  });
+
+  prevBtn.addEventListener('click', () => {
+    const cur = findSentenceAt(audio.currentTime || 0);
+    const segIdx = cur ? Math.max(0, cur.segIdx - 1) : 0;
+    jumpToTime(TIMELINE.segments[segIdx].start, !audio.paused);
+  });
+
+  nextBtn.addEventListener('click', () => {
+    const cur = findSentenceAt(audio.currentTime || 0);
+    const segIdx = cur ? Math.min(TIMELINE.segments.length - 1, cur.segIdx + 1) : 0;
+    jumpToTime(TIMELINE.segments[segIdx].start, !audio.paused);
+  });
+
+  scrub.addEventListener('input', () => {
+    audio.currentTime = parseFloat(scrub.value);
+    syncUI();
+  });
+
+  function applySpeed(idx) {
+    speedIdx = ((idx % speeds.length) + speeds.length) % speeds.length;
+    const rate = speeds[speedIdx];
+    audio.preservesPitch = true;
+    audio.webkitPreservesPitch = true;
+    audio.defaultPlaybackRate = rate;
+    audio.playbackRate = rate;
+    speedBtn.textContent = `${rate}x`;
+    try { localStorage.setItem('ccdvp-speed', String(speedIdx)); } catch {}
+    syncUI();
+  }
+
+  speedBtn.addEventListener('click', () => applySpeed(speedIdx + 1));
+  try {
+    const savedSpeed = parseInt(localStorage.getItem('ccdvp-speed'), 10);
+    if (!isNaN(savedSpeed) && savedSpeed >= 0 && savedSpeed < speeds.length) {
+      applySpeed(savedSpeed);
+    } else {
+      applySpeed(1);
+    }
+  } catch { applySpeed(1); }
+
+  autoScrollBtn.addEventListener('click', () => {
+    autoScroll = !autoScroll;
+    autoScrollBtn.classList.toggle('active', autoScroll);
+    autoScrollBtn.textContent = autoScroll ? 'Auto-Scroll: ON' : 'Auto-Scroll: OFF';
+  });
+
+  themeBtn.addEventListener('click', () => {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    themeBtn.textContent = isDark ? 'Dark' : 'Light';
+    try { localStorage.setItem('ccdvp-theme', isDark ? 'light' : 'dark'); } catch {}
+  });
+  try {
+    if (localStorage.getItem('ccdvp-theme') === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      themeBtn.textContent = 'Light';
+    }
+  } catch {}
+
+  audio.addEventListener('play', () => { setPlayUI(true); tick(); });
+  audio.addEventListener('pause', () => { setPlayUI(false); if (rafId) cancelAnimationFrame(rafId); });
+  audio.addEventListener('ended', () => { setPlayUI(false); if (rafId) cancelAnimationFrame(rafId); });
+  audio.addEventListener('timeupdate', syncUI);
+  audio.addEventListener('seeked', syncUI);
+  audio.addEventListener('ratechange', syncUI);
+  audio.addEventListener('loadedmetadata', () => {
+    audio.playbackRate = speeds[speedIdx];
+    syncUI();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    if (e.code === 'Space') { e.preventDefault(); playBtn.click(); }
+    else if (e.code === 'ArrowRight') { e.preventDefault(); nextBtn.click(); }
+    else if (e.code === 'ArrowLeft') { e.preventDefault(); prevBtn.click(); }
+  });
+
+  document.querySelectorAll('.scenario-card').forEach(card => {
+    const correct = card.dataset.correct;
+    const rat = card.querySelector('.rationale');
+    card.querySelectorAll('.opt-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        card.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('correct', 'wrong'));
+        if (btn.dataset.key === correct) {
+          btn.classList.add('correct');
+        } else {
+          btn.classList.add('wrong');
+          const rightBtn = card.querySelector(`.opt-btn[data-key="${correct}"]`);
+          if (rightBtn) rightBtn.classList.add('correct');
+        }
+        rat.classList.add('show');
+      });
+    });
+  });
+
+  syncUI();
+})();
+
+</script>
+</body>
+</html>

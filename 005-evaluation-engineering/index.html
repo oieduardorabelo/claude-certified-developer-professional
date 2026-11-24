@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Domain 5: Evaluation Engineering and Quality Assurance — CCDV-P Study Guide</title>
+<style>
+:root {
+  --bg: #FAF8F5;
+  --surface: #FFFFFF;
+  --surface-alt: #F3EFE8;
+  --ink: #1A1915;
+  --ink-muted: #5C5850;
+  --border: #E5DFD5;
+  --accent: #C96442;
+  --accent-soft: #FDF3EC;
+  --accent-border: #E6A98F;
+  --sent-bg: rgba(201, 100, 66, 0.11);
+  --word-bg: #F7C97E;
+  --word-ink: #1A1915;
+  --word-past: #1A1915;
+  --word-future: #6D685F;
+  --code-bg: #1E1D1A;
+  --code-ink: #F4F0E8;
+  --ok: #2D7A4F;
+  --ok-bg: #EAF6EF;
+  --bad: #B83A3A;
+  --bad-bg: #FCEEEE;
+  --shadow: 0 2px 12px rgba(26, 25, 21, 0.06);
+  --radius: 12px;
+}
+[data-theme="dark"] {
+  --bg: #141311;
+  --surface: #1D1C19;
+  --surface-alt: #25231F;
+  --ink: #F2EEE6;
+  --ink-muted: #A9A295;
+  --border: #322F2A;
+  --accent: #E07A56;
+  --accent-soft: #2A1E18;
+  --accent-border: #8A452C;
+  --sent-bg: rgba(224, 122, 86, 0.16);
+  --word-bg: #C96442;
+  --word-ink: #FFFFFF;
+  --word-past: #F2EEE6;
+  --word-future: #9E978B;
+  --code-bg: #0E0D0C;
+  --code-ink: #EFEAE0;
+  --ok: #52B788;
+  --ok-bg: #172B21;
+  --bad: #E06C6C;
+  --bad-bg: #2E1919;
+  --shadow: 0 2px 16px rgba(0, 0, 0, 0.35);
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+  line-height: 1.68;
+  font-size: 16px;
+}
+/* Sticky Audio Bar */
+.audio-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  padding: 10px 20px;
+}
+.audio-bar-inner {
+  max-width: 1240px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.ab-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  background: var(--surface-alt);
+  color: var(--ink);
+  border-radius: 8px;
+  height: 36px;
+  padding: 0 11px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.ab-btn:hover { border-color: var(--accent); color: var(--accent); }
+.ab-btn.primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+  min-width: 96px;
+  gap: 6px;
+}
+.ab-btn.primary:hover { filter: brightness(1.06); color: #fff; }
+.ab-btn.active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.ab-scrubber {
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.ab-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+.ab-now {
+  font-weight: 600;
+  color: var(--accent);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 360px;
+}
+input[type="range"].scrub {
+  width: 100%;
+  accent-color: var(--accent);
+  cursor: pointer;
+  height: 5px;
+}
+/* Layout */
+.layout {
+  max-width: 1240px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 270px minmax(0, 1fr);
+  gap: 32px;
+  padding: 28px 20px 80px;
+}
+@media (max-width: 940px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { position: static !important; }
+}
+.sidebar {
+  position: sticky;
+  top: 76px;
+  align-self: start;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  box-shadow: var(--shadow);
+}
+.side-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.hub-link {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+}
+.hub-link:hover { text-decoration: underline; }
+.side-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-muted);
+  font-weight: 700;
+  margin: 14px 0 8px;
+}
+.toc-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.toc-list a {
+  display: block;
+  padding: 7px 10px;
+  border-radius: 7px;
+  font-size: 13.5px;
+  color: var(--ink-muted);
+  text-decoration: none;
+  border-left: 3px solid transparent;
+  transition: all 0.15s;
+}
+.toc-list a:hover { background: var(--surface-alt); color: var(--ink); }
+.toc-list a.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-left-color: var(--accent);
+  font-weight: 600;
+}
+.progress-track {
+  height: 6px;
+  background: var(--surface-alt);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-top: 6px;
+}
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--accent);
+  transition: width 0.2s linear;
+}
+.domain-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.domain-nav a {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-muted);
+  text-decoration: none;
+  padding: 5px 8px;
+  border-radius: 6px;
+  background: var(--surface-alt);
+}
+.domain-nav a:hover { color: var(--accent); }
+/* Main Content */
+.hero {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px 30px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow);
+  position: relative;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+.badge-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.pill {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 99px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid var(--accent-border);
+}
+.pill.neutral {
+  background: var(--surface-alt);
+  color: var(--ink-muted);
+  border-color: var(--border);
+}
+h1 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 30px;
+  line-height: 1.22;
+  margin: 0 0 10px;
+  letter-spacing: -0.015em;
+}
+.tagline {
+  font-size: 17px;
+  color: var(--ink-muted);
+  margin: 0 0 14px;
+}
+.mental-model {
+  background: var(--surface-alt);
+  border-left: 3px solid var(--accent);
+  padding: 12px 16px;
+  border-radius: 0 8px 8px 0;
+  font-size: 14.5px;
+}
+.section-block {
+  margin-bottom: 34px;
+  scroll-margin-top: 84px;
+}
+.section-header {
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--border);
+}
+.section-obj {
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  font-weight: 700;
+}
+.section-header h2 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 23px;
+  margin: 4px 0 0;
+}
+/* Narrated Segment Cards */
+.seg {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid transparent;
+  border-radius: var(--radius);
+  padding: 18px 22px;
+  margin-bottom: 16px;
+  transition: background 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+}
+.seg.kind-callout {
+  border-left-color: var(--ink-muted);
+}
+.seg.is-speaking, .hero.is-speaking {
+  border-color: var(--accent-border);
+  border-left: 5px solid var(--accent);
+  box-shadow: 0 4px 22px rgba(201, 100, 66, 0.14);
+}
+.seg-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.seg-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--accent);
+}
+.seg-play-btn {
+  font-size: 11.5px;
+  color: var(--ink-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 2px 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.seg-play-btn:hover {
+  border-color: var(--accent-border);
+  color: var(--accent);
+}
+.seg.is-speaking .seg-play-btn, .hero.is-speaking .seg-play-btn {
+  color: var(--accent);
+  font-weight: 700;
+}
+.pulse-dot {
+  display: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: pulse 1.2s infinite ease-in-out;
+}
+.is-speaking .pulse-dot { display: inline-block; }
+@keyframes pulse {
+  0%, 100% { transform: scale(0.85); opacity: 0.6; }
+  50% { transform: scale(1.25); opacity: 1; }
+}
+.seg h3 {
+  font-size: 18px;
+  margin: 0 0 10px;
+  color: var(--ink);
+}
+/* Live Read-Along Synchronized Transcript */
+.read-along {
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 13px 16px;
+  margin: 10px 0 14px;
+  font-size: 16px;
+  line-height: 1.78;
+}
+.is-speaking .read-along {
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+}
+.read-along-tag {
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--ink-muted);
+  margin-bottom: 5px;
+}
+.is-speaking .read-along-tag {
+  color: var(--accent);
+}
+.sent {
+  border-radius: 5px;
+  padding: 2px 3px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.sent:hover {
+  background: var(--sent-bg);
+}
+.sent.active-sent {
+  background: var(--sent-bg);
+}
+.w {
+  border-radius: 4px;
+  padding: 1px 1.5px;
+  transition: background 0.08s ease, color 0.08s ease;
+}
+.sent.active-sent .w.w-future {
+  color: var(--word-future);
+}
+.sent.active-sent .w.w-past {
+  color: var(--word-past);
+}
+.w.w-now {
+  background: var(--word-bg);
+  color: var(--word-ink) !important;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(201, 100, 66, 0.25);
+}
+/* Reference Notes / Code / Tables */
+.ref-notes {
+  font-size: 15px;
+  color: var(--ink);
+}
+.ref-notes p { margin: 0 0 10px; }
+.ref-notes p:last-child { margin-bottom: 0; }
+.ref-notes ul, .ref-notes ol { margin: 6px 0 8px; padding-left: 22px; }
+.ref-notes li { margin-bottom: 5px; }
+.ref-notes code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.88em;
+  background: var(--surface-alt);
+  padding: 2px 5px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+.ref-notes pre {
+  background: var(--code-bg);
+  color: var(--code-ink);
+  padding: 14px 16px;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-size: 13.5px;
+  line-height: 1.5;
+  margin: 10px 0 4px;
+}
+.ref-notes pre code {
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: inherit;
+}
+.ref-notes table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  margin: 8px 0 4px;
+}
+.ref-notes th, .ref-notes td {
+  border: 1px solid var(--border);
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+.ref-notes th {
+  background: var(--surface-alt);
+  font-weight: 700;
+}
+/* Scenarios Quiz */
+.quiz-section {
+  margin-top: 42px;
+  scroll-margin-top: 84px;
+}
+.scenario-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px 24px;
+  margin-bottom: 18px;
+  box-shadow: var(--shadow);
+}
+.scenario-card h3 {
+  margin: 0 0 10px;
+  font-size: 17.5px;
+  color: var(--accent);
+}
+.scenario-prompt {
+  margin: 0 0 16px;
+  font-size: 15.5px;
+}
+.opt-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.opt-btn {
+  text-align: left;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  color: var(--ink);
+  padding: 11px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14.5px;
+  line-height: 1.45;
+  transition: all 0.15s;
+}
+.opt-btn:hover { border-color: var(--accent); }
+.opt-btn.correct { background: var(--ok-bg); border-color: var(--ok); color: var(--ink); font-weight: 600; }
+.opt-btn.wrong { background: var(--bad-bg); border-color: var(--bad); color: var(--ink); }
+.rationale {
+  display: none;
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  background: var(--surface-alt);
+  border-left: 4px solid var(--ok);
+  font-size: 14.5px;
+}
+.rationale.show { display: block; }
+</style>
+</head>
+<body>
+  <audio id="voiceAudio" src="audio.m4a" preload="metadata"></audio>
+
+  <header class="audio-bar">
+    <div class="audio-bar-inner">
+      <button id="playBtn" class="ab-btn primary" title="Play / Pause (Space)">&#9654; Play</button>
+      <button id="prevBtn" class="ab-btn" title="Previous block (Left Arrow)">&lsaquo; Prev</button>
+      <button id="nextBtn" class="ab-btn" title="Next block (Right Arrow)">Next &rsaquo;</button>
+      <div class="ab-scrubber">
+        <div class="ab-meta">
+          <span id="nowLabel" class="ab-now">Ready &mdash; click Play or any sentence</span>
+          <span id="timeLabel">0:00 / 0:00</span>
+        </div>
+        <input id="scrub" class="scrub" type="range" min="0" max="100" step="0.05" value="0" />
+      </div>
+      <button id="speedBtn" class="ab-btn" title="Playback speed">1x</button>
+      <button id="autoScrollBtn" class="ab-btn active" title="Auto-scroll to active sentence">Auto-Scroll: ON</button>
+      <button id="themeBtn" class="ab-btn" title="Toggle theme">Dark</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="side-top">
+        <a class="hub-link" href="../index.html">&larr; All 8 Domains</a>
+        <span class="pill">Weight 12%</span>
+      </div>
+      <div class="side-title">Listening Progress</div>
+      <div class="progress-track"><div id="progressFill" class="progress-fill"></div></div>
+      <div class="side-title">Domain 5 Sections</div>
+      <ul class="toc-list">
+        <li><a href="#top" class="active">Overview &amp; Mental Model</a></li><li><a href="#sec-1">Offline Eval Architecture, Graders, and Agent Non-Determinism</a></li><li><a href="#sec-2">CI/CD Gates, Groundedness Metrics, and Suite Validity</a></li><li><a href="#sec-3">Calibrating LLM Judges, Rubrics, Bias Mitigation, and Drift</a></li><li><a href="#sec-4">Live-Traffic Sampling, A/B Testing, Feedback Loops, and Task Metrics</a></li><li><a href="#scenarios">Exam Practice Scenarios</a></li>
+      </ul>
+      <div class="domain-nav">
+        <a href="../004-debugging-incident-response/index.html">&larr; Domain 4</a>
+        <a href="../006-cost-latency-optimization/index.html">Domain 6 &rarr;</a>
+      </div>
+    </aside>
+
+    <main id="top">
+      <section class="hero" data-seg-id="intro">
+        <div class="seg-top">
+          <div class="badge-row">
+            <span class="pill">CCDV-P Domain 5 of 8</span>
+            <span class="pill neutral">Exam Weight: 12%</span>
+            <span class="pill neutral">Voice: Kokoro Neural (af_heart)</span>
+          </div>
+          <button class="seg-play-btn" data-jump-seg="intro"><span class="pulse-dot"></span>&#9654; Play intro</button>
+        </div>
+        <h1>Evaluation Engineering and Quality Assurance</h1>
+        <p class="tagline">Proving that prompt, model, and agent changes genuinely improve production quality through calibrated offline suites, unbiased LLM judges, and live-traffic measurement.</p>
+        <div class="mental-model">
+          <strong>Staff Engineer Mental Model:</strong> A staff engineer treats evaluations like production software infrastructure, not a one-off spreadsheet check. On the CCDV-P exam, never trust an uncalibrated metric or a 100% pass rate at face value: verify grader agreement against human labels, grade final environment outcomes rather than brittle tool-call paths, isolate every trial, and layer offline CI gates with live-traffic sampling and transcript review.
+        </div>
+        <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="intro-s0" data-start="0.0" title="Click to jump here"><span class="w">Domain</span> <span class="w">5:</span> <span class="w">Evaluation</span> <span class="w">Engineering</span> <span class="w">and</span> <span class="w">Quality</span> <span class="w">Assurance.</span></span> <span class="sent" data-sent-id="intro-s1" data-start="3.617" title="Click to jump here"><span class="w">Exam</span> <span class="w">weight:</span> <span class="w">12%.</span></span> <span class="sent" data-sent-id="intro-s2" data-start="5.485" title="Click to jump here"><span class="w">Proving</span> <span class="w">that</span> <span class="w">prompt,</span> <span class="w">model,</span> <span class="w">and</span> <span class="w">agent</span> <span class="w">changes</span> <span class="w">genuinely</span> <span class="w">improve</span> <span class="w">production</span> <span class="w">quality</span> <span class="w">through</span> <span class="w">calibrated</span> <span class="w">offline</span> <span class="w">suites,</span> <span class="w">unbiased</span> <span class="w">LLM</span> <span class="w">judges,</span> <span class="w">and</span> <span class="w">live-traffic</span> <span class="w">measurement.</span></span> <span class="sent" data-sent-id="intro-s3" data-start="16.441" title="Click to jump here"><span class="w">A</span> <span class="w">staff</span> <span class="w">engineer</span> <span class="w">treats</span> <span class="w">evaluations</span> <span class="w">like</span> <span class="w">production</span> <span class="w">software</span> <span class="w">infrastructure,</span> <span class="w">not</span> <span class="w">a</span> <span class="w">one-off</span> <span class="w">spreadsheet</span> <span class="w">check.</span></span> <span class="sent" data-sent-id="intro-s4" data-start="22.853" title="Click to jump here"><span class="w">On</span> <span class="w">the</span> <span class="w">CCDV-P</span> <span class="w">exam,</span> <span class="w">never</span> <span class="w">trust</span> <span class="w">an</span> <span class="w">uncalibrated</span> <span class="w">metric</span> <span class="w">or</span> <span class="w">a</span> <span class="w">100%</span> <span class="w">pass</span> <span class="w">rate</span> <span class="w">at</span> <span class="w">face</span> <span class="w">value:</span> <span class="w">verify</span> <span class="w">grader</span> <span class="w">agreement</span> <span class="w">against</span> <span class="w">human</span> <span class="w">labels,</span> <span class="w">grade</span> <span class="w">final</span> <span class="w">environment</span> <span class="w">outcomes</span> <span class="w">rather</span> <span class="w">than</span> <span class="w">brittle</span> <span class="w">tool-call</span> <span class="w">paths,</span> <span class="w">isolate</span> <span class="w">every</span> <span class="w">trial,</span> <span class="w">and</span> <span class="w">layer</span> <span class="w">offline</span> <span class="w">CI</span> <span class="w">gates</span> <span class="w">with</span> <span class="w">live-traffic</span> <span class="w">sampling</span> <span class="w">and</span> <span class="w">transcript</span> <span class="w">review.</span></span></div></div>
+      </section>
+
+      
+        <section class="section-block" id="sec-1">
+          <div class="section-header">
+            <div class="section-obj">Evaluation System Design</div>
+            <h2>Offline Eval Architecture, Graders, and Agent Non-Determinism</h2>
+          </div>
+          
+            <article class="seg kind-prose" data-seg-id="s1-1">
+              <div class="seg-top">
+                <span class="seg-label">KEY CONCEPT</span>
+                <button class="seg-play-btn" data-jump-seg="s1-1"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Anatomy of an Agent Evaluation</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s1-1-s0" data-start="44.417" title="Click to jump here"><span class="w">When</span> <span class="w">you</span> <span class="w">evaluate</span> <span class="w">an</span> <span class="w">AI</span> <span class="w">agent,</span> <span class="w">you</span> <span class="w">are</span> <span class="w">never</span> <span class="w">testing</span> <span class="w">the</span> <span class="w">model</span> <span class="w">in</span> <span class="w">isolation.</span></span> <span class="sent" data-sent-id="s1-1-s1" data-start="48.995" title="Click to jump here"><span class="w">You</span> <span class="w">are</span> <span class="w">testing</span> <span class="w">the</span> <span class="w">model</span> <span class="w">and</span> <span class="w">its</span> <span class="w">agent</span> <span class="w">harness</span> <span class="w">together.</span></span> <span class="sent" data-sent-id="s1-1-s2" data-start="52.1" title="Click to jump here"><span class="w">Each</span> <span class="w">test</span> <span class="w">case</span> <span class="w">is</span> <span class="w">a</span> <span class="w">task,</span> <span class="w">and</span> <span class="w">each</span> <span class="w">run</span> <span class="w">is</span> <span class="w">a</span> <span class="w">trial</span> <span class="w">executed</span> <span class="w">in</span> <span class="w">a</span> <span class="w">clean,</span> <span class="w">isolated</span> <span class="w">environment.</span></span> <span class="sent" data-sent-id="s1-1-s3" data-start="58.235" title="Click to jump here"><span class="w">Crucially,</span> <span class="w">graders</span> <span class="w">should</span> <span class="w">distinguish</span> <span class="w">between</span> <span class="w">the</span> <span class="w">transcript,</span> <span class="w">which</span> <span class="w">is</span> <span class="w">the</span> <span class="w">full</span> <span class="w">messages</span> <span class="w">array,</span> <span class="w">and</span> <span class="w">the</span> <span class="w">outcome,</span> <span class="w">which</span> <span class="w">is</span> <span class="w">the</span> <span class="w">actual</span> <span class="w">final</span> <span class="w">state</span> <span class="w">in</span> <span class="w">the</span> <span class="w">database</span> <span class="w">or</span> <span class="w">file</span> <span class="w">system.</span></span></div></div>
+              <div class="ref-notes"><p>An agent evaluation measures the <strong>model and agent harness working together</strong> across multi-turn loops. Each <strong>task</strong> defines inputs and unambiguous success criteria, and each attempt is a <strong>trial</strong> run inside an isolated environment. Graders score two distinct artifacts: the <strong>transcript</strong> (the complete <code>messages</code> array of tool calls, reasoning, and outputs) and the <strong>outcome</strong> (the verified final state in the environment, such as a database row or generated file).</p></div>
+            </article>
+            <article class="seg kind-callout" data-seg-id="s1-2">
+              <div class="seg-top">
+                <span class="seg-label">EXAM TRAP</span>
+                <button class="seg-play-btn" data-jump-seg="s1-2"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Grade Outcomes, Not Rigid Tool-Call Sequences</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s1-2-s0" data-start="68.685" title="Click to jump here"><span class="w">Watch</span> <span class="w">out</span> <span class="w">for</span> <span class="w">a</span> <span class="w">classic</span> <span class="w">exam</span> <span class="w">trap:</span> <span class="w">grading</span> <span class="w">the</span> <span class="w">exact</span> <span class="w">sequence</span> <span class="w">of</span> <span class="w">tool</span> <span class="w">calls</span> <span class="w">instead</span> <span class="w">of</span> <span class="w">the</span> <span class="w">final</span> <span class="w">outcome.</span></span> <span class="sent" data-sent-id="s1-2-s1" data-start="75.183" title="Click to jump here"><span class="w">Frontier</span> <span class="w">models</span> <span class="w">often</span> <span class="w">find</span> <span class="w">creative,</span> <span class="w">valid</span> <span class="w">paths</span> <span class="w">that</span> <span class="w">rigid</span> <span class="w">sequence</span> <span class="w">checks</span> <span class="w">unfairly</span> <span class="w">fail.</span></span> <span class="sent" data-sent-id="s1-2-s2" data-start="81.019" title="Click to jump here"><span class="w">Also,</span> <span class="w">never</span> <span class="w">share</span> <span class="w">state</span> <span class="w">between</span> <span class="w">trials.</span></span> <span class="sent" data-sent-id="s1-2-s3" data-start="83.527" title="Click to jump here"><span class="w">Leftover</span> <span class="w">files</span> <span class="w">or</span> <span class="w">git</span> <span class="w">history</span> <span class="w">can</span> <span class="w">cause</span> <span class="w">correlated</span> <span class="w">failures</span> <span class="w">or</span> <span class="w">let</span> <span class="w">the</span> <span class="w">model</span> <span class="w">cheat.</span></span> <span class="sent" data-sent-id="s1-2-s4" data-start="88.829" title="Click to jump here"><span class="w">Always</span> <span class="w">verify</span> <span class="w">every</span> <span class="w">task</span> <span class="w">with</span> <span class="w">a</span> <span class="w">reference</span> <span class="w">solution,</span> <span class="w">because</span> <span class="w">a</span> <span class="w">zero</span> <span class="w">percent</span> <span class="w">pass</span> <span class="w">rate</span> <span class="w">across</span> <span class="w">many</span> <span class="w">trials</span> <span class="w">usually</span> <span class="w">means</span> <span class="w">your</span> <span class="w">task</span> <span class="w">spec</span> <span class="w">is</span> <span class="w">broken.</span></span></div></div>
+              <div class="ref-notes"><p>A common anti-pattern is asserting an exact sequence of tool calls. Frontier models frequently discover valid, unanticipated paths to solve a task, so path-based assertions create brittle false failures. Equally dangerous is <strong>shared state across trials</strong> (leftover files, cached data, or git history from prior runs), which causes correlated flakiness or lets the agent cheat. Always isolate every trial and include a <strong>reference solution</strong>; a <code>0% pass@100</code> rate almost always signals a broken task spec or grader bug, not an incapable model.</p></div>
+            </article>
+            <article class="seg kind-bullets" data-seg-id="s1-3">
+              <div class="seg-top">
+                <span class="seg-label">ARCHITECTURE PATTERN</span>
+                <button class="seg-play-btn" data-jump-seg="s1-3"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Capability vs. Regression Suites and Balanced Problem Sets</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s1-3-s0" data-start="98.235" title="Click to jump here"><span class="w">Separate</span> <span class="w">your</span> <span class="w">offline</span> <span class="w">evaluations</span> <span class="w">into</span> <span class="w">two</span> <span class="w">suites.</span></span> <span class="sent" data-sent-id="s1-3-s1" data-start="101.276" title="Click to jump here"><span class="w">Capability</span> <span class="w">evals</span> <span class="w">start</span> <span class="w">with</span> <span class="w">a</span> <span class="w">low</span> <span class="w">pass</span> <span class="w">rate</span> <span class="w">on</span> <span class="w">hard</span> <span class="w">problems</span> <span class="w">to</span> <span class="w">give</span> <span class="w">your</span> <span class="w">team</span> <span class="w">a</span> <span class="w">hill</span> <span class="w">to</span> <span class="w">climb.</span></span> <span class="sent" data-sent-id="s1-3-s2" data-start="107.176" title="Click to jump here"><span class="w">Regression</span> <span class="w">evals</span> <span class="w">sit</span> <span class="w">near</span> <span class="w">one</span> <span class="w">hundred</span> <span class="w">percent</span> <span class="w">to</span> <span class="w">catch</span> <span class="w">backsliding,</span> <span class="w">and</span> <span class="w">mature</span> <span class="w">capability</span> <span class="w">tasks</span> <span class="w">graduate</span> <span class="w">into</span> <span class="w">them</span> <span class="w">over</span> <span class="w">time.</span></span> <span class="sent" data-sent-id="s1-3-s3" data-start="114.633" title="Click to jump here"><span class="w">Always</span> <span class="w">keep</span> <span class="w">problem</span> <span class="w">sets</span> <span class="w">balanced</span> <span class="w">with</span> <span class="w">both</span> <span class="w">positive</span> <span class="w">and</span> <span class="w">negative</span> <span class="w">cases</span> <span class="w">so</span> <span class="w">you</span> <span class="w">prevent</span> <span class="w">overtriggering,</span> <span class="w">and</span> <span class="w">start</span> <span class="w">early</span> <span class="w">with</span> <span class="w">twenty</span> <span class="w">to</span> <span class="w">fifty</span> <span class="w">tasks</span> <span class="w">pulled</span> <span class="w">from</span> <span class="w">real</span> <span class="w">failures.</span></span></div></div>
+              <div class="ref-notes"><ul><li><strong>Capability (Quality) Evals:</strong> Start at a low pass rate on hard tasks the agent currently struggles with, giving teams a clear hill to climb and revealing which bets pay off on new model releases.</li><li><strong>Regression Evals:</strong> Maintain a near-100% pass rate on proven behaviors to catch backsliding before release. High-performing capability tasks should <em>graduate</em> into the regression suite.</li><li><strong>Balanced Problem Sets:</strong> Test both positive triggers (when a tool or skill <em>should</em> fire) and negative controls (when it <em>should not</em>). One-sided suites cause overtriggering—such as searching the web for static facts.</li><li><strong>Start Small and Real:</strong> 20–50 unambiguous tasks sourced from manual release checks, bug trackers, and support tickets beat waiting months for a massive synthetic dataset.</li></ul></div>
+            </article>
+            <article class="seg kind-table" data-seg-id="s1-4">
+              <div class="seg-top">
+                <span class="seg-label">DECISION MATRIX</span>
+                <button class="seg-play-btn" data-jump-seg="s1-4"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Choosing the Right Grader Type</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s1-4-s0" data-start="125.361" title="Click to jump here"><span class="w">Choose</span> <span class="w">the</span> <span class="w">fastest,</span> <span class="w">most</span> <span class="w">reliable</span> <span class="w">grader</span> <span class="w">that</span> <span class="w">fits</span> <span class="w">the</span> <span class="w">task.</span></span> <span class="sent" data-sent-id="s1-4-s1" data-start="129.171" title="Click to jump here"><span class="w">Start</span> <span class="w">with</span> <span class="w">code-based</span> <span class="w">graders</span> <span class="w">like</span> <span class="w">unit</span> <span class="w">tests,</span> <span class="w">regex</span> <span class="w">checks,</span> <span class="w">and</span> <span class="w">database</span> <span class="w">state</span> <span class="w">verification</span> <span class="w">whenever</span> <span class="w">possible</span> <span class="w">because</span> <span class="w">they</span> <span class="w">are</span> <span class="w">cheap</span> <span class="w">and</span> <span class="w">deterministic.</span></span> <span class="sent" data-sent-id="s1-4-s2" data-start="138.569" title="Click to jump here"><span class="w">Bring</span> <span class="w">in</span> <span class="w">model-based</span> <span class="w">graders</span> <span class="w">for</span> <span class="w">open-ended</span> <span class="w">nuance,</span> <span class="w">but</span> <span class="w">only</span> <span class="w">after</span> <span class="w">calibrating</span> <span class="w">them</span> <span class="w">against</span> <span class="w">humans.</span></span> <span class="sent" data-sent-id="s1-4-s3" data-start="144.661" title="Click to jump here"><span class="w">Reserve</span> <span class="w">human</span> <span class="w">subject</span> <span class="w">matter</span> <span class="w">experts</span> <span class="w">for</span> <span class="w">calibration</span> <span class="w">sets</span> <span class="w">and</span> <span class="w">high-stakes</span> <span class="w">spot</span> <span class="w">checks,</span> <span class="w">and</span> <span class="w">build</span> <span class="w">partial</span> <span class="w">credit</span> <span class="w">into</span> <span class="w">multi-step</span> <span class="w">tasks.</span></span></div></div>
+              <div class="ref-notes"><table><thead><tr><th>Grader Type</th><th>Core Methods</th><th>Strengths</th><th>Weaknesses &amp; Role</th></tr></thead><tbody><tr><td><strong>Code-Based</strong></td><td>Exact/regex match, unit tests, static analysis (<code>ruff</code>, <code>mypy</code>), DB/file <code>state_check</code>, transcript token/turn limits</td><td>Fast, cheap, objective, reproducible, easy to debug</td><td>Brittle to valid phrasing variations; use first wherever deterministic verification is possible</td></tr><tr><td><strong>Model-Based</strong></td><td>Rubric scoring, natural-language assertions, pairwise comparison, reference-based, multi-judge consensus</td><td>Flexible, scalable, captures nuance on open-ended outputs</td><td>Non-deterministic and pricier than code; must be calibrated against human labels</td></tr><tr><td><strong>Human</strong></td><td>SME review, spot-check sampling, systematic multi-rater studies</td><td>Gold-standard expert judgment</td><td>Slow and expensive; reserve for calibrating LLM judges and auditing subjective domains</td></tr></tbody></table></div>
+            </article>
+            <article class="seg kind-callout" data-seg-id="s1-5">
+              <div class="seg-top">
+                <span class="seg-label">KEY METRIC</span>
+                <button class="seg-play-btn" data-jump-seg="s1-5"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Measuring Non-Determinism: pass@k vs. pass^k</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s1-5-s0" data-start="153.448" title="Click to jump here"><span class="w">At</span> <span class="w">k</span> <span class="w">equals</span> <span class="w">one,</span> <span class="w">pass</span> <span class="w">at</span> <span class="w">k</span> <span class="w">and</span> <span class="w">pass</span> <span class="w">to</span> <span class="w">the</span> <span class="w">k</span> <span class="w">are</span> <span class="w">identical,</span> <span class="w">but</span> <span class="w">as</span> <span class="w">you</span> <span class="w">run</span> <span class="w">more</span> <span class="w">trials,</span> <span class="w">they</span> <span class="w">tell</span> <span class="w">opposite</span> <span class="w">stories.</span></span> <span class="sent" data-sent-id="s1-5-s1" data-start="161.076" title="Click to jump here"><span class="w">Pass</span> <span class="w">at</span> <span class="w">k</span> <span class="w">measures</span> <span class="w">the</span> <span class="w">odds</span> <span class="w">of</span> <span class="w">getting</span> <span class="w">at</span> <span class="w">least</span> <span class="w">one</span> <span class="w">success</span> <span class="w">in</span> <span class="w">k</span> <span class="w">attempts,</span> <span class="w">which</span> <span class="w">rises</span> <span class="w">toward</span> <span class="w">one</span> <span class="w">hundred</span> <span class="w">percent</span> <span class="w">and</span> <span class="w">fits</span> <span class="w">tools</span> <span class="w">where</span> <span class="w">one</span> <span class="w">working</span> <span class="w">draft</span> <span class="w">is</span> <span class="w">enough.</span></span> <span class="sent" data-sent-id="s1-5-s2" data-start="171.157" title="Click to jump here"><span class="w">Pass</span> <span class="w">to</span> <span class="w">the</span> <span class="w">k</span> <span class="w">measures</span> <span class="w">the</span> <span class="w">odds</span> <span class="w">that</span> <span class="w">all</span> <span class="w">k</span> <span class="w">trials</span> <span class="w">succeed.</span></span> <span class="sent" data-sent-id="s1-5-s3" data-start="174.924" title="Click to jump here"><span class="w">At</span> <span class="w">a</span> <span class="w">seventy-five</span> <span class="w">percent</span> <span class="w">per-trial</span> <span class="w">rate,</span> <span class="w">pass</span> <span class="w">to</span> <span class="w">the</span> <span class="w">three</span> <span class="w">drops</span> <span class="w">to</span> <span class="w">forty-two</span> <span class="w">percent,</span> <span class="w">making</span> <span class="w">it</span> <span class="w">the</span> <span class="w">right</span> <span class="w">bar</span> <span class="w">for</span> <span class="w">customer-facing</span> <span class="w">consistency.</span></span></div></div>
+              <div class="ref-notes"><p>Because agents are non-deterministic, a single trial is noisy. Two complementary multi-trial metrics capture reliability:</p><ul><li><strong><code>pass@k</code></strong> — Probability of getting <em>at least one</em> correct solution in <code>k</code> attempts. Rises toward 100% as <code>k</code> grows. Best for coding or research tools where one valid candidate is enough.</li><li><strong><code>pass^k</code></strong> — Probability that <em>all</em> <code>k</code> trials succeed. Falls exponentially as <code>k</code> grows (e.g., a 75% per-trial success rate yields <code>0.75³ ≈ 42%</code> for <code>pass^3</code>). Essential for customer-facing agents where users expect consistent correctness every single time.</li></ul></div>
+            </article>
+            <article class="seg kind-code" data-seg-id="s1-6">
+              <div class="seg-top">
+                <span class="seg-label">CODE PATTERN</span>
+                <button class="seg-play-btn" data-jump-seg="s1-6"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Multidimensional Agent Eval Definition</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s1-6-s0" data-start="183.455" title="Click to jump here"><span class="w">In</span> <span class="w">production,</span> <span class="w">a</span> <span class="w">single</span> <span class="w">task</span> <span class="w">usually</span> <span class="w">combines</span> <span class="w">multiple</span> <span class="w">graders.</span></span> <span class="sent" data-sent-id="s1-6-s1" data-start="187.413" title="Click to jump here"><span class="w">Here,</span> <span class="w">a</span> <span class="w">support</span> <span class="w">refund</span> <span class="w">eval</span> <span class="w">verifies</span> <span class="w">the</span> <span class="w">database</span> <span class="w">outcome</span> <span class="w">with</span> <span class="w">a</span> <span class="w">state</span> <span class="w">check,</span> <span class="w">confirms</span> <span class="w">identity</span> <span class="w">verification</span> <span class="w">and</span> <span class="w">refund</span> <span class="w">bounds</span> <span class="w">through</span> <span class="w">tool-call</span> <span class="w">checks,</span> <span class="w">evaluates</span> <span class="w">policy</span> <span class="w">grounding</span> <span class="w">with</span> <span class="w">an</span> <span class="w">LLM</span> <span class="w">rubric,</span> <span class="w">and</span> <span class="w">enforces</span> <span class="w">a</span> <span class="w">ten-turn</span> <span class="w">transcript</span> <span class="w">cap</span> <span class="w">while</span> <span class="w">tracking</span> <span class="w">token</span> <span class="w">and</span> <span class="w">latency</span> <span class="w">metrics.</span></span></div></div>
+              <div class="ref-notes"><pre><code>graders:
+  - type: state_check
+    expect:
+      tickets: { status: resolved }
+      refunds: { status: processed }
+  - type: tool_calls
+    required:
+      - { tool: verify_identity }
+      - { tool: process_refund, params: { amount: "&lt;=100" } }
+  - type: llm_rubric
+    rubric: prompts/support_quality.md
+    assertions:
+      - "Response is grounded in fetch_policy tool results"
+  - type: transcript
+    max_turns: 10
+tracked_metrics:
+  - { type: transcript, metrics: [n_turns, n_toolcalls, n_total_tokens] }
+  - { type: latency, metrics: [time_to_first_token, time_to_last_token] }</code></pre></div>
+            </article>
+        </section>
+        <section class="section-block" id="sec-2">
+          <div class="section-header">
+            <div class="section-obj">Evaluation System Design</div>
+            <h2>CI/CD Gates, Groundedness Metrics, and Suite Validity</h2>
+          </div>
+          
+            <article class="seg kind-code" data-seg-id="s2-1">
+              <div class="seg-top">
+                <span class="seg-label">CODE PATTERN</span>
+                <button class="seg-play-btn" data-jump-seg="s2-1"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Gating Releases in CI/CD with Pinned Models and Cost Ceilings</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s2-1-s0" data-start="206.247" title="Click to jump here"><span class="w">When</span> <span class="w">wiring</span> <span class="w">evals</span> <span class="w">into</span> <span class="w">CI/CD,</span> <span class="w">pin</span> <span class="w">both</span> <span class="w">the</span> <span class="w">agent</span> <span class="w">model</span> <span class="w">and</span> <span class="w">the</span> <span class="w">judge</span> <span class="w">model</span> <span class="w">so</span> <span class="w">an</span> <span class="w">upstream</span> <span class="w">model</span> <span class="w">update</span> <span class="w">is</span> <span class="w">never</span> <span class="w">confused</span> <span class="w">with</span> <span class="w">a</span> <span class="w">code</span> <span class="w">regression.</span></span> <span class="sent" data-sent-id="s2-1-s1" data-start="216.349" title="Click to jump here"><span class="w">Set</span> <span class="w">a</span> <span class="w">pass</span> <span class="w">threshold,</span> <span class="w">a</span> <span class="w">maximum</span> <span class="w">dollar</span> <span class="w">cost</span> <span class="w">ceiling,</span> <span class="w">and</span> <span class="w">JSON</span> <span class="w">output</span> <span class="w">for</span> <span class="w">archiving.</span></span> <span class="sent" data-sent-id="s2-1-s2" data-start="221.823" title="Click to jump here"><span class="w">Exit</span> <span class="w">code</span> <span class="w">zero</span> <span class="w">passes</span> <span class="w">the</span> <span class="w">gate,</span> <span class="w">exit</span> <span class="w">code</span> <span class="w">one</span> <span class="w">fails</span> <span class="w">on</span> <span class="w">a</span> <span class="w">regression</span> <span class="w">or</span> <span class="w">error,</span> <span class="w">and</span> <span class="w">exit</span> <span class="w">code</span> <span class="w">two</span> <span class="w">flags</span> <span class="w">a</span> <span class="w">partial</span> <span class="w">run</span> <span class="w">that</span> <span class="w">you</span> <span class="w">must</span> <span class="w">exclude</span> <span class="w">from</span> <span class="w">quality</span> <span class="w">trend</span> <span class="w">charts.</span></span></div></div>
+              <div class="ref-notes"><pre><code>claude plugin eval . \
+  --trust-plugin \
+  --json results.json \
+  --threshold 0.8 \
+  --model claude-sonnet-5 \
+  --judge-model claude-haiku-4-5 \
+  --no-publish \
+  --max-cost-usd 20</code></pre><p>In CI, always pin both <code>--model</code> and <code>--judge-model</code> so an upstream model rollout is never mistaken for a prompt or plugin regression. Gate builds on exit codes: <code>0</code> means all cases met <code>--threshold</code>, <code>1</code> signals a threshold failure or run/API error, and <code>2</code> signals a partial run (such as hitting <code>--max-cost-usd</code> or an auth failure), which must be excluded from historical trend charts.</p></div>
+            </article>
+            <article class="seg kind-prose" data-seg-id="s2-2">
+              <div class="seg-top">
+                <span class="seg-label">ARCHITECTURE PATTERN</span>
+                <button class="seg-play-btn" data-jump-seg="s2-2"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Ablation Baselines and Fair Two-Arm Scoring</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s2-2-s0" data-start="232.572" title="Click to jump here"><span class="w">A</span> <span class="w">high</span> <span class="w">score</span> <span class="w">by</span> <span class="w">itself</span> <span class="w">doesn&#x27;t</span> <span class="w">prove</span> <span class="w">your</span> <span class="w">plugin</span> <span class="w">or</span> <span class="w">prompt</span> <span class="w">change</span> <span class="w">added</span> <span class="w">value,</span> <span class="w">because</span> <span class="w">Claude</span> <span class="w">might</span> <span class="w">pass</span> <span class="w">the</span> <span class="w">task</span> <span class="w">without</span> <span class="w">it.</span></span> <span class="sent" data-sent-id="s2-2-s1" data-start="239.581" title="Click to jump here"><span class="w">Two-arm</span> <span class="w">ablation</span> <span class="w">runs</span> <span class="w">every</span> <span class="w">case</span> <span class="w">with</span> <span class="w">and</span> <span class="w">without</span> <span class="w">the</span> <span class="w">change</span> <span class="w">to</span> <span class="w">measure</span> <span class="w">delta.</span></span> <span class="sent" data-sent-id="s2-2-s2" data-start="244.393" title="Click to jump here"><span class="w">Checks</span> <span class="w">that</span> <span class="w">can</span> <span class="w">never</span> <span class="w">pass</span> <span class="w">in</span> <span class="w">the</span> <span class="w">baseline</span> <span class="w">arm,</span> <span class="w">like</span> <span class="w">invoking</span> <span class="w">a</span> <span class="w">plugin</span> <span class="w">skill,</span> <span class="w">are</span> <span class="w">excluded</span> <span class="w">from</span> <span class="w">scoring</span> <span class="w">in</span> <span class="w">both</span> <span class="w">arms</span> <span class="w">so</span> <span class="w">they</span> <span class="w">don&#x27;t</span> <span class="w">artificially</span> <span class="w">inflate</span> <span class="w">the</span> <span class="w">lift.</span></span></div></div>
+              <div class="ref-notes"><p>A high absolute score alone does not prove a prompt change, skill, or plugin actually helped—Claude may have succeeded without it. Tools like <code>claude plugin eval</code> run a <strong>two-arm ablation</strong> (<code>WITH</code> vs. <code>W/OUT</code>) to measure incremental lift (<code>Δ</code>). To avoid artificially inflating <code>Δ</code>, checks that can only pass in the with-arm (such as <code>tool_used: Skill</code>) are reported as pass/fail indicators with <code>scored: false</code> in both arms, while fast inner-loop CI checks can use <code>--ablation none</code> and deterministic-only graders to keep costs predictable.</p></div>
+            </article>
+            <article class="seg kind-bullets" data-seg-id="s2-3">
+              <div class="seg-top">
+                <span class="seg-label">KEY CONCEPT</span>
+                <button class="seg-play-btn" data-jump-seg="s2-3"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Retrieval Precision, Groundedness, and Hallucination Controls</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s2-3-s0" data-start="254.225" title="Click to jump here"><span class="w">For</span> <span class="w">retrieval-grounded</span> <span class="w">and</span> <span class="w">research</span> <span class="w">agents,</span> <span class="w">evaluate</span> <span class="w">retrieval</span> <span class="w">precision</span> <span class="w">and</span> <span class="w">source</span> <span class="w">authority</span> <span class="w">separately</span> <span class="w">from</span> <span class="w">synthesis</span> <span class="w">quality.</span></span> <span class="sent" data-sent-id="s2-3-s1" data-start="262.024" title="Click to jump here"><span class="w">Measure</span> <span class="w">groundedness</span> <span class="w">to</span> <span class="w">verify</span> <span class="w">every</span> <span class="w">claim</span> <span class="w">maps</span> <span class="w">to</span> <span class="w">retrieved</span> <span class="w">evidence,</span> <span class="w">and</span> <span class="w">coverage</span> <span class="w">to</span> <span class="w">confirm</span> <span class="w">key</span> <span class="w">facts</span> <span class="w">aren&#x27;t</span> <span class="w">missed.</span></span> <span class="sent" data-sent-id="s2-3-s2" data-start="269.097" title="Click to jump here"><span class="w">To</span> <span class="w">curb</span> <span class="w">hallucinations,</span> <span class="w">allow</span> <span class="w">Claude</span> <span class="w">to</span> <span class="w">admit</span> <span class="w">uncertainty,</span> <span class="w">extract</span> <span class="w">direct</span> <span class="w">quotes</span> <span class="w">first</span> <span class="w">on</span> <span class="w">long</span> <span class="w">documents,</span> <span class="w">and</span> <span class="w">verify</span> <span class="w">citations.</span></span> <span class="sent" data-sent-id="s2-3-s3" data-start="277.643" title="Click to jump here"><span class="w">For</span> <span class="w">strict</span> <span class="w">schema</span> <span class="w">consistency,</span> <span class="w">rely</span> <span class="w">on</span> <span class="w">Structured</span> <span class="w">Outputs</span> <span class="w">rather</span> <span class="w">than</span> <span class="w">prefilling,</span> <span class="w">which</span> <span class="w">is</span> <span class="w">not</span> <span class="w">supported</span> <span class="w">on</span> <span class="w">Claude</span> <span class="w">four</span> <span class="w">point</span> <span class="w">six</span> <span class="w">and</span> <span class="w">later.</span></span></div></div>
+              <div class="ref-notes"><ul><li><strong>Retrieval Precision &amp; Source Quality:</strong> Verify that retrieved chunks are relevant and authoritative, not merely the top-ranked results, separating retrieval failures from generation failures.</li><li><strong>Groundedness &amp; Coverage:</strong> Check that every factual claim in the output is supported by retrieved evidence (groundedness) and that all required key facts are present (coverage).</li><li><strong>Hallucination Minimization in Prompts &amp; Evals:</strong> Explicitly permit Claude to say <em>"I don't know"</em>, require word-for-word quote extraction before synthesizing long documents (&gt;20k tokens), and verify each claim against a supporting quote—retracting unsupported claims.</li><li><strong>Consistency Enforcement:</strong> Use <strong>Structured Outputs</strong> for guaranteed JSON schema compliance rather than relying solely on prompt formatting or prefilling (note: response prefilling is not supported on Claude 4.6 and later models).</li></ul></div>
+            </article>
+            <article class="seg kind-callout" data-seg-id="s2-4">
+              <div class="seg-top">
+                <span class="seg-label">EXAM TRAP</span>
+                <button class="seg-play-btn" data-jump-seg="s2-4"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Maintaining Suite Validity: Saturation, Contamination, and Coverage Gaps</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s2-4-s0" data-start="286.259" title="Click to jump here"><span class="w">Static</span> <span class="w">eval</span> <span class="w">suites</span> <span class="w">lose</span> <span class="w">validity</span> <span class="w">over</span> <span class="w">time</span> <span class="w">in</span> <span class="w">three</span> <span class="w">ways.</span></span> <span class="sent" data-sent-id="s2-4-s1" data-start="289.684" title="Click to jump here"><span class="w">First,</span> <span class="w">saturation:</span> <span class="w">once</span> <span class="w">scores</span> <span class="w">approach</span> <span class="w">one</span> <span class="w">hundred</span> <span class="w">percent,</span> <span class="w">you</span> <span class="w">lose</span> <span class="w">signal</span> <span class="w">for</span> <span class="w">measuring</span> <span class="w">real</span> <span class="w">capability</span> <span class="w">gains</span> <span class="w">and</span> <span class="w">need</span> <span class="w">harder</span> <span class="w">agentic</span> <span class="w">tasks.</span></span> <span class="sent" data-sent-id="s2-4-s2" data-start="299.104" title="Click to jump here"><span class="w">Second,</span> <span class="w">contamination</span> <span class="w">or</span> <span class="w">overfitting</span> <span class="w">to</span> <span class="w">a</span> <span class="w">small</span> <span class="w">golden</span> <span class="w">set</span> <span class="w">makes</span> <span class="w">offline</span> <span class="w">scores</span> <span class="w">look</span> <span class="w">great</span> <span class="w">while</span> <span class="w">production</span> <span class="w">stagnates.</span></span> <span class="sent" data-sent-id="s2-4-s3" data-start="306.668" title="Click to jump here"><span class="w">Third,</span> <span class="w">coverage</span> <span class="w">gaps</span> <span class="w">and</span> <span class="w">grading</span> <span class="w">bugs</span> <span class="w">hide</span> <span class="w">behind</span> <span class="w">summary</span> <span class="w">numbers,</span> <span class="w">which</span> <span class="w">is</span> <span class="w">why</span> <span class="w">reading</span> <span class="w">transcripts</span> <span class="w">is</span> <span class="w">non-negotiable.</span></span></div></div>
+              <div class="ref-notes"><p>An evaluation suite degrades if left static:</p><ul><li><strong>Saturation:</strong> Once an agent scores near 100%, the suite still catches regressions but provides <em>zero signal for capability improvement</em> (as seen when SWE-bench Verified passed 80%, or when one-shot coding evals masked agentic gains). Add harder, longer-horizon tasks.</li><li><strong>Contamination &amp; Leakage:</strong> Benchmark tasks leaking into training data or prompts overfitted to a small golden set inflate offline scores while production quality stagnates. Maintain held-out test sets and refresh cases from live traffic.</li><li><strong>Coverage Gaps &amp; Transcript Review:</strong> Never take scores at face value without reading transcripts. Audits of benchmarks like CORE-Bench and METR revealed rigid float formatting and threshold misconfigurations that unfairly penalized correct agents.</li></ul></div>
+            </article>
+            <article class="seg kind-table" data-seg-id="s2-5">
+              <div class="seg-top">
+                <span class="seg-label">RELEASE CRITERIA</span>
+                <button class="seg-play-btn" data-jump-seg="s2-5"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Release Gate Strategy Across Change Types</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s2-5-s0" data-start="314.175" title="Click to jump here"><span class="w">Match</span> <span class="w">your</span> <span class="w">release</span> <span class="w">criteria</span> <span class="w">to</span> <span class="w">the</span> <span class="w">risk</span> <span class="w">of</span> <span class="w">the</span> <span class="w">change.</span></span> <span class="sent" data-sent-id="s2-5-s1" data-start="317.28" title="Click to jump here"><span class="w">Run</span> <span class="w">fast</span> <span class="w">deterministic</span> <span class="w">regression</span> <span class="w">suites</span> <span class="w">on</span> <span class="w">every</span> <span class="w">pull</span> <span class="w">request</span> <span class="w">for</span> <span class="w">prompt</span> <span class="w">edits.</span></span> <span class="sent" data-sent-id="s2-5-s2" data-start="322.668" title="Click to jump here"><span class="w">For</span> <span class="w">model</span> <span class="w">version</span> <span class="w">upgrades,</span> <span class="w">run</span> <span class="w">the</span> <span class="w">full</span> <span class="w">regression</span> <span class="w">and</span> <span class="w">capability</span> <span class="w">suites,</span> <span class="w">check</span> <span class="w">pass</span> <span class="w">to</span> <span class="w">the</span> <span class="w">k</span> <span class="w">consistency</span> <span class="w">alongside</span> <span class="w">latency</span> <span class="w">and</span> <span class="w">token</span> <span class="w">budgets,</span> <span class="w">and</span> <span class="w">re-verify</span> <span class="w">your</span> <span class="w">judge</span> <span class="w">calibration.</span></span> <span class="sent" data-sent-id="s2-5-s3" data-start="334.307" title="Click to jump here"><span class="w">For</span> <span class="w">harness</span> <span class="w">or</span> <span class="w">tool</span> <span class="w">changes,</span> <span class="w">test</span> <span class="w">in</span> <span class="w">isolated</span> <span class="w">sandboxes</span> <span class="w">with</span> <span class="w">end-state</span> <span class="w">checks</span> <span class="w">and</span> <span class="w">strict</span> <span class="w">turn</span> <span class="w">caps.</span></span></div></div>
+              <div class="ref-notes"><table><thead><tr><th>Change Type</th><th>Required Offline Gate</th><th>Key Release Criteria</th></tr></thead><tbody><tr><td><strong>Prompt / Skill Edit</strong></td><td>Fast deterministic regression suite on every PR + targeted LLM-rubric cases</td><td>Zero regression on core tasks, balanced trigger/non-trigger pass, positive or non-negative ablation <code>Δ</code></td></tr><tr><td><strong>Model Version Upgrade</strong></td><td>Full regression + capability suite + calibrated judge re-verification</td><td>Meet quality SLOs on <code>pass^k</code>, latency (TTFT/TTLT), token budget, and refusal behavior; re-check judge drift</td></tr><tr><td><strong>Agent Harness / Tool Change</strong></td><td>Isolated multi-turn sandbox evals with mocked or staged MCP servers</td><td>End-state outcome pass rate, turn/cost caps respected, no increase in aborted or timed-out runs</td></tr></tbody></table></div>
+            </article>
+        </section>
+        <section class="section-block" id="sec-3">
+          <div class="section-header">
+            <div class="section-obj">LLM-as-Judge Engineering</div>
+            <h2>Calibrating LLM Judges, Rubrics, Bias Mitigation, and Drift</h2>
+          </div>
+          
+            <article class="seg kind-prose" data-seg-id="s3-1">
+              <div class="seg-top">
+                <span class="seg-label">KEY CONCEPT</span>
+                <button class="seg-play-btn" data-jump-seg="s3-1"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Calibrate Against Human Labels Before Granting Gating Authority</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s3-1-s0" data-start="341.407" title="Click to jump here"><span class="w">Never</span> <span class="w">let</span> <span class="w">an</span> <span class="w">uncalibrated</span> <span class="w">LLM</span> <span class="w">judge</span> <span class="w">gate</span> <span class="w">production</span> <span class="w">releases.</span></span> <span class="sent" data-sent-id="s3-1-s1" data-start="345.557" title="Click to jump here"><span class="w">Treat</span> <span class="w">the</span> <span class="w">judge</span> <span class="w">like</span> <span class="w">a</span> <span class="w">measurement</span> <span class="w">instrument:</span> <span class="w">validate</span> <span class="w">it</span> <span class="w">against</span> <span class="w">a</span> <span class="w">human-labeled</span> <span class="w">golden</span> <span class="w">dataset</span> <span class="w">first.</span></span> <span class="sent" data-sent-id="s3-1-s2" data-start="351.777" title="Click to jump here"><span class="w">If</span> <span class="w">the</span> <span class="w">judge</span> <span class="w">agrees</span> <span class="w">with</span> <span class="w">human</span> <span class="w">raters</span> <span class="w">only</span> <span class="w">slightly</span> <span class="w">better</span> <span class="w">than</span> <span class="w">a</span> <span class="w">coin</span> <span class="w">flip,</span> <span class="w">you</span> <span class="w">must</span> <span class="w">withhold</span> <span class="w">gating</span> <span class="w">authority</span> <span class="w">until</span> <span class="w">you</span> <span class="w">fix</span> <span class="w">the</span> <span class="w">bias,</span> <span class="w">tighten</span> <span class="w">the</span> <span class="w">rubric,</span> <span class="w">and</span> <span class="w">prove</span> <span class="w">acceptable</span> <span class="w">agreement.</span></span></div></div>
+              <div class="ref-notes"><p>An LLM-as-judge is a measurement instrument, not ground truth. Before allowing a model-based grader to gate CI/CD releases, you must <strong>calibrate it against a human-labeled golden dataset</strong> and verify that its verdicts align closely with subject matter experts. If a judge agrees with human raters only slightly better than chance, its verdicts are untrustworthy—<strong>withhold gating authority</strong> until bias is controlled and agreement meets your acceptance bar.</p></div>
+            </article>
+            <article class="seg kind-bullets" data-seg-id="s3-2">
+              <div class="seg-top">
+                <span class="seg-label">RUBRIC ENGINEERING</span>
+                <button class="seg-play-btn" data-jump-seg="s3-2"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Designing High-Signal Judge Rubrics</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s3-2-s0" data-start="363.081" title="Click to jump here"><span class="w">Strong</span> <span class="w">rubrics</span> <span class="w">make</span> <span class="w">or</span> <span class="w">break</span> <span class="w">LLM-as-judge</span> <span class="w">reliability.</span></span> <span class="sent" data-sent-id="s3-2-s1" data-start="366.784" title="Click to jump here"><span class="w">Define</span> <span class="w">explicit</span> <span class="w">pass</span> <span class="w">and</span> <span class="w">fail</span> <span class="w">conditions</span> <span class="w">or</span> <span class="w">anchored</span> <span class="w">one-to-five</span> <span class="w">scales,</span> <span class="w">and</span> <span class="w">isolate</span> <span class="w">one</span> <span class="w">judge</span> <span class="w">call</span> <span class="w">per</span> <span class="w">evaluation</span> <span class="w">dimension</span> <span class="w">instead</span> <span class="w">of</span> <span class="w">asking</span> <span class="w">one</span> <span class="w">prompt</span> <span class="w">to</span> <span class="w">score</span> <span class="w">everything</span> <span class="w">at</span> <span class="w">once.</span></span> <span class="sent" data-sent-id="s3-2-s2" data-start="378.401" title="Click to jump here"><span class="w">Always</span> <span class="w">give</span> <span class="w">the</span> <span class="w">judge</span> <span class="w">an</span> <span class="w">Unknown</span> <span class="w">option</span> <span class="w">when</span> <span class="w">evidence</span> <span class="w">is</span> <span class="w">missing,</span> <span class="w">and</span> <span class="w">enable</span> <span class="w">thinking</span> <span class="w">on</span> <span class="w">the</span> <span class="w">judge</span> <span class="w">model</span> <span class="w">so</span> <span class="w">it</span> <span class="w">reasons</span> <span class="w">carefully</span> <span class="w">before</span> <span class="w">emitting</span> <span class="w">its</span> <span class="w">final</span> <span class="w">score.</span></span></div></div>
+              <div class="ref-notes"><ul><li><strong>Concrete PASS/FAIL or Discrete Scales:</strong> Instruct the judge to output binary labels (<code>correct</code>/<code>incorrect</code>) or an anchored 1–5 Likert scale rather than open-ended prose.</li><li><strong>One Dimension per Judge:</strong> Decompose complex quality into separate rubrics (e.g., groundedness, tone, completeness) and grade each dimension with an <strong>isolated LLM-as-judge</strong> rather than bundling everything into a single prompt.</li><li><strong>Give the Judge an Escape Hatch:</strong> Explicitly allow the judge to return <code>Unknown</code> when context is insufficient, preventing hallucinated verdicts.</li><li><strong>Enable Reasoning Before Scoring:</strong> Turn on <code>thinking</code> on the judge model so it reasons through the evidence before emitting the final verdict, and keep judged excerpts concise (use <code>regex</code> graders for long generated files).</li></ul></div>
+            </article>
+            <article class="seg kind-table" data-seg-id="s3-3">
+              <div class="seg-top">
+                <span class="seg-label">BIAS MITIGATION</span>
+                <button class="seg-play-btn" data-jump-seg="s3-3"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Diagnosing and Controlling LLM-as-Judge Biases</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s3-3-s0" data-start="388.063" title="Click to jump here"><span class="w">LLM</span> <span class="w">judges</span> <span class="w">exhibit</span> <span class="w">predictable</span> <span class="w">biases</span> <span class="w">that</span> <span class="w">can</span> <span class="w">silently</span> <span class="w">break</span> <span class="w">your</span> <span class="w">release</span> <span class="w">gates.</span></span> <span class="sent" data-sent-id="s3-3-s1" data-start="393.643" title="Click to jump here"><span class="w">Position</span> <span class="w">bias</span> <span class="w">causes</span> <span class="w">pairwise</span> <span class="w">judges</span> <span class="w">to</span> <span class="w">favor</span> <span class="w">whichever</span> <span class="w">answer</span> <span class="w">appears</span> <span class="w">first;</span> <span class="w">fix</span> <span class="w">it</span> <span class="w">by</span> <span class="w">randomizing</span> <span class="w">or</span> <span class="w">swapping</span> <span class="w">response</span> <span class="w">order</span> <span class="w">and</span> <span class="w">requiring</span> <span class="w">consistency.</span></span> <span class="sent" data-sent-id="s3-3-s2" data-start="403.98" title="Click to jump here"><span class="w">Verbosity</span> <span class="w">bias</span> <span class="w">rewards</span> <span class="w">padded</span> <span class="w">answers,</span> <span class="w">self-preference</span> <span class="w">favors</span> <span class="w">the</span> <span class="w">judge&#x27;s</span> <span class="w">own</span> <span class="w">model</span> <span class="w">family,</span> <span class="w">and</span> <span class="w">small</span> <span class="w">judge</span> <span class="w">models</span> <span class="w">often</span> <span class="w">fail</span> <span class="w">valid</span> <span class="w">outputs</span> <span class="w">over</span> <span class="w">harmless</span> <span class="w">formatting</span> <span class="w">differences.</span></span> <span class="sent" data-sent-id="s3-3-s3" data-start="415.512" title="Click to jump here"><span class="w">Always</span> <span class="w">test</span> <span class="w">for</span> <span class="w">these</span> <span class="w">on</span> <span class="w">blind</span> <span class="w">human-labeled</span> <span class="w">pairs.</span></span></div></div>
+              <div class="ref-notes"><table><thead><tr><th>Bias / Failure Mode</th><th>Symptom in Eval Data</th><th>Engineering Mitigation</th></tr></thead><tbody><tr><td><strong>Position / Order Bias</strong></td><td>Pairwise judge favors whichever response appears first (or last) far more often than humans do</td><td>Randomize or swap A/B presentation order across dual runs; count a win only when consistent across both orders, then re-measure human agreement</td></tr><tr><td><strong>Verbosity Bias</strong></td><td>Judge systematically rewards longer, more padded answers over concise, accurate ones</td><td>Explicitly penalize fluff in the rubric, test concise vs. verbose pairs in calibration, and separate length-independent factual assertions</td></tr><tr><td><strong>Self-Preference Bias</strong></td><td>Judge favors outputs generated by its own model family or stylistic patterns</td><td>Calibrate against blind human labels; use a stronger or distinct judge model or multi-judge consensus</td></tr><tr><td><strong>Format Sensitivity</strong></td><td>Small judge marks valid answers wrong due to minor formatting differences</td><td>Upgrade judge model (e.g., <code>--judge-model sonnet</code>), tighten rubric to ignore incidental formatting, and use 2-of-3 majority voting</td></tr></tbody></table></div>
+            </article>
+            <article class="seg kind-prose" data-seg-id="s3-4">
+              <div class="seg-top">
+                <span class="seg-label">KEY METRIC</span>
+                <button class="seg-play-btn" data-jump-seg="s3-4"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Inter-Rater Reliability (Cohen&#x27;s Kappa) and Human Consensus</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s3-4-s0" data-start="418.901" title="Click to jump here"><span class="w">Raw</span> <span class="w">percent</span> <span class="w">agreement</span> <span class="w">can</span> <span class="w">fool</span> <span class="w">you</span> <span class="w">on</span> <span class="w">imbalanced</span> <span class="w">datasets,</span> <span class="w">so</span> <span class="w">track</span> <span class="w">chance-corrected</span> <span class="w">inter-rater</span> <span class="w">reliability</span> <span class="w">like</span> <span class="w">Cohen&#x27;s</span> <span class="w">kappa.</span></span> <span class="sent" data-sent-id="s3-4-s1" data-start="426.785" title="Click to jump here"><span class="w">Measure</span> <span class="w">kappa</span> <span class="w">both</span> <span class="w">between</span> <span class="w">your</span> <span class="w">human</span> <span class="w">annotators</span> <span class="w">and</span> <span class="w">between</span> <span class="w">your</span> <span class="w">LLM</span> <span class="w">judge</span> <span class="w">and</span> <span class="w">human</span> <span class="w">consensus.</span></span> <span class="sent" data-sent-id="s3-4-s2" data-start="432.941" title="Click to jump here"><span class="w">If</span> <span class="w">two</span> <span class="w">domain</span> <span class="w">experts</span> <span class="w">disagree</span> <span class="w">on</span> <span class="w">whether</span> <span class="w">a</span> <span class="w">response</span> <span class="w">passes,</span> <span class="w">stop</span> <span class="w">tuning</span> <span class="w">the</span> <span class="w">judge—your</span> <span class="w">task</span> <span class="w">specification</span> <span class="w">or</span> <span class="w">rubric</span> <span class="w">is</span> <span class="w">ambiguous</span> <span class="w">and</span> <span class="w">needs</span> <span class="w">to</span> <span class="w">be</span> <span class="w">rewritten.</span></span></div></div>
+              <div class="ref-notes"><p>Raw percent agreement can be misleading when classes are imbalanced (a judge that always outputs <code>PASS</code> gets 90% agreement on a 90%-pass set). Use chance-corrected metrics like <strong>Cohen's kappa (κ)</strong> to measure both <strong>human-to-human</strong> inter-annotator agreement and <strong>judge-to-human</strong> agreement. If two human domain experts cannot independently reach the same pass/fail verdict on a task, the task specification or rubric itself is ambiguous and must be refined before tuning the judge.</p></div>
+            </article>
+            <article class="seg kind-callout" data-seg-id="s3-5">
+              <div class="seg-top">
+                <span class="seg-label">PRODUCTION OPERATIONS</span>
+                <button class="seg-play-btn" data-jump-seg="s3-5"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Detecting and Controlling Judge Drift Across Model Versions</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s3-5-s0" data-start="443.371" title="Click to jump here"><span class="w">Judge</span> <span class="w">drift</span> <span class="w">happens</span> <span class="w">when</span> <span class="w">an</span> <span class="w">updated</span> <span class="w">judge</span> <span class="w">model</span> <span class="w">becomes</span> <span class="w">stricter</span> <span class="w">or</span> <span class="w">more</span> <span class="w">lenient,</span> <span class="w">creating</span> <span class="w">phantom</span> <span class="w">regressions</span> <span class="w">or</span> <span class="w">false</span> <span class="w">passes</span> <span class="w">even</span> <span class="w">though</span> <span class="w">your</span> <span class="w">application</span> <span class="w">didn&#x27;t</span> <span class="w">change.</span></span> <span class="sent" data-sent-id="s3-5-s1" data-start="453.708" title="Click to jump here"><span class="w">Prevent</span> <span class="w">drift</span> <span class="w">by</span> <span class="w">pinning</span> <span class="w">exact</span> <span class="w">judge</span> <span class="w">model</span> <span class="w">versions</span> <span class="w">in</span> <span class="w">CI,</span> <span class="w">re-running</span> <span class="w">your</span> <span class="w">fixed</span> <span class="w">human</span> <span class="w">calibration</span> <span class="w">set</span> <span class="w">before</span> <span class="w">adopting</span> <span class="w">any</span> <span class="w">new</span> <span class="w">judge</span> <span class="w">model,</span> <span class="w">and</span> <span class="w">auditing</span> <span class="w">periodic</span> <span class="w">human</span> <span class="w">spot</span> <span class="w">checks</span> <span class="w">against</span> <span class="w">judge</span> <span class="w">verdicts.</span></span></div></div>
+              <div class="ref-notes"><p>Just as application behavior shifts across model updates, <strong>judge behavior drifts</strong> when the underlying judge model version changes or when rubrics evolve—producing phantom regressions or inflated pass rates even when the candidate agent did not change. Pin exact judge model IDs in CI, re-run your fixed human-labeled calibration benchmark whenever upgrading the judge model, and monitor judge pass-rate distributions and human spot-check kappa over time.</p></div>
+            </article>
+            <article class="seg kind-code" data-seg-id="s3-6">
+              <div class="seg-top">
+                <span class="seg-label">CODE PATTERN</span>
+                <button class="seg-play-btn" data-jump-seg="s3-6"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Order-Swapped Pairwise Judge with Thinking Enabled</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s3-6-s0" data-start="466.783" title="Click to jump here"><span class="w">This</span> <span class="w">Python</span> <span class="w">pattern</span> <span class="w">eliminates</span> <span class="w">pairwise</span> <span class="w">position</span> <span class="w">bias</span> <span class="w">in</span> <span class="w">two</span> <span class="w">calls.</span></span> <span class="sent" data-sent-id="s3-6-s1" data-start="471.189" title="Click to jump here"><span class="w">It</span> <span class="w">runs</span> <span class="w">the</span> <span class="w">judge</span> <span class="w">with</span> <span class="w">adaptive</span> <span class="w">thinking</span> <span class="w">enabled,</span> <span class="w">first</span> <span class="w">with</span> <span class="w">candidate</span> <span class="w">A</span> <span class="w">in</span> <span class="w">position</span> <span class="w">one</span> <span class="w">and</span> <span class="w">then</span> <span class="w">swapped</span> <span class="w">with</span> <span class="w">candidate</span> <span class="w">B</span> <span class="w">in</span> <span class="w">position</span> <span class="w">one.</span></span> <span class="sent" data-sent-id="s3-6-s2" data-start="479.628" title="Click to jump here"><span class="w">A</span> <span class="w">candidate</span> <span class="w">only</span> <span class="w">wins</span> <span class="w">if</span> <span class="w">it</span> <span class="w">is</span> <span class="w">selected</span> <span class="w">in</span> <span class="w">both</span> <span class="w">orders;</span> <span class="w">if</span> <span class="w">the</span> <span class="w">verdicts</span> <span class="w">flip,</span> <span class="w">the</span> <span class="w">pair</span> <span class="w">is</span> <span class="w">flagged</span> <span class="w">as</span> <span class="w">a</span> <span class="w">tie</span> <span class="w">or</span> <span class="w">position-inconsistent</span> <span class="w">result.</span></span></div></div>
+              <div class="ref-notes"><pre><code>def judge_pair_debiased(prompt: str, resp_a: str, resp_b: str) -&gt; str:
+    def run_once(first: str, second: str) -&gt; str:
+        msg = client.messages.create(
+            model="claude-sonnet-5",
+            max_tokens=2048,
+            thinking={"type": "adaptive"},
+            messages=[{"role": "user", "content": f"""Compare Candidate 1 and Candidate 2.
+Ignore length and formatting; judge factual accuracy and rubric adherence only.
+Output '1', '2', 'tie', or 'unknown' in &lt;verdict&gt; tags.
+&lt;prompt&gt;{prompt}&lt;/prompt&gt;
+&lt;candidate_1&gt;{first}&lt;/candidate_1&gt;
+&lt;candidate_2&gt;{second}&lt;/candidate_2&gt;"""}],
+        )
+        return extract_verdict(msg)
+
+    v1 = run_once(resp_a, resp_b)          # A first, B second
+    v2 = run_once(resp_b, resp_a)          # B first, A second
+    if v1 == "1" and v2 == "2": return "A"
+    if v1 == "2" and v2 == "1": return "B"
+    return "tie_or_inconsistent"           # Position-biased disagreement</code></pre></div>
+            </article>
+        </section>
+        <section class="section-block" id="sec-4">
+          <div class="section-header">
+            <div class="section-obj">Online Quality Measurement</div>
+            <h2>Live-Traffic Sampling, A/B Testing, Feedback Loops, and Task Metrics</h2>
+          </div>
+          
+            <article class="seg kind-prose" data-seg-id="s4-1">
+              <div class="seg-top">
+                <span class="seg-label">ARCHITECTURE PATTERN</span>
+                <button class="seg-play-btn" data-jump-seg="s4-1"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>The Swiss Cheese Model of Production Quality</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s4-1-s0" data-start="489.053" title="Click to jump here"><span class="w">Think</span> <span class="w">of</span> <span class="w">production</span> <span class="w">quality</span> <span class="w">assurance</span> <span class="w">as</span> <span class="w">the</span> <span class="w">Swiss</span> <span class="w">Cheese</span> <span class="w">Model:</span> <span class="w">no</span> <span class="w">single</span> <span class="w">layer</span> <span class="w">catches</span> <span class="w">every</span> <span class="w">bug,</span> <span class="w">so</span> <span class="w">you</span> <span class="w">stack</span> <span class="w">defenses.</span></span> <span class="sent" data-sent-id="s4-1-s1" data-start="496.255" title="Click to jump here"><span class="w">Automated</span> <span class="w">offline</span> <span class="w">evals</span> <span class="w">guard</span> <span class="w">CI/CD</span> <span class="w">before</span> <span class="w">launch.</span></span> <span class="sent" data-sent-id="s4-1-s2" data-start="500.341" title="Click to jump here"><span class="w">Production</span> <span class="w">monitoring</span> <span class="w">catches</span> <span class="w">real-world</span> <span class="w">distribution</span> <span class="w">drift.</span></span> <span class="sent" data-sent-id="s4-1-s3" data-start="504.129" title="Click to jump here"><span class="w">Shadow</span> <span class="w">evaluations</span> <span class="w">and</span> <span class="w">A/B</span> <span class="w">tests</span> <span class="w">validate</span> <span class="w">major</span> <span class="w">changes</span> <span class="w">safely.</span></span> <span class="sent" data-sent-id="s4-1-s4" data-start="509.027" title="Click to jump here"><span class="w">Weekly</span> <span class="w">transcript</span> <span class="w">reviews,</span> <span class="w">user</span> <span class="w">feedback</span> <span class="w">triage,</span> <span class="w">and</span> <span class="w">periodic</span> <span class="w">human</span> <span class="w">studies</span> <span class="w">close</span> <span class="w">the</span> <span class="w">remaining</span> <span class="w">blind</span> <span class="w">spots.</span></span></div></div>
+              <div class="ref-notes"><p>No single evaluation layer catches every failure. Like the <strong>Swiss Cheese Model</strong> in safety engineering, mature Claude teams layer six complementary methods: <strong>automated offline evals</strong> in CI/CD (fast, pre-launch defense), <strong>production monitoring</strong> (real-world drift and error detection), <strong>shadow evaluation and A/B testing</strong> (controlled live validation), <strong>user feedback</strong> (thumbs-down and bug reports), <strong>weekly manual transcript review</strong> (qualitative intuition), and <strong>periodic systematic human studies</strong> (gold-standard calibration).</p></div>
+            </article>
+            <article class="seg kind-bullets" data-seg-id="s4-2">
+              <div class="seg-top">
+                <span class="seg-label">ONLINE TECHNIQUES</span>
+                <button class="seg-play-btn" data-jump-seg="s4-2"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Live-Traffic Sampling and Shadow Evaluation</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s4-2-s0" data-start="516.299" title="Click to jump here"><span class="w">Online</span> <span class="w">evaluation</span> <span class="w">brings</span> <span class="w">your</span> <span class="w">graders</span> <span class="w">to</span> <span class="w">real</span> <span class="w">traffic.</span></span> <span class="sent" data-sent-id="s4-2-s1" data-start="519.895" title="Click to jump here"><span class="w">Use</span> <span class="w">stratified</span> <span class="w">live-traffic</span> <span class="w">sampling</span> <span class="w">to</span> <span class="w">run</span> <span class="w">calibrated</span> <span class="w">judges</span> <span class="w">asynchronously</span> <span class="w">across</span> <span class="w">representative</span> <span class="w">requests,</span> <span class="w">oversampling</span> <span class="w">high-risk</span> <span class="w">cohorts</span> <span class="w">and</span> <span class="w">long-turn</span> <span class="w">sessions.</span></span> <span class="sent" data-sent-id="s4-2-s2" data-start="530.381" title="Click to jump here"><span class="w">Before</span> <span class="w">exposing</span> <span class="w">users</span> <span class="w">to</span> <span class="w">a</span> <span class="w">new</span> <span class="w">model</span> <span class="w">or</span> <span class="w">prompt,</span> <span class="w">run</span> <span class="w">shadow</span> <span class="w">evaluations</span> <span class="w">that</span> <span class="w">replay</span> <span class="w">real</span> <span class="w">inputs</span> <span class="w">in</span> <span class="w">the</span> <span class="w">background</span> <span class="w">so</span> <span class="w">you</span> <span class="w">can</span> <span class="w">measure</span> <span class="w">latency,</span> <span class="w">cost,</span> <span class="w">and</span> <span class="w">quality</span> <span class="w">on</span> <span class="w">true</span> <span class="w">production</span> <span class="w">distributions</span> <span class="w">with</span> <span class="w">zero</span> <span class="w">user</span> <span class="w">impact.</span></span></div></div>
+              <div class="ref-notes"><ul><li><strong>Stratified Live-Traffic Sampling:</strong> Run asynchronous online evaluators (deterministic checks and calibrated LLM judges) on a representative sample of production traces, oversampling high-risk cohorts, long-turn sessions, and tool-error traces to detect distribution shift without blowing up cost.</li><li><strong>Shadow Evaluation:</strong> Replay live production inputs against a candidate prompt, model, or harness in the background without returning its output to users—measuring latency, token cost, schema validity, and judge scores on real traffic distribution with zero user impact.</li><li><strong>Privacy-Safe Capture:</strong> Apply PII redaction and zero-data-retention policies before sampling traces into offline evaluation datasets.</li></ul></div>
+            </article>
+            <article class="seg kind-callout" data-seg-id="s4-3">
+              <div class="seg-top">
+                <span class="seg-label">TRADE-OFFS</span>
+                <button class="seg-play-btn" data-jump-seg="s4-3"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>A/B Testing vs. User Feedback Loops</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s4-3-s0" data-start="544.629" title="Click to jump here"><span class="w">Know</span> <span class="w">the</span> <span class="w">trade-offs</span> <span class="w">between</span> <span class="w">A/B</span> <span class="w">tests</span> <span class="w">and</span> <span class="w">user</span> <span class="w">feedback.</span></span> <span class="sent" data-sent-id="s4-3-s1" data-start="548.289" title="Click to jump here"><span class="w">A/B</span> <span class="w">tests</span> <span class="w">control</span> <span class="w">for</span> <span class="w">confounds</span> <span class="w">and</span> <span class="w">measure</span> <span class="w">real</span> <span class="w">user</span> <span class="w">outcomes</span> <span class="w">like</span> <span class="w">task</span> <span class="w">completion</span> <span class="w">and</span> <span class="w">retention,</span> <span class="w">but</span> <span class="w">they</span> <span class="w">take</span> <span class="w">days</span> <span class="w">or</span> <span class="w">weeks</span> <span class="w">to</span> <span class="w">reach</span> <span class="w">significance</span> <span class="w">and</span> <span class="w">don&#x27;t</span> <span class="w">tell</span> <span class="w">you</span> <span class="w">why</span> <span class="w">a</span> <span class="w">metric</span> <span class="w">moved</span> <span class="w">until</span> <span class="w">you</span> <span class="w">read</span> <span class="w">the</span> <span class="w">transcripts.</span></span> <span class="sent" data-sent-id="s4-3-s2" data-start="562.445" title="Click to jump here"><span class="w">Explicit</span> <span class="w">thumbs-down</span> <span class="w">feedback</span> <span class="w">surfaces</span> <span class="w">real</span> <span class="w">edge</span> <span class="w">cases,</span> <span class="w">yet</span> <span class="w">it</span> <span class="w">is</span> <span class="w">sparse</span> <span class="w">and</span> <span class="w">self-selected,</span> <span class="w">so</span> <span class="w">pair</span> <span class="w">it</span> <span class="w">with</span> <span class="w">implicit</span> <span class="w">signals</span> <span class="w">like</span> <span class="w">retries</span> <span class="w">and</span> <span class="w">escalations.</span></span></div></div>
+              <div class="ref-notes"><p><strong>A/B testing</strong> measures actual user outcomes (task completion, retention, escalation rate) while controlling for confounds, but it is slow (requiring days or weeks and sufficient traffic to reach statistical significance) and reveals <em>what</em> changed without explaining <em>why</em>—always pair A/B deltas with transcript review. <strong>Explicit user feedback</strong> (thumbs-down, bug reports) surfaces unanticipated edge cases with real examples, but it is sparse, self-selected, and skews toward severe failures; combine it with <strong>implicit signals</strong> (retries, abandonment, edits, human escalations).</p></div>
+            </article>
+            <article class="seg kind-table" data-seg-id="s4-4">
+              <div class="seg-top">
+                <span class="seg-label">METRIC SELECTION</span>
+                <button class="seg-play-btn" data-jump-seg="s4-4"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Matching Evaluation Metrics to Task Type</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s4-4-s0" data-start="572.64" title="Click to jump here"><span class="w">On</span> <span class="w">the</span> <span class="w">exam,</span> <span class="w">match</span> <span class="w">your</span> <span class="w">metrics</span> <span class="w">tightly</span> <span class="w">to</span> <span class="w">the</span> <span class="w">task</span> <span class="w">type.</span></span> <span class="sent" data-sent-id="s4-4-s1" data-start="575.916" title="Click to jump here"><span class="w">For</span> <span class="w">extraction</span> <span class="w">and</span> <span class="w">classification,</span> <span class="w">use</span> <span class="w">exact</span> <span class="w">match,</span> <span class="w">F1,</span> <span class="w">and</span> <span class="w">schema</span> <span class="w">compliance.</span></span> <span class="sent" data-sent-id="s4-4-s2" data-start="581.219" title="Click to jump here"><span class="w">For</span> <span class="w">open-ended</span> <span class="w">generation,</span> <span class="w">use</span> <span class="w">calibrated</span> <span class="w">rubric</span> <span class="w">scores</span> <span class="w">and</span> <span class="w">user</span> <span class="w">acceptance</span> <span class="w">rates.</span></span> <span class="sent" data-sent-id="s4-4-s3" data-start="586.585" title="Click to jump here"><span class="w">For</span> <span class="w">agentic</span> <span class="w">workflows,</span> <span class="w">prioritize</span> <span class="w">verified</span> <span class="w">end-state</span> <span class="w">outcomes,</span> <span class="w">pass</span> <span class="w">to</span> <span class="w">the</span> <span class="w">k</span> <span class="w">consistency,</span> <span class="w">and</span> <span class="w">turn</span> <span class="w">or</span> <span class="w">cost</span> <span class="w">efficiency.</span></span> <span class="sent" data-sent-id="s4-4-s4" data-start="594.875" title="Click to jump here"><span class="w">For</span> <span class="w">retrieval-grounded</span> <span class="w">systems,</span> <span class="w">measure</span> <span class="w">retrieval</span> <span class="w">precision,</span> <span class="w">claim</span> <span class="w">groundedness,</span> <span class="w">citation</span> <span class="w">accuracy,</span> <span class="w">and</span> <span class="w">proper</span> <span class="w">abstention.</span></span></div></div>
+              <div class="ref-notes"><table><thead><tr><th>Task Type</th><th>Primary Offline &amp; Online Metrics</th><th>Preferred Grader Mix</th></tr></thead><tbody><tr><td><strong>Extraction / Classification</strong></td><td>Exact match, precision/recall, F1 score, JSON schema compliance rate</td><td>Deterministic code checks + Structured Outputs validation</td></tr><tr><td><strong>Open-Ended Generation</strong></td><td>Rubric-scored coherence, tone, instruction adherence, pairwise win rate, user edit/acceptance rate</td><td>Calibrated LLM-as-judge + periodic human SME studies</td></tr><tr><td><strong>Agentic Workflows</strong></td><td>End-state outcome pass rate, <code>pass^k</code> (consistency) or <code>pass@k</code>, turns/tool-calls per task, cost &amp; latency (TTFT/TTLT), escalation rate</td><td>Environment <code>state_check</code> + unit/static tests + transcript constraints + LLM rubric</td></tr><tr><td><strong>Retrieval-Grounded (RAG / Research)</strong></td><td>Retrieval precision &amp; recall, claim groundedness (faithfulness), key-fact coverage, citation accuracy, abstention rate on unanswerable queries</td><td>Citation/quote verifier + retrieval metrics + calibrated groundedness judge</td></tr></tbody></table></div>
+            </article>
+            <article class="seg kind-prose" data-seg-id="s4-5">
+              <div class="seg-top">
+                <span class="seg-label">CLOSING THE LOOP</span>
+                <button class="seg-play-btn" data-jump-seg="s4-5"><span class="pulse-dot"></span>&#9654; Play block</button>
+              </div>
+              <h3>Eval-Driven Development: Turning Production Failures into Regression Tests</h3>
+              <div class="read-along"><div class="read-along-tag">Live Read-Along (click any sentence to jump)</div><div><span class="sent" data-sent-id="s4-5-s0" data-start="602.723" title="Click to jump here"><span class="w">Finally,</span> <span class="w">close</span> <span class="w">the</span> <span class="w">loop</span> <span class="w">with</span> <span class="w">eval-driven</span> <span class="w">development.</span></span> <span class="sent" data-sent-id="s4-5-s1" data-start="605.743" title="Click to jump here"><span class="w">Every</span> <span class="w">time</span> <span class="w">live-traffic</span> <span class="w">sampling,</span> <span class="w">a</span> <span class="w">thumbs-down</span> <span class="w">report,</span> <span class="w">or</span> <span class="w">a</span> <span class="w">weekly</span> <span class="w">transcript</span> <span class="w">review</span> <span class="w">reveals</span> <span class="w">a</span> <span class="w">new</span> <span class="w">failure</span> <span class="w">mode,</span> <span class="w">convert</span> <span class="w">that</span> <span class="w">redacted</span> <span class="w">example</span> <span class="w">into</span> <span class="w">an</span> <span class="w">unambiguous</span> <span class="w">offline</span> <span class="w">regression</span> <span class="w">test</span> <span class="w">with</span> <span class="w">a</span> <span class="w">reference</span> <span class="w">solution.</span></span> <span class="sent" data-sent-id="s4-5-s2" data-start="619.707" title="Click to jump here"><span class="w">That</span> <span class="w">way,</span> <span class="w">every</span> <span class="w">production</span> <span class="w">incident</span> <span class="w">strengthens</span> <span class="w">your</span> <span class="w">CI</span> <span class="w">gate</span> <span class="w">permanently.</span></span></div></div>
+              <div class="ref-notes"><p>The highest-leverage operational habit in evaluation engineering is closing the loop between production and CI/CD. Every time online monitoring, a user report, or a weekly transcript review uncovers a novel failure mode, convert that redacted trace into an unambiguous, balanced test case with a reference solution and add it to the offline suite. Over time, failures compound into permanent institutional memory—turning reactive firefighting into predictable, metric-driven releases.</p></div>
+            </article>
+        </section>
+
+      <section class="quiz-section" id="scenarios">
+        <div class="section-header">
+          <div class="section-obj">CCDV-P Scenario Practice</div>
+          <h2>Production Scenario Questions</h2>
+        </div>
+        
+        <div class="scenario-card" data-correct="B">
+          <h3>Scenario 1: Brittle Agent Evals and Hidden Non-Determinism</h3>
+          <p class="scenario-prompt">A platform team is preparing to upgrade their customer-facing billing support agent to a newer Claude model. Their offline eval suite runs each of 60 tasks once (k=1) and asserts that the agent invokes `lookup_account`, `fetch_policy`, and `issue_credit` in that exact order. After the upgrade, the suite pass rate drops from 92% to 74%, yet manual spot checks show the new model resolves tickets accurately by calling `fetch_policy` and `lookup_account` in parallel. Meanwhile, customers on the current version report intermittent failures where identical refund requests succeed on one attempt and fail on the next. Which combination of changes best fixes their evaluation methodology?</p>
+          <div class="opt-list"><button class="opt-btn" data-key="A"><strong>A.</strong> Keep the strict tool-order assertion so the new model is forced to match the legacy sequence, and increase the pass@5 threshold to 95%.</button><button class="opt-btn" data-key="B"><strong>B.</strong> Replace the rigid tool-order assertion with end-state outcome checks and required-action checks, and evaluate multiple trials per task using pass^k to measure consistency.</button><button class="opt-btn" data-key="C"><strong>C.</strong> Replace all deterministic graders with a single LLM-as-judge prompt that scores tool order, tone, and database state together, and run k=1 to control CI costs.</button><button class="opt-btn" data-key="D"><strong>D.</strong> Remove the failing tasks from the regression suite until the new model reaches 95% pass@1, then re-introduce them as capability evals.</button></div>
+          <div class="rationale">
+            <strong>Answer: B</strong> &mdash; B addresses both root issues: grading rigid tool-call sequences penalizes valid parallel or creative agent paths (grade outcomes and required preconditions instead), and running k=1 hides non-deterministic flakiness that hurts customer-facing agents—pass^k directly measures the probability that all k trials succeed consistently. A enforces a brittle path and uses pass@5, which measures at least one success rather than consistency; C bundles multiple dimensions into one uncalibrated LLM judge and keeps k=1; D masks real regressions by deleting failing tests.
+          </div>
+        </div>
+        <div class="scenario-card" data-correct="A">
+          <h3>Scenario 2: Uncalibrated Pairwise Judge and Judge Drift</h3>
+          <p class="scenario-prompt">An engineering team uses a pairwise LLM-as-judge in CI/CD to gate weekly prompt updates by comparing the candidate response (always placed first) against the production baseline (always placed second). After upgrading the judge model to a smaller, faster model to reduce CI spend, candidate pass rates jump from 58% to 94%, yet production CSAT drops over the next two releases. Auditing 100 human-labeled pairs reveals the new judge has a Cohen&#x27;s kappa of 0.14 with SMEs and picks whichever candidate appears first 81% of the time. What should the team do first?</p>
+          <div class="opt-list"><button class="opt-btn" data-key="A"><strong>A.</strong> Immediately withhold automated gating authority from the judge, randomize/swap candidate ordering, re-calibrate against the human-labeled set, and pin a validated judge model before restoring the gate.</button><button class="opt-btn" data-key="B"><strong>B.</strong> Raise the CI win-rate threshold from 50% to 85% so that only strongly superior candidate prompts pass the faster judge.</button><button class="opt-btn" data-key="C"><strong>C.</strong> Keep the faster judge model in place but add a prompt instruction telling it not to be biased toward the first response.</button><button class="opt-btn" data-key="D"><strong>D.</strong> Switch from pairwise comparison to a 1–10 Likert scale on the same smaller judge model and resume gating immediately.</button></div>
+          <div class="rationale">
+            <strong>Answer: A</strong> &mdash; A directly resolves both judge drift and severe position bias (81% first-position preference, kappa 0.14): an uncalibrated judge cannot safely gate releases, so the team must suspend gating authority, control position bias via order randomization/swapping, pin a calibrated judge model, and verify acceptable Cohen&#x27;s kappa against human labels first. B merely shifts the threshold on a broken signal; C relies on a prompt-only plea without measuring or fixing calibration; D changes the scoring format without validating agreement on the smaller judge.
+          </div>
+        </div>
+        <div class="scenario-card" data-correct="C">
+          <h3>Scenario 3: Offline Saturation vs. Live Retrieval-Grounded Failures</h3>
+          <p class="scenario-prompt">A financial research assistant powered by Claude maintains a 99% pass rate on its 120-task offline regression suite. Despite green CI builds, enterprise customers report that answers to recent regulatory filings increasingly contain unsupported numbers and fail to admit when a filing lacks the requested metric. Investigation shows the offline golden set has not been updated in nine months and only checks exact-match answers on older filings. Which strategy best restores quality assurance?</p>
+          <div class="opt-list"><button class="opt-btn" data-key="A"><strong>A.</strong> Increase the CI pass threshold on the existing 120-task suite from 95% to 100% and run each task 5 times to catch regressions.</button><button class="opt-btn" data-key="B"><strong>B.</strong> Replace offline evaluations entirely with a 50/50 production A/B test on every prompt commit so only live user ratings gate releases.</button><button class="opt-btn" data-key="C"><strong>C.</strong> Deploy live-traffic stratified sampling with calibrated groundedness, citation, and abstention checks; review failing transcripts; and expand the offline suite with balanced new-filing and unanswerable tasks.</button><button class="opt-btn" data-key="D"><strong>D.</strong> Add a verbosity-penalizing LLM judge to the existing 120-task suite so answers become shorter and less likely to hallucinate.</button></div>
+          <div class="rationale">
+            <strong>Answer: C</strong> &mdash; C applies the Swiss Cheese Model to fix suite saturation and coverage gaps: live-traffic sampling with task-matched retrieval-grounded metrics (groundedness, citation verification, abstention on unanswerable queries) detects real-world drift immediately, transcript review diagnoses failure modes, and feeding balanced new-filing and unanswerable cases back into the offline suite restores CI signal. A tightens a saturated, stale suite; B exposes users directly to untested regressions and is too slow for per-commit gating; D optimizes length on stale tasks without measuring groundedness or abstention.
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+<script>
+const TIMELINE = {"duration":623.717,"segments":[{"id":"intro","section":"Overview","start":0.0,"end":43.717,"sentences":[{"id":"intro-s0","start":0.0,"end":3.477,"words":[{"t":"Domain","s":0.0,"e":0.407},{"t":"5:","s":0.407,"e":0.659},{"t":"Evaluation","s":0.659,"e":1.338},{"t":"Engineering","s":1.338,"e":2.085},{"t":"and","s":2.085,"e":2.289},{"t":"Quality","s":2.289,"e":2.764},{"t":"Assurance.","s":2.764,"e":3.477}]},{"id":"intro-s1","start":3.617,"end":5.345,"words":[{"t":"Exam","s":3.617,"e":4.057},{"t":"weight:","s":4.057,"e":4.96},{"t":"12%.","s":4.96,"e":5.345}]},{"id":"intro-s2","start":5.485,"end":16.301,"words":[{"t":"Proving","s":5.485,"e":5.982},{"t":"that","s":5.982,"e":6.266},{"t":"prompt,","s":6.266,"e":6.849},{"t":"model,","s":6.849,"e":7.36},{"t":"and","s":7.36,"e":7.573},{"t":"agent","s":7.573,"e":7.928},{"t":"changes","s":7.928,"e":8.425},{"t":"genuinely","s":8.425,"e":9.064},{"t":"improve","s":9.064,"e":9.561},{"t":"production","s":9.561,"e":10.272},{"t":"quality","s":10.272,"e":10.769},{"t":"through","s":10.769,"e":11.266},{"t":"calibrated","s":11.266,"e":11.976},{"t":"offline","s":11.976,"e":12.473},{"t":"suites,","s":12.473,"e":13.055},{"t":"unbiased","s":13.055,"e":13.624},{"t":"LLM","s":13.624,"e":13.837},{"t":"judges,","s":13.837,"e":14.419},{"t":"and","s":14.419,"e":14.632},{"t":"live-traffic","s":14.632,"e":15.413},{"t":"measurement.","s":15.413,"e":16.301}]},{"id":"intro-s3","start":16.441,"end":22.713,"words":[{"t":"A","s":16.441,"e":16.537},{"t":"staff","s":16.537,"e":16.858},{"t":"engineer","s":16.858,"e":17.372},{"t":"treats","s":17.372,"e":17.757},{"t":"evaluations","s":17.757,"e":18.463},{"t":"like","s":18.463,"e":18.72},{"t":"production","s":18.72,"e":19.362},{"t":"software","s":19.362,"e":19.876},{"t":"infrastructure,","s":19.876,"e":20.915},{"t":"not","s":20.915,"e":21.108},{"t":"a","s":21.108,"e":21.204},{"t":"one-off","s":21.204,"e":21.59},{"t":"spreadsheet","s":21.59,"e":22.296},{"t":"check.","s":22.296,"e":22.713}]},{"id":"intro-s4","start":22.853,"end":43.717,"words":[{"t":"On","s":22.853,"e":23.013},{"t":"the","s":23.013,"e":23.253},{"t":"CCDV-P","s":23.253,"e":23.652},{"t":"exam,","s":23.652,"e":24.148},{"t":"never","s":24.148,"e":24.548},{"t":"trust","s":24.548,"e":24.947},{"t":"an","s":24.947,"e":25.107},{"t":"uncalibrated","s":25.107,"e":26.067},{"t":"metric","s":26.067,"e":26.546},{"t":"or","s":26.546,"e":26.706},{"t":"a","s":26.706,"e":26.826},{"t":"100%","s":26.826,"e":27.066},{"t":"pass","s":27.066,"e":27.386},{"t":"rate","s":27.386,"e":27.705},{"t":"at","s":27.705,"e":27.865},{"t":"face","s":27.865,"e":28.185},{"t":"value:","s":28.185,"e":28.76},{"t":"verify","s":28.76,"e":29.24},{"t":"grader","s":29.24,"e":29.72},{"t":"agreement","s":29.72,"e":30.439},{"t":"against","s":30.439,"e":30.999},{"t":"human","s":30.999,"e":31.398},{"t":"labels,","s":31.398,"e":32.054},{"t":"grade","s":32.054,"e":32.454},{"t":"final","s":32.454,"e":32.853},{"t":"environment","s":32.853,"e":33.733},{"t":"outcomes","s":33.733,"e":34.372},{"t":"rather","s":34.372,"e":34.852},{"t":"than","s":34.852,"e":35.172},{"t":"brittle","s":35.172,"e":35.731},{"t":"tool-call","s":35.731,"e":36.371},{"t":"paths,","s":36.371,"e":36.946},{"t":"isolate","s":36.946,"e":37.506},{"t":"every","s":37.506,"e":37.905},{"t":"trial,","s":37.905,"e":38.481},{"t":"and","s":38.481,"e":38.721},{"t":"layer","s":38.721,"e":39.121},{"t":"offline","s":39.121,"e":39.68},{"t":"CI","s":39.68,"e":39.84},{"t":"gates","s":39.84,"e":40.24},{"t":"with","s":40.24,"e":40.559},{"t":"live-traffic","s":40.559,"e":41.439},{"t":"sampling","s":41.439,"e":42.078},{"t":"and","s":42.078,"e":42.318},{"t":"transcript","s":42.318,"e":43.117},{"t":"review.","s":43.117,"e":43.717}]}]},{"id":"s1-1","section":"Offline Eval Architecture, Graders, and Agent Non-Determinism","start":44.417,"end":68.325,"sentences":[{"id":"s1-1-s0","start":44.417,"end":48.855,"words":[{"t":"When","s":44.417,"e":44.691},{"t":"you","s":44.691,"e":44.897},{"t":"evaluate","s":44.897,"e":45.446},{"t":"an","s":45.446,"e":45.583},{"t":"AI","s":45.583,"e":45.72},{"t":"agent,","s":45.72,"e":46.214},{"t":"you","s":46.214,"e":46.42},{"t":"are","s":46.42,"e":46.626},{"t":"never","s":46.626,"e":46.969},{"t":"testing","s":46.969,"e":47.449},{"t":"the","s":47.449,"e":47.655},{"t":"model","s":47.655,"e":47.998},{"t":"in","s":47.998,"e":48.135},{"t":"isolation.","s":48.135,"e":48.855}]},{"id":"s1-1-s1","start":48.995,"end":51.96,"words":[{"t":"You","s":48.995,"e":49.178},{"t":"are","s":49.178,"e":49.362},{"t":"testing","s":49.362,"e":49.79},{"t":"the","s":49.79,"e":49.973},{"t":"model","s":49.973,"e":50.279},{"t":"and","s":50.279,"e":50.462},{"t":"its","s":50.462,"e":50.646},{"t":"agent","s":50.646,"e":50.951},{"t":"harness","s":50.951,"e":51.379},{"t":"together.","s":51.379,"e":51.96}]},{"id":"s1-1-s2","start":52.1,"end":58.095,"words":[{"t":"Each","s":52.1,"e":52.402},{"t":"test","s":52.402,"e":52.704},{"t":"case","s":52.704,"e":53.006},{"t":"is","s":53.006,"e":53.157},{"t":"a","s":53.157,"e":53.27},{"t":"task,","s":53.27,"e":53.738},{"t":"and","s":53.738,"e":53.965},{"t":"each","s":53.965,"e":54.267},{"t":"run","s":54.267,"e":54.493},{"t":"is","s":54.493,"e":54.644},{"t":"a","s":54.644,"e":54.758},{"t":"trial","s":54.758,"e":55.135},{"t":"executed","s":55.135,"e":55.739},{"t":"in","s":55.739,"e":55.89},{"t":"a","s":55.89,"e":56.004},{"t":"clean,","s":56.004,"e":56.547},{"t":"isolated","s":56.547,"e":57.151},{"t":"environment.","s":57.151,"e":58.095}]},{"id":"s1-1-s3","start":58.235,"end":68.325,"words":[{"t":"Crucially,","s":58.235,"e":58.967},{"t":"graders","s":58.967,"e":59.425},{"t":"should","s":59.425,"e":59.817},{"t":"distinguish","s":59.817,"e":60.537},{"t":"between","s":60.537,"e":60.995},{"t":"the","s":60.995,"e":61.191},{"t":"transcript,","s":61.191,"e":61.989},{"t":"which","s":61.989,"e":62.315},{"t":"is","s":62.315,"e":62.446},{"t":"the","s":62.446,"e":62.642},{"t":"full","s":62.642,"e":62.904},{"t":"messages","s":62.904,"e":63.427},{"t":"array,","s":63.427,"e":63.898},{"t":"and","s":63.898,"e":64.094},{"t":"the","s":64.094,"e":64.29},{"t":"outcome,","s":64.29,"e":64.892},{"t":"which","s":64.892,"e":65.219},{"t":"is","s":65.219,"e":65.35},{"t":"the","s":65.35,"e":65.546},{"t":"actual","s":65.546,"e":65.938},{"t":"final","s":65.938,"e":66.265},{"t":"state","s":66.265,"e":66.592},{"t":"in","s":66.592,"e":66.723},{"t":"the","s":66.723,"e":66.919},{"t":"database","s":66.919,"e":67.442},{"t":"or","s":67.442,"e":67.573},{"t":"file","s":67.573,"e":67.835},{"t":"system.","s":67.835,"e":68.325}]}]},{"id":"s1-2","section":"Offline Eval Architecture, Graders, and Agent Non-Determinism","start":68.685,"end":97.875,"sentences":[{"id":"s1-2-s0","start":68.685,"end":75.043,"words":[{"t":"Watch","s":68.685,"e":69.041},{"t":"out","s":69.041,"e":69.255},{"t":"for","s":69.255,"e":69.469},{"t":"a","s":69.469,"e":69.576},{"t":"classic","s":69.576,"e":70.075},{"t":"exam","s":70.075,"e":70.36},{"t":"trap:","s":70.36,"e":70.802},{"t":"grading","s":70.802,"e":71.301},{"t":"the","s":71.301,"e":71.515},{"t":"exact","s":71.515,"e":71.871},{"t":"sequence","s":71.871,"e":72.441},{"t":"of","s":72.441,"e":72.584},{"t":"tool","s":72.584,"e":72.869},{"t":"calls","s":72.869,"e":73.225},{"t":"instead","s":73.225,"e":73.724},{"t":"of","s":73.724,"e":73.867},{"t":"the","s":73.867,"e":74.081},{"t":"final","s":74.081,"e":74.437},{"t":"outcome.","s":74.437,"e":75.043}]},{"id":"s1-2-s1","start":75.183,"end":80.879,"words":[{"t":"Frontier","s":75.183,"e":75.755},{"t":"models","s":75.755,"e":76.184},{"t":"often","s":76.184,"e":76.541},{"t":"find","s":76.541,"e":76.827},{"t":"creative,","s":76.827,"e":77.556},{"t":"valid","s":77.556,"e":77.913},{"t":"paths","s":77.913,"e":78.27},{"t":"that","s":78.27,"e":78.556},{"t":"rigid","s":78.556,"e":78.914},{"t":"sequence","s":78.914,"e":79.485},{"t":"checks","s":79.485,"e":79.914},{"t":"unfairly","s":79.914,"e":80.486},{"t":"fail.","s":80.486,"e":80.879}]},{"id":"s1-2-s2","start":81.019,"end":83.387,"words":[{"t":"Also,","s":81.019,"e":81.43},{"t":"never","s":81.43,"e":81.762},{"t":"share","s":81.762,"e":82.094},{"t":"state","s":82.094,"e":82.425},{"t":"between","s":82.425,"e":82.89},{"t":"trials.","s":82.89,"e":83.387}]},{"id":"s1-2-s3","start":83.527,"end":88.689,"words":[{"t":"Leftover","s":83.527,"e":84.113},{"t":"files","s":84.113,"e":84.479},{"t":"or","s":84.479,"e":84.625},{"t":"git","s":84.625,"e":84.845},{"t":"history","s":84.845,"e":85.357},{"t":"can","s":85.357,"e":85.577},{"t":"cause","s":85.577,"e":85.943},{"t":"correlated","s":85.943,"e":86.675},{"t":"failures","s":86.675,"e":87.261},{"t":"or","s":87.261,"e":87.408},{"t":"let","s":87.408,"e":87.627},{"t":"the","s":87.627,"e":87.847},{"t":"model","s":87.847,"e":88.213},{"t":"cheat.","s":88.213,"e":88.689}]},{"id":"s1-2-s4","start":88.829,"end":97.875,"words":[{"t":"Always","s":88.829,"e":89.271},{"t":"verify","s":89.271,"e":89.714},{"t":"every","s":89.714,"e":90.082},{"t":"task","s":90.082,"e":90.377},{"t":"with","s":90.377,"e":90.672},{"t":"a","s":90.672,"e":90.783},{"t":"reference","s":90.783,"e":91.446},{"t":"solution,","s":91.446,"e":92.198},{"t":"because","s":92.198,"e":92.714},{"t":"a","s":92.714,"e":92.825},{"t":"zero","s":92.825,"e":93.12},{"t":"percent","s":93.12,"e":93.636},{"t":"pass","s":93.636,"e":93.931},{"t":"rate","s":93.931,"e":94.226},{"t":"across","s":94.226,"e":94.668},{"t":"many","s":94.668,"e":94.963},{"t":"trials","s":94.963,"e":95.405},{"t":"usually","s":95.405,"e":95.921},{"t":"means","s":95.921,"e":96.29},{"t":"your","s":96.29,"e":96.585},{"t":"task","s":96.585,"e":96.88},{"t":"spec","s":96.88,"e":97.175},{"t":"is","s":97.175,"e":97.322},{"t":"broken.","s":97.322,"e":97.875}]}]},{"id":"s1-3","section":"Offline Eval Architecture, Graders, and Agent Non-Determinism","start":98.235,"end":125.001,"sentences":[{"id":"s1-3-s0","start":98.235,"end":101.136,"words":[{"t":"Separate","s":98.235,"e":98.757},{"t":"your","s":98.757,"e":99.017},{"t":"offline","s":99.017,"e":99.474},{"t":"evaluations","s":99.474,"e":100.191},{"t":"into","s":100.191,"e":100.451},{"t":"two","s":100.451,"e":100.647},{"t":"suites.","s":100.647,"e":101.136}]},{"id":"s1-3-s1","start":101.276,"end":107.036,"words":[{"t":"Capability","s":101.276,"e":102.01},{"t":"evals","s":102.01,"e":102.377},{"t":"start","s":102.377,"e":102.744},{"t":"with","s":102.744,"e":103.037},{"t":"a","s":103.037,"e":103.147},{"t":"low","s":103.147,"e":103.367},{"t":"pass","s":103.367,"e":103.661},{"t":"rate","s":103.661,"e":103.954},{"t":"on","s":103.954,"e":104.101},{"t":"hard","s":104.101,"e":104.394},{"t":"problems","s":104.394,"e":104.981},{"t":"to","s":104.981,"e":105.128},{"t":"give","s":105.128,"e":105.422},{"t":"your","s":105.422,"e":105.715},{"t":"team","s":105.715,"e":106.009},{"t":"a","s":106.009,"e":106.119},{"t":"hill","s":106.119,"e":106.412},{"t":"to","s":106.412,"e":106.559},{"t":"climb.","s":106.559,"e":107.036}]},{"id":"s1-3-s2","start":107.176,"end":114.493,"words":[{"t":"Regression","s":107.176,"e":107.849},{"t":"evals","s":107.849,"e":108.186},{"t":"sit","s":108.186,"e":108.388},{"t":"near","s":108.388,"e":108.657},{"t":"one","s":108.657,"e":108.859},{"t":"hundred","s":108.859,"e":109.33},{"t":"percent","s":109.33,"e":109.801},{"t":"to","s":109.801,"e":109.936},{"t":"catch","s":109.936,"e":110.272},{"t":"backsliding,","s":110.272,"e":111.161},{"t":"and","s":111.161,"e":111.363},{"t":"mature","s":111.363,"e":111.767},{"t":"capability","s":111.767,"e":112.44},{"t":"tasks","s":112.44,"e":112.777},{"t":"graduate","s":112.777,"e":113.315},{"t":"into","s":113.315,"e":113.584},{"t":"them","s":113.584,"e":113.854},{"t":"over","s":113.854,"e":114.123},{"t":"time.","s":114.123,"e":114.493}]},{"id":"s1-3-s3","start":114.633,"end":125.001,"words":[{"t":"Always","s":114.633,"e":115.054},{"t":"keep","s":115.054,"e":115.335},{"t":"problem","s":115.335,"e":115.826},{"t":"sets","s":115.826,"e":116.107},{"t":"balanced","s":116.107,"e":116.669},{"t":"with","s":116.669,"e":116.949},{"t":"both","s":116.949,"e":117.23},{"t":"positive","s":117.23,"e":117.792},{"t":"and","s":117.792,"e":118.002},{"t":"negative","s":118.002,"e":118.564},{"t":"cases","s":118.564,"e":118.915},{"t":"so","s":118.915,"e":119.055},{"t":"you","s":119.055,"e":119.266},{"t":"prevent","s":119.266,"e":119.757},{"t":"overtriggering,","s":119.757,"e":120.895},{"t":"and","s":120.895,"e":121.105},{"t":"start","s":121.105,"e":121.456},{"t":"early","s":121.456,"e":121.807},{"t":"with","s":121.807,"e":122.088},{"t":"twenty","s":122.088,"e":122.509},{"t":"to","s":122.509,"e":122.649},{"t":"fifty","s":122.649,"e":123.0},{"t":"tasks","s":123.0,"e":123.351},{"t":"pulled","s":123.351,"e":123.773},{"t":"from","s":123.773,"e":124.053},{"t":"real","s":124.053,"e":124.334},{"t":"failures.","s":124.334,"e":125.001}]}]},{"id":"s1-4","section":"Offline Eval Architecture, Graders, and Agent Non-Determinism","start":125.361,"end":153.088,"sentences":[{"id":"s1-4-s0","start":125.361,"end":129.031,"words":[{"t":"Choose","s":125.361,"e":125.779},{"t":"the","s":125.779,"e":125.988},{"t":"fastest,","s":125.988,"e":126.628},{"t":"most","s":126.628,"e":126.907},{"t":"reliable","s":126.907,"e":127.464},{"t":"grader","s":127.464,"e":127.882},{"t":"that","s":127.882,"e":128.161},{"t":"fits","s":128.161,"e":128.439},{"t":"the","s":128.439,"e":128.648},{"t":"task.","s":128.648,"e":129.031}]},{"id":"s1-4-s1","start":129.171,"end":138.429,"words":[{"t":"Start","s":129.171,"e":129.517},{"t":"with","s":129.517,"e":129.793},{"t":"code-based","s":129.793,"e":130.416},{"t":"graders","s":130.416,"e":130.9},{"t":"like","s":130.9,"e":131.176},{"t":"unit","s":131.176,"e":131.453},{"t":"tests,","s":131.453,"e":131.95},{"t":"regex","s":131.95,"e":132.296},{"t":"checks,","s":132.296,"e":132.863},{"t":"and","s":132.863,"e":133.071},{"t":"database","s":133.071,"e":133.624},{"t":"state","s":133.624,"e":133.969},{"t":"verification","s":133.969,"e":134.799},{"t":"whenever","s":134.799,"e":135.352},{"t":"possible","s":135.352,"e":135.905},{"t":"because","s":135.905,"e":136.389},{"t":"they","s":136.389,"e":136.666},{"t":"are","s":136.666,"e":136.873},{"t":"cheap","s":136.873,"e":137.219},{"t":"and","s":137.219,"e":137.426},{"t":"deterministic.","s":137.426,"e":138.429}]},{"id":"s1-4-s2","start":138.569,"end":144.521,"words":[{"t":"Bring","s":138.569,"e":138.916},{"t":"in","s":138.916,"e":139.055},{"t":"model-based","s":139.055,"e":139.75},{"t":"graders","s":139.75,"e":140.236},{"t":"for","s":140.236,"e":140.444},{"t":"open-ended","s":140.444,"e":141.069},{"t":"nuance,","s":141.069,"e":141.639},{"t":"but","s":141.639,"e":141.847},{"t":"only","s":141.847,"e":142.125},{"t":"after","s":142.125,"e":142.472},{"t":"calibrating","s":142.472,"e":143.236},{"t":"them","s":143.236,"e":143.514},{"t":"against","s":143.514,"e":144.0},{"t":"humans.","s":144.0,"e":144.521}]},{"id":"s1-4-s3","start":144.661,"end":153.088,"words":[{"t":"Reserve","s":144.661,"e":145.171},{"t":"human","s":145.171,"e":145.535},{"t":"subject","s":145.535,"e":146.045},{"t":"matter","s":146.045,"e":146.482},{"t":"experts","s":146.482,"e":146.992},{"t":"for","s":146.992,"e":147.21},{"t":"calibration","s":147.21,"e":148.011},{"t":"sets","s":148.011,"e":148.303},{"t":"and","s":148.303,"e":148.521},{"t":"high-stakes","s":148.521,"e":149.25},{"t":"spot","s":149.25,"e":149.541},{"t":"checks,","s":149.541,"e":150.138},{"t":"and","s":150.138,"e":150.357},{"t":"build","s":150.357,"e":150.721},{"t":"partial","s":150.721,"e":151.231},{"t":"credit","s":151.231,"e":151.668},{"t":"into","s":151.668,"e":151.959},{"t":"multi-step","s":151.959,"e":152.615},{"t":"tasks.","s":152.615,"e":153.088}]}]},{"id":"s1-5","section":"Offline Eval Architecture, Graders, and Agent Non-Determinism","start":153.448,"end":183.095,"sentences":[{"id":"s1-5-s0","start":153.448,"end":160.936,"words":[{"t":"At","s":153.448,"e":153.601},{"t":"k","s":153.601,"e":153.717},{"t":"equals","s":153.717,"e":154.177},{"t":"one,","s":154.177,"e":154.576},{"t":"pass","s":154.576,"e":154.883},{"t":"at","s":154.883,"e":155.036},{"t":"k","s":155.036,"e":155.151},{"t":"and","s":155.151,"e":155.381},{"t":"pass","s":155.381,"e":155.688},{"t":"to","s":155.688,"e":155.842},{"t":"the","s":155.842,"e":156.072},{"t":"k","s":156.072,"e":156.187},{"t":"are","s":156.187,"e":156.417},{"t":"identical,","s":156.417,"e":157.276},{"t":"but","s":157.276,"e":157.507},{"t":"as","s":157.507,"e":157.66},{"t":"you","s":157.66,"e":157.89},{"t":"run","s":157.89,"e":158.12},{"t":"more","s":158.12,"e":158.427},{"t":"trials,","s":158.427,"e":159.056},{"t":"they","s":159.056,"e":159.363},{"t":"tell","s":159.363,"e":159.67},{"t":"opposite","s":159.67,"e":160.284},{"t":"stories.","s":160.284,"e":160.936}]},{"id":"s1-5-s1","start":161.076,"end":171.017,"words":[{"t":"Pass","s":161.076,"e":161.367},{"t":"at","s":161.367,"e":161.512},{"t":"k","s":161.512,"e":161.621},{"t":"measures","s":161.621,"e":162.203},{"t":"the","s":162.203,"e":162.421},{"t":"odds","s":162.421,"e":162.712},{"t":"of","s":162.712,"e":162.858},{"t":"getting","s":162.858,"e":163.367},{"t":"at","s":163.367,"e":163.512},{"t":"least","s":163.512,"e":163.876},{"t":"one","s":163.876,"e":164.094},{"t":"success","s":164.094,"e":164.603},{"t":"in","s":164.603,"e":164.748},{"t":"k","s":164.748,"e":164.858},{"t":"attempts,","s":164.858,"e":165.599},{"t":"which","s":165.599,"e":165.963},{"t":"rises","s":165.963,"e":166.326},{"t":"toward","s":166.326,"e":166.763},{"t":"one","s":166.763,"e":166.981},{"t":"hundred","s":166.981,"e":167.49},{"t":"percent","s":167.49,"e":167.999},{"t":"and","s":167.999,"e":168.217},{"t":"fits","s":168.217,"e":168.508},{"t":"tools","s":168.508,"e":168.872},{"t":"where","s":168.872,"e":169.235},{"t":"one","s":169.235,"e":169.453},{"t":"working","s":169.453,"e":169.963},{"t":"draft","s":169.963,"e":170.326},{"t":"is","s":170.326,"e":170.472},{"t":"enough.","s":170.472,"e":171.017}]},{"id":"s1-5-s2","start":171.157,"end":174.784,"words":[{"t":"Pass","s":171.157,"e":171.456},{"t":"to","s":171.456,"e":171.606},{"t":"the","s":171.606,"e":171.83},{"t":"k","s":171.83,"e":171.942},{"t":"measures","s":171.942,"e":172.54},{"t":"the","s":172.54,"e":172.765},{"t":"odds","s":172.765,"e":173.064},{"t":"that","s":173.064,"e":173.363},{"t":"all","s":173.363,"e":173.587},{"t":"k","s":173.587,"e":173.7},{"t":"trials","s":173.7,"e":174.148},{"t":"succeed.","s":174.148,"e":174.784}]},{"id":"s1-5-s3","start":174.924,"end":183.095,"words":[{"t":"At","s":174.924,"e":175.058},{"t":"a","s":175.058,"e":175.158},{"t":"seventy-five","s":175.158,"e":175.892},{"t":"percent","s":175.892,"e":176.359},{"t":"per-trial","s":176.359,"e":176.893},{"t":"rate,","s":176.893,"e":177.307},{"t":"pass","s":177.307,"e":177.574},{"t":"to","s":177.574,"e":177.708},{"t":"the","s":177.708,"e":177.908},{"t":"three","s":177.908,"e":178.242},{"t":"drops","s":178.242,"e":178.576},{"t":"to","s":178.576,"e":178.709},{"t":"forty-two","s":178.709,"e":179.243},{"t":"percent,","s":179.243,"e":179.857},{"t":"making","s":179.857,"e":180.258},{"t":"it","s":180.258,"e":180.391},{"t":"the","s":180.391,"e":180.592},{"t":"right","s":180.592,"e":180.925},{"t":"bar","s":180.925,"e":181.126},{"t":"for","s":181.126,"e":181.326},{"t":"customer-facing","s":181.326,"e":182.261},{"t":"consistency.","s":182.261,"e":183.095}]}]},{"id":"s1-6","section":"Offline Eval Architecture, Graders, and Agent Non-Determinism","start":183.455,"end":205.547,"sentences":[{"id":"s1-6-s0","start":183.455,"end":187.273,"words":[{"t":"In","s":183.455,"e":183.588},{"t":"production,","s":183.588,"e":184.403},{"t":"a","s":184.403,"e":184.503},{"t":"single","s":184.503,"e":184.903},{"t":"task","s":184.903,"e":185.17},{"t":"usually","s":185.17,"e":185.638},{"t":"combines","s":185.638,"e":186.172},{"t":"multiple","s":186.172,"e":186.706},{"t":"graders.","s":186.706,"e":187.273}]},{"id":"s1-6-s1","start":187.413,"end":205.547,"words":[{"t":"Here,","s":187.413,"e":187.872},{"t":"a","s":187.872,"e":187.983},{"t":"support","s":187.983,"e":188.502},{"t":"refund","s":188.502,"e":188.946},{"t":"eval","s":188.946,"e":189.243},{"t":"verifies","s":189.243,"e":189.835},{"t":"the","s":189.835,"e":190.058},{"t":"database","s":190.058,"e":190.65},{"t":"outcome","s":190.65,"e":191.169},{"t":"with","s":191.169,"e":191.465},{"t":"a","s":191.465,"e":191.576},{"t":"state","s":191.576,"e":191.947},{"t":"check,","s":191.947,"e":192.48},{"t":"confirms","s":192.48,"e":193.072},{"t":"identity","s":193.072,"e":193.665},{"t":"verification","s":193.665,"e":194.554},{"t":"and","s":194.554,"e":194.776},{"t":"refund","s":194.776,"e":195.221},{"t":"bounds","s":195.221,"e":195.665},{"t":"through","s":195.665,"e":196.184},{"t":"tool-call","s":196.184,"e":196.776},{"t":"checks,","s":196.776,"e":197.384},{"t":"evaluates","s":197.384,"e":198.05},{"t":"policy","s":198.05,"e":198.495},{"t":"grounding","s":198.495,"e":199.162},{"t":"with","s":199.162,"e":199.458},{"t":"an","s":199.458,"e":199.606},{"t":"LLM","s":199.606,"e":199.828},{"t":"rubric,","s":199.828,"e":200.436},{"t":"and","s":200.436,"e":200.658},{"t":"enforces","s":200.658,"e":201.251},{"t":"a","s":201.251,"e":201.362},{"t":"ten-turn","s":201.362,"e":201.88},{"t":"transcript","s":201.88,"e":202.621},{"t":"cap","s":202.621,"e":202.843},{"t":"while","s":202.843,"e":203.214},{"t":"tracking","s":203.214,"e":203.806},{"t":"token","s":203.806,"e":204.177},{"t":"and","s":204.177,"e":204.399},{"t":"latency","s":204.399,"e":204.917},{"t":"metrics.","s":204.917,"e":205.547}]}]},{"id":"s2-1","section":"CI/CD Gates, Groundedness Metrics, and Suite Validity","start":206.247,"end":232.212,"sentences":[{"id":"s2-1-s0","start":206.247,"end":216.209,"words":[{"t":"When","s":206.247,"e":206.579},{"t":"wiring","s":206.579,"e":207.076},{"t":"evals","s":207.076,"e":207.49},{"t":"into","s":207.49,"e":207.822},{"t":"CI/CD,","s":207.822,"e":208.336},{"t":"pin","s":208.336,"e":208.584},{"t":"both","s":208.584,"e":208.916},{"t":"the","s":208.916,"e":209.164},{"t":"agent","s":209.164,"e":209.579},{"t":"model","s":209.579,"e":209.993},{"t":"and","s":209.993,"e":210.242},{"t":"the","s":210.242,"e":210.49},{"t":"judge","s":210.49,"e":210.905},{"t":"model","s":210.905,"e":211.319},{"t":"so","s":211.319,"e":211.485},{"t":"an","s":211.485,"e":211.651},{"t":"upstream","s":211.651,"e":212.314},{"t":"model","s":212.314,"e":212.728},{"t":"update","s":212.728,"e":213.225},{"t":"is","s":213.225,"e":213.391},{"t":"never","s":213.391,"e":213.806},{"t":"confused","s":213.806,"e":214.469},{"t":"with","s":214.469,"e":214.8},{"t":"a","s":214.8,"e":214.924},{"t":"code","s":214.924,"e":215.256},{"t":"regression.","s":215.256,"e":216.209}]},{"id":"s2-1-s1","start":216.349,"end":221.683,"words":[{"t":"Set","s":216.349,"e":216.566},{"t":"a","s":216.566,"e":216.674},{"t":"pass","s":216.674,"e":216.963},{"t":"threshold,","s":216.963,"e":217.771},{"t":"a","s":217.771,"e":217.879},{"t":"maximum","s":217.879,"e":218.384},{"t":"dollar","s":218.384,"e":218.818},{"t":"cost","s":218.818,"e":219.106},{"t":"ceiling,","s":219.106,"e":219.77},{"t":"and","s":219.77,"e":219.987},{"t":"JSON","s":219.987,"e":220.276},{"t":"output","s":220.276,"e":220.709},{"t":"for","s":220.709,"e":220.925},{"t":"archiving.","s":220.925,"e":221.683}]},{"id":"s2-1-s2","start":221.823,"end":232.212,"words":[{"t":"Exit","s":221.823,"e":222.124},{"t":"code","s":222.124,"e":222.426},{"t":"zero","s":222.426,"e":222.727},{"t":"passes","s":222.727,"e":223.179},{"t":"the","s":223.179,"e":223.405},{"t":"gate,","s":223.405,"e":223.872},{"t":"exit","s":223.872,"e":224.174},{"t":"code","s":224.174,"e":224.475},{"t":"one","s":224.475,"e":224.701},{"t":"fails","s":224.701,"e":225.078},{"t":"on","s":225.078,"e":225.228},{"t":"a","s":225.228,"e":225.341},{"t":"regression","s":225.341,"e":226.095},{"t":"or","s":226.095,"e":226.245},{"t":"error,","s":226.245,"e":226.788},{"t":"and","s":226.788,"e":227.014},{"t":"exit","s":227.014,"e":227.315},{"t":"code","s":227.315,"e":227.616},{"t":"two","s":227.616,"e":227.842},{"t":"flags","s":227.842,"e":228.219},{"t":"a","s":228.219,"e":228.332},{"t":"partial","s":228.332,"e":228.859},{"t":"run","s":228.859,"e":229.086},{"t":"that","s":229.086,"e":229.387},{"t":"you","s":229.387,"e":229.613},{"t":"must","s":229.613,"e":229.914},{"t":"exclude","s":229.914,"e":230.442},{"t":"from","s":230.442,"e":230.743},{"t":"quality","s":230.743,"e":231.27},{"t":"trend","s":231.27,"e":231.647},{"t":"charts.","s":231.647,"e":232.212}]}]},{"id":"s2-2","section":"CI/CD Gates, Groundedness Metrics, and Suite Validity","start":232.572,"end":253.865,"sentences":[{"id":"s2-2-s0","start":232.572,"end":239.441,"words":[{"t":"A","s":232.572,"e":232.67},{"t":"high","s":232.67,"e":232.931},{"t":"score","s":232.931,"e":233.258},{"t":"by","s":233.258,"e":233.388},{"t":"itself","s":233.388,"e":233.78},{"t":"doesn't","s":233.78,"e":234.172},{"t":"prove","s":234.172,"e":234.498},{"t":"your","s":234.498,"e":234.759},{"t":"plugin","s":234.759,"e":235.151},{"t":"or","s":235.151,"e":235.282},{"t":"prompt","s":235.282,"e":235.673},{"t":"change","s":235.673,"e":236.065},{"t":"added","s":236.065,"e":236.392},{"t":"value,","s":236.392,"e":236.862},{"t":"because","s":236.862,"e":237.319},{"t":"Claude","s":237.319,"e":237.711},{"t":"might","s":237.711,"e":238.037},{"t":"pass","s":238.037,"e":238.298},{"t":"the","s":238.298,"e":238.494},{"t":"task","s":238.494,"e":238.755},{"t":"without","s":238.755,"e":239.212},{"t":"it.","s":239.212,"e":239.441}]},{"id":"s2-2-s1","start":239.581,"end":244.253,"words":[{"t":"Two-arm","s":239.581,"e":240.009},{"t":"ablation","s":240.009,"e":240.58},{"t":"runs","s":240.58,"e":240.865},{"t":"every","s":240.865,"e":241.222},{"t":"case","s":241.222,"e":241.507},{"t":"with","s":241.507,"e":241.792},{"t":"and","s":241.792,"e":242.006},{"t":"without","s":242.006,"e":242.505},{"t":"the","s":242.505,"e":242.719},{"t":"change","s":242.719,"e":243.147},{"t":"to","s":243.147,"e":243.29},{"t":"measure","s":243.29,"e":243.789},{"t":"delta.","s":243.789,"e":244.253}]},{"id":"s2-2-s2","start":244.393,"end":253.865,"words":[{"t":"Checks","s":244.393,"e":244.81},{"t":"that","s":244.81,"e":245.087},{"t":"can","s":245.087,"e":245.296},{"t":"never","s":245.296,"e":245.643},{"t":"pass","s":245.643,"e":245.921},{"t":"in","s":245.921,"e":246.06},{"t":"the","s":246.06,"e":246.268},{"t":"baseline","s":246.268,"e":246.823},{"t":"arm,","s":246.823,"e":247.185},{"t":"like","s":247.185,"e":247.462},{"t":"invoking","s":247.462,"e":248.018},{"t":"a","s":248.018,"e":248.122},{"t":"plugin","s":248.122,"e":248.539},{"t":"skill,","s":248.539,"e":249.039},{"t":"are","s":249.039,"e":249.247},{"t":"excluded","s":249.247,"e":249.803},{"t":"from","s":249.803,"e":250.08},{"t":"scoring","s":250.08,"e":250.566},{"t":"in","s":250.566,"e":250.705},{"t":"both","s":250.705,"e":250.983},{"t":"arms","s":250.983,"e":251.261},{"t":"so","s":251.261,"e":251.4},{"t":"they","s":251.4,"e":251.678},{"t":"don't","s":251.678,"e":251.955},{"t":"artificially","s":251.955,"e":252.789},{"t":"inflate","s":252.789,"e":253.275},{"t":"the","s":253.275,"e":253.483},{"t":"lift.","s":253.483,"e":253.865}]}]},{"id":"s2-3","section":"CI/CD Gates, Groundedness Metrics, and Suite Validity","start":254.225,"end":285.899,"sentences":[{"id":"s2-3-s0","start":254.225,"end":261.884,"words":[{"t":"For","s":254.225,"e":254.425},{"t":"retrieval-grounded","s":254.425,"e":255.56},{"t":"and","s":255.56,"e":255.761},{"t":"research","s":255.761,"e":256.295},{"t":"agents,","s":256.295,"e":256.843},{"t":"evaluate","s":256.843,"e":257.377},{"t":"retrieval","s":257.377,"e":257.978},{"t":"precision","s":257.978,"e":258.579},{"t":"and","s":258.579,"e":258.779},{"t":"source","s":258.779,"e":259.18},{"t":"authority","s":259.18,"e":259.781},{"t":"separately","s":259.781,"e":260.448},{"t":"from","s":260.448,"e":260.715},{"t":"synthesis","s":260.715,"e":261.316},{"t":"quality.","s":261.316,"e":261.884}]},{"id":"s2-3-s1","start":262.024,"end":268.957,"words":[{"t":"Measure","s":262.024,"e":262.497},{"t":"groundedness","s":262.497,"e":263.307},{"t":"to","s":263.307,"e":263.442},{"t":"verify","s":263.442,"e":263.847},{"t":"every","s":263.847,"e":264.184},{"t":"claim","s":264.184,"e":264.522},{"t":"maps","s":264.522,"e":264.792},{"t":"to","s":264.792,"e":264.927},{"t":"retrieved","s":264.927,"e":265.534},{"t":"evidence,","s":265.534,"e":266.223},{"t":"and","s":266.223,"e":266.425},{"t":"coverage","s":266.425,"e":266.966},{"t":"to","s":266.966,"e":267.101},{"t":"confirm","s":267.101,"e":267.573},{"t":"key","s":267.573,"e":267.776},{"t":"facts","s":267.776,"e":268.113},{"t":"aren't","s":268.113,"e":268.451},{"t":"missed.","s":268.451,"e":268.957}]},{"id":"s2-3-s2","start":269.097,"end":277.503,"words":[{"t":"To","s":269.097,"e":269.244},{"t":"curb","s":269.244,"e":269.539},{"t":"hallucinations,","s":269.539,"e":270.733},{"t":"allow","s":270.733,"e":271.101},{"t":"Claude","s":271.101,"e":271.543},{"t":"to","s":271.543,"e":271.69},{"t":"admit","s":271.69,"e":272.059},{"t":"uncertainty,","s":272.059,"e":273.031},{"t":"extract","s":273.031,"e":273.547},{"t":"direct","s":273.547,"e":273.989},{"t":"quotes","s":273.989,"e":274.431},{"t":"first","s":274.431,"e":274.799},{"t":"on","s":274.799,"e":274.947},{"t":"long","s":274.947,"e":275.241},{"t":"documents,","s":275.241,"e":276.066},{"t":"and","s":276.066,"e":276.287},{"t":"verify","s":276.287,"e":276.729},{"t":"citations.","s":276.729,"e":277.503}]},{"id":"s2-3-s3","start":277.643,"end":285.899,"words":[{"t":"For","s":277.643,"e":277.846},{"t":"strict","s":277.846,"e":278.253},{"t":"schema","s":278.253,"e":278.659},{"t":"consistency,","s":278.659,"e":279.553},{"t":"rely","s":279.553,"e":279.824},{"t":"on","s":279.824,"e":279.959},{"t":"Structured","s":279.959,"e":280.637},{"t":"Outputs","s":280.637,"e":281.111},{"t":"rather","s":281.111,"e":281.517},{"t":"than","s":281.517,"e":281.788},{"t":"prefilling,","s":281.788,"e":282.614},{"t":"which","s":282.614,"e":282.953},{"t":"is","s":282.953,"e":283.088},{"t":"not","s":283.088,"e":283.291},{"t":"supported","s":283.291,"e":283.901},{"t":"on","s":283.901,"e":284.036},{"t":"Claude","s":284.036,"e":284.443},{"t":"four","s":284.443,"e":284.714},{"t":"point","s":284.714,"e":285.052},{"t":"six","s":285.052,"e":285.256},{"t":"and","s":285.256,"e":285.459},{"t":"later.","s":285.459,"e":285.899}]}]},{"id":"s2-4","section":"CI/CD Gates, Groundedness Metrics, and Suite Validity","start":286.259,"end":313.815,"sentences":[{"id":"s2-4-s0","start":286.259,"end":289.544,"words":[{"t":"Static","s":286.259,"e":286.665},{"t":"eval","s":286.665,"e":286.936},{"t":"suites","s":286.936,"e":287.343},{"t":"lose","s":287.343,"e":287.614},{"t":"validity","s":287.614,"e":288.155},{"t":"over","s":288.155,"e":288.426},{"t":"time","s":288.426,"e":288.697},{"t":"in","s":288.697,"e":288.833},{"t":"three","s":288.833,"e":289.171},{"t":"ways.","s":289.171,"e":289.544}]},{"id":"s2-4-s1","start":289.684,"end":298.964,"words":[{"t":"First,","s":289.684,"e":290.21},{"t":"saturation:","s":290.21,"e":291.1},{"t":"once","s":291.1,"e":291.393},{"t":"scores","s":291.393,"e":291.831},{"t":"approach","s":291.831,"e":292.415},{"t":"one","s":292.415,"e":292.634},{"t":"hundred","s":292.634,"e":293.145},{"t":"percent,","s":293.145,"e":293.817},{"t":"you","s":293.817,"e":294.036},{"t":"lose","s":294.036,"e":294.328},{"t":"signal","s":294.328,"e":294.766},{"t":"for","s":294.766,"e":294.985},{"t":"measuring","s":294.985,"e":295.642},{"t":"real","s":295.642,"e":295.934},{"t":"capability","s":295.934,"e":296.664},{"t":"gains","s":296.664,"e":297.029},{"t":"and","s":297.029,"e":297.248},{"t":"need","s":297.248,"e":297.54},{"t":"harder","s":297.54,"e":297.978},{"t":"agentic","s":297.978,"e":298.489},{"t":"tasks.","s":298.489,"e":298.964}]},{"id":"s2-4-s2","start":299.104,"end":306.528,"words":[{"t":"Second,","s":299.104,"e":299.688},{"t":"contamination","s":299.688,"e":300.614},{"t":"or","s":300.614,"e":300.757},{"t":"overfitting","s":300.757,"e":301.541},{"t":"to","s":301.541,"e":301.683},{"t":"a","s":301.683,"e":301.79},{"t":"small","s":301.79,"e":302.146},{"t":"golden","s":302.146,"e":302.574},{"t":"set","s":302.574,"e":302.788},{"t":"makes","s":302.788,"e":303.144},{"t":"offline","s":303.144,"e":303.642},{"t":"scores","s":303.642,"e":304.07},{"t":"look","s":304.07,"e":304.355},{"t":"great","s":304.355,"e":304.711},{"t":"while","s":304.711,"e":305.067},{"t":"production","s":305.067,"e":305.78},{"t":"stagnates.","s":305.78,"e":306.528}]},{"id":"s2-4-s3","start":306.668,"end":313.815,"words":[{"t":"Third,","s":306.668,"e":307.163},{"t":"coverage","s":307.163,"e":307.714},{"t":"gaps","s":307.714,"e":307.989},{"t":"and","s":307.989,"e":308.195},{"t":"grading","s":308.195,"e":308.677},{"t":"bugs","s":308.677,"e":308.952},{"t":"hide","s":308.952,"e":309.227},{"t":"behind","s":309.227,"e":309.64},{"t":"summary","s":309.64,"e":310.121},{"t":"numbers,","s":310.121,"e":310.754},{"t":"which","s":310.754,"e":311.098},{"t":"is","s":311.098,"e":311.235},{"t":"why","s":311.235,"e":311.442},{"t":"reading","s":311.442,"e":311.923},{"t":"transcripts","s":311.923,"e":312.68},{"t":"is","s":312.68,"e":312.818},{"t":"non-negotiable.","s":312.818,"e":313.815}]}]},{"id":"s2-5","section":"CI/CD Gates, Groundedness Metrics, and Suite Validity","start":314.175,"end":340.707,"sentences":[{"id":"s2-5-s0","start":314.175,"end":317.14,"words":[{"t":"Match","s":314.175,"e":314.501},{"t":"your","s":314.501,"e":314.761},{"t":"release","s":314.761,"e":315.218},{"t":"criteria","s":315.218,"e":315.739},{"t":"to","s":315.739,"e":315.869},{"t":"the","s":315.869,"e":316.065},{"t":"risk","s":316.065,"e":316.325},{"t":"of","s":316.325,"e":316.456},{"t":"the","s":316.456,"e":316.651},{"t":"change.","s":316.651,"e":317.14}]},{"id":"s2-5-s1","start":317.28,"end":322.528,"words":[{"t":"Run","s":317.28,"e":317.507},{"t":"fast","s":317.507,"e":317.809},{"t":"deterministic","s":317.809,"e":318.79},{"t":"regression","s":318.79,"e":319.545},{"t":"suites","s":319.545,"e":319.998},{"t":"on","s":319.998,"e":320.149},{"t":"every","s":320.149,"e":320.527},{"t":"pull","s":320.527,"e":320.829},{"t":"request","s":320.829,"e":321.358},{"t":"for","s":321.358,"e":321.584},{"t":"prompt","s":321.584,"e":322.037},{"t":"edits.","s":322.037,"e":322.528}]},{"id":"s2-5-s2","start":322.668,"end":334.167,"words":[{"t":"For","s":322.668,"e":322.886},{"t":"model","s":322.886,"e":323.248},{"t":"version","s":323.248,"e":323.756},{"t":"upgrades,","s":323.756,"e":324.495},{"t":"run","s":324.495,"e":324.713},{"t":"the","s":324.713,"e":324.93},{"t":"full","s":324.93,"e":325.22},{"t":"regression","s":325.22,"e":325.945},{"t":"and","s":325.945,"e":326.163},{"t":"capability","s":326.163,"e":326.888},{"t":"suites,","s":326.888,"e":327.482},{"t":"check","s":327.482,"e":327.845},{"t":"pass","s":327.845,"e":328.135},{"t":"to","s":328.135,"e":328.28},{"t":"the","s":328.28,"e":328.497},{"t":"k","s":328.497,"e":328.606},{"t":"consistency","s":328.606,"e":329.404},{"t":"alongside","s":329.404,"e":330.056},{"t":"latency","s":330.056,"e":330.564},{"t":"and","s":330.564,"e":330.781},{"t":"token","s":330.781,"e":331.144},{"t":"budgets,","s":331.144,"e":331.811},{"t":"and","s":331.811,"e":332.028},{"t":"re-verify","s":332.028,"e":332.608},{"t":"your","s":332.608,"e":332.898},{"t":"judge","s":332.898,"e":333.261},{"t":"calibration.","s":333.261,"e":334.167}]},{"id":"s2-5-s3","start":334.307,"end":340.707,"words":[{"t":"For","s":334.307,"e":334.534},{"t":"harness","s":334.534,"e":335.063},{"t":"or","s":335.063,"e":335.214},{"t":"tool","s":335.214,"e":335.516},{"t":"changes,","s":335.516,"e":336.211},{"t":"test","s":336.211,"e":336.513},{"t":"in","s":336.513,"e":336.664},{"t":"isolated","s":336.664,"e":337.269},{"t":"sandboxes","s":337.269,"e":337.949},{"t":"with","s":337.949,"e":338.251},{"t":"end-state","s":338.251,"e":338.856},{"t":"checks","s":338.856,"e":339.309},{"t":"and","s":339.309,"e":339.536},{"t":"strict","s":339.536,"e":339.989},{"t":"turn","s":339.989,"e":340.291},{"t":"caps.","s":340.291,"e":340.707}]}]},{"id":"s3-1","section":"Calibrating LLM Judges, Rubrics, Bias Mitigation, and Drift","start":341.407,"end":362.721,"sentences":[{"id":"s3-1-s0","start":341.407,"end":345.417,"words":[{"t":"Never","s":341.407,"e":341.782},{"t":"let","s":341.782,"e":342.007},{"t":"an","s":342.007,"e":342.157},{"t":"uncalibrated","s":342.157,"e":343.056},{"t":"LLM","s":343.056,"e":343.281},{"t":"judge","s":343.281,"e":343.656},{"t":"gate","s":343.656,"e":343.955},{"t":"production","s":343.955,"e":344.705},{"t":"releases.","s":344.705,"e":345.417}]},{"id":"s3-1-s1","start":345.557,"end":351.637,"words":[{"t":"Treat","s":345.557,"e":345.889},{"t":"the","s":345.889,"e":346.087},{"t":"judge","s":346.087,"e":346.419},{"t":"like","s":346.419,"e":346.684},{"t":"a","s":346.684,"e":346.784},{"t":"measurement","s":346.784,"e":347.513},{"t":"instrument:","s":347.513,"e":348.322},{"t":"validate","s":348.322,"e":348.852},{"t":"it","s":348.852,"e":348.985},{"t":"against","s":348.985,"e":349.449},{"t":"a","s":349.449,"e":349.548},{"t":"human-labeled","s":349.548,"e":350.344},{"t":"golden","s":350.344,"e":350.742},{"t":"dataset","s":350.742,"e":351.206},{"t":"first.","s":351.206,"e":351.637}]},{"id":"s3-1-s2","start":351.777,"end":362.721,"words":[{"t":"If","s":351.777,"e":351.912},{"t":"the","s":351.912,"e":352.116},{"t":"judge","s":352.116,"e":352.454},{"t":"agrees","s":352.454,"e":352.861},{"t":"with","s":352.861,"e":353.131},{"t":"human","s":353.131,"e":353.47},{"t":"raters","s":353.47,"e":353.876},{"t":"only","s":353.876,"e":354.147},{"t":"slightly","s":354.147,"e":354.689},{"t":"better","s":354.689,"e":355.095},{"t":"than","s":355.095,"e":355.366},{"t":"a","s":355.366,"e":355.468},{"t":"coin","s":355.468,"e":355.739},{"t":"flip,","s":355.739,"e":356.159},{"t":"you","s":356.159,"e":356.362},{"t":"must","s":356.362,"e":356.633},{"t":"withhold","s":356.633,"e":357.175},{"t":"gating","s":357.175,"e":357.581},{"t":"authority","s":357.581,"e":358.19},{"t":"until","s":358.19,"e":358.529},{"t":"you","s":358.529,"e":358.732},{"t":"fix","s":358.732,"e":358.935},{"t":"the","s":358.935,"e":359.138},{"t":"bias,","s":359.138,"e":359.558},{"t":"tighten","s":359.558,"e":360.032},{"t":"the","s":360.032,"e":360.236},{"t":"rubric,","s":360.236,"e":360.791},{"t":"and","s":360.791,"e":360.994},{"t":"prove","s":360.994,"e":361.333},{"t":"acceptable","s":361.333,"e":362.01},{"t":"agreement.","s":362.01,"e":362.721}]}]},{"id":"s3-2","section":"Calibrating LLM Judges, Rubrics, Bias Mitigation, and Drift","start":363.081,"end":387.703,"sentences":[{"id":"s3-2-s0","start":363.081,"end":366.644,"words":[{"t":"Strong","s":363.081,"e":363.541},{"t":"rubrics","s":363.541,"e":364.077},{"t":"make","s":364.077,"e":364.384},{"t":"or","s":364.384,"e":364.537},{"t":"break","s":364.537,"e":364.92},{"t":"LLM-as-judge","s":364.92,"e":365.686},{"t":"reliability.","s":365.686,"e":366.644}]},{"id":"s3-2-s1","start":366.784,"end":378.261,"words":[{"t":"Define","s":366.784,"e":367.229},{"t":"explicit","s":367.229,"e":367.823},{"t":"pass","s":367.823,"e":368.119},{"t":"and","s":368.119,"e":368.342},{"t":"fail","s":368.342,"e":368.639},{"t":"conditions","s":368.639,"e":369.381},{"t":"or","s":369.381,"e":369.529},{"t":"anchored","s":369.529,"e":370.122},{"t":"one-to-five","s":370.122,"e":370.79},{"t":"scales,","s":370.79,"e":371.399},{"t":"and","s":371.399,"e":371.621},{"t":"isolate","s":371.621,"e":372.14},{"t":"one","s":372.14,"e":372.363},{"t":"judge","s":372.363,"e":372.734},{"t":"call","s":372.734,"e":373.031},{"t":"per","s":373.031,"e":373.253},{"t":"evaluation","s":373.253,"e":373.995},{"t":"dimension","s":373.995,"e":374.663},{"t":"instead","s":374.663,"e":375.182},{"t":"of","s":375.182,"e":375.331},{"t":"asking","s":375.331,"e":375.776},{"t":"one","s":375.776,"e":375.998},{"t":"prompt","s":375.998,"e":376.443},{"t":"to","s":376.443,"e":376.592},{"t":"score","s":376.592,"e":376.963},{"t":"everything","s":376.963,"e":377.705},{"t":"at","s":377.705,"e":377.853},{"t":"once.","s":377.853,"e":378.261}]},{"id":"s3-2-s2","start":378.401,"end":387.703,"words":[{"t":"Always","s":378.401,"e":378.809},{"t":"give","s":378.809,"e":379.081},{"t":"the","s":379.081,"e":379.286},{"t":"judge","s":379.286,"e":379.626},{"t":"an","s":379.626,"e":379.762},{"t":"Unknown","s":379.762,"e":380.238},{"t":"option","s":380.238,"e":380.647},{"t":"when","s":380.647,"e":380.919},{"t":"evidence","s":380.919,"e":381.463},{"t":"is","s":381.463,"e":381.599},{"t":"missing,","s":381.599,"e":382.225},{"t":"and","s":382.225,"e":382.429},{"t":"enable","s":382.429,"e":382.838},{"t":"thinking","s":382.838,"e":383.382},{"t":"on","s":383.382,"e":383.518},{"t":"the","s":383.518,"e":383.722},{"t":"judge","s":383.722,"e":384.062},{"t":"model","s":384.062,"e":384.403},{"t":"so","s":384.403,"e":384.539},{"t":"it","s":384.539,"e":384.675},{"t":"reasons","s":384.675,"e":385.151},{"t":"carefully","s":385.151,"e":385.764},{"t":"before","s":385.764,"e":386.172},{"t":"emitting","s":386.172,"e":386.716},{"t":"its","s":386.716,"e":386.92},{"t":"final","s":386.92,"e":387.261},{"t":"score.","s":387.261,"e":387.703}]}]},{"id":"s3-3","section":"Calibrating LLM Judges, Rubrics, Bias Mitigation, and Drift","start":388.063,"end":418.541,"sentences":[{"id":"s3-3-s0","start":388.063,"end":393.503,"words":[{"t":"LLM","s":388.063,"e":388.294},{"t":"judges","s":388.294,"e":388.757},{"t":"exhibit","s":388.757,"e":389.298},{"t":"predictable","s":389.298,"e":390.146},{"t":"biases","s":390.146,"e":390.609},{"t":"that","s":390.609,"e":390.918},{"t":"can","s":390.918,"e":391.15},{"t":"silently","s":391.15,"e":391.767},{"t":"break","s":391.767,"e":392.153},{"t":"your","s":392.153,"e":392.461},{"t":"release","s":392.461,"e":393.001},{"t":"gates.","s":393.001,"e":393.503}]},{"id":"s3-3-s1","start":393.643,"end":403.84,"words":[{"t":"Position","s":393.643,"e":394.253},{"t":"bias","s":394.253,"e":394.558},{"t":"causes","s":394.558,"e":395.016},{"t":"pairwise","s":395.016,"e":395.626},{"t":"judges","s":395.626,"e":396.084},{"t":"to","s":396.084,"e":396.236},{"t":"favor","s":396.236,"e":396.617},{"t":"whichever","s":396.617,"e":397.304},{"t":"answer","s":397.304,"e":397.761},{"t":"appears","s":397.761,"e":398.295},{"t":"first;","s":398.295,"e":398.844},{"t":"fix","s":398.844,"e":399.073},{"t":"it","s":399.073,"e":399.226},{"t":"by","s":399.226,"e":399.378},{"t":"randomizing","s":399.378,"e":400.217},{"t":"or","s":400.217,"e":400.37},{"t":"swapping","s":400.37,"e":400.98},{"t":"response","s":400.98,"e":401.59},{"t":"order","s":401.59,"e":401.971},{"t":"and","s":401.971,"e":402.2},{"t":"requiring","s":402.2,"e":402.887},{"t":"consistency.","s":402.887,"e":403.84}]},{"id":"s3-3-s2","start":403.98,"end":415.372,"words":[{"t":"Verbosity","s":403.98,"e":404.642},{"t":"bias","s":404.642,"e":404.936},{"t":"rewards","s":404.936,"e":405.451},{"t":"padded","s":405.451,"e":405.892},{"t":"answers,","s":405.892,"e":406.569},{"t":"self-preference","s":406.569,"e":407.598},{"t":"favors","s":407.598,"e":408.04},{"t":"the","s":408.04,"e":408.26},{"t":"judge's","s":408.26,"e":408.702},{"t":"own","s":408.702,"e":408.922},{"t":"model","s":408.922,"e":409.29},{"t":"family,","s":409.29,"e":409.893},{"t":"and","s":409.893,"e":410.114},{"t":"small","s":410.114,"e":410.481},{"t":"judge","s":410.481,"e":410.849},{"t":"models","s":410.849,"e":411.29},{"t":"often","s":411.29,"e":411.658},{"t":"fail","s":411.658,"e":411.952},{"t":"valid","s":411.952,"e":412.32},{"t":"outputs","s":412.32,"e":412.835},{"t":"over","s":412.835,"e":413.129},{"t":"harmless","s":413.129,"e":413.717},{"t":"formatting","s":413.717,"e":414.453},{"t":"differences.","s":414.453,"e":415.372}]},{"id":"s3-3-s3","start":415.512,"end":418.541,"words":[{"t":"Always","s":415.512,"e":415.93},{"t":"test","s":415.93,"e":416.208},{"t":"for","s":416.208,"e":416.417},{"t":"these","s":416.417,"e":416.765},{"t":"on","s":416.765,"e":416.905},{"t":"blind","s":416.905,"e":417.253},{"t":"human-labeled","s":417.253,"e":418.088},{"t":"pairs.","s":418.088,"e":418.541}]}]},{"id":"s3-4","section":"Calibrating LLM Judges, Rubrics, Bias Mitigation, and Drift","start":418.901,"end":443.011,"sentences":[{"id":"s3-4-s0","start":418.901,"end":426.645,"words":[{"t":"Raw","s":418.901,"e":419.111},{"t":"percent","s":419.111,"e":419.601},{"t":"agreement","s":419.601,"e":420.23},{"t":"can","s":420.23,"e":420.44},{"t":"fool","s":420.44,"e":420.72},{"t":"you","s":420.72,"e":420.93},{"t":"on","s":420.93,"e":421.07},{"t":"imbalanced","s":421.07,"e":421.769},{"t":"datasets,","s":421.769,"e":422.483},{"t":"so","s":422.483,"e":422.623},{"t":"track","s":422.623,"e":422.972},{"t":"chance-corrected","s":422.972,"e":424.022},{"t":"inter-rater","s":424.022,"e":424.721},{"t":"reliability","s":424.721,"e":425.491},{"t":"like","s":425.491,"e":425.771},{"t":"Cohen's","s":425.771,"e":426.19},{"t":"kappa.","s":426.19,"e":426.645}]},{"id":"s3-4-s1","start":426.785,"end":432.801,"words":[{"t":"Measure","s":426.785,"e":427.295},{"t":"kappa","s":427.295,"e":427.66},{"t":"both","s":427.66,"e":427.952},{"t":"between","s":427.952,"e":428.462},{"t":"your","s":428.462,"e":428.754},{"t":"human","s":428.754,"e":429.118},{"t":"annotators","s":429.118,"e":429.848},{"t":"and","s":429.848,"e":430.066},{"t":"between","s":430.066,"e":430.577},{"t":"your","s":430.577,"e":430.869},{"t":"LLM","s":430.869,"e":431.087},{"t":"judge","s":431.087,"e":431.452},{"t":"and","s":431.452,"e":431.671},{"t":"human","s":431.671,"e":432.035},{"t":"consensus.","s":432.035,"e":432.801}]},{"id":"s3-4-s2","start":432.941,"end":443.011,"words":[{"t":"If","s":432.941,"e":433.092},{"t":"two","s":433.092,"e":433.319},{"t":"domain","s":433.319,"e":433.773},{"t":"experts","s":433.773,"e":434.302},{"t":"disagree","s":434.302,"e":434.907},{"t":"on","s":434.907,"e":435.058},{"t":"whether","s":435.058,"e":435.587},{"t":"a","s":435.587,"e":435.7},{"t":"response","s":435.7,"e":436.305},{"t":"passes,","s":436.305,"e":436.925},{"t":"stop","s":436.925,"e":437.228},{"t":"tuning","s":437.228,"e":437.681},{"t":"the","s":437.681,"e":437.908},{"t":"judge\u2014your","s":437.908,"e":438.588},{"t":"task","s":438.588,"e":438.891},{"t":"specification","s":438.891,"e":439.874},{"t":"or","s":439.874,"e":440.025},{"t":"rubric","s":440.025,"e":440.478},{"t":"is","s":440.478,"e":440.63},{"t":"ambiguous","s":440.63,"e":441.31},{"t":"and","s":441.31,"e":441.537},{"t":"needs","s":441.537,"e":441.915},{"t":"to","s":441.915,"e":442.066},{"t":"be","s":442.066,"e":442.217},{"t":"rewritten.","s":442.217,"e":443.011}]}]},{"id":"s3-5","section":"Calibrating LLM Judges, Rubrics, Bias Mitigation, and Drift","start":443.371,"end":466.423,"sentences":[{"id":"s3-5-s0","start":443.371,"end":453.568,"words":[{"t":"Judge","s":443.371,"e":443.719},{"t":"drift","s":443.719,"e":444.066},{"t":"happens","s":444.066,"e":444.553},{"t":"when","s":444.553,"e":444.831},{"t":"an","s":444.831,"e":444.97},{"t":"updated","s":444.97,"e":445.456},{"t":"judge","s":445.456,"e":445.804},{"t":"model","s":445.804,"e":446.151},{"t":"becomes","s":446.151,"e":446.638},{"t":"stricter","s":446.638,"e":447.194},{"t":"or","s":447.194,"e":447.333},{"t":"more","s":447.333,"e":447.611},{"t":"lenient,","s":447.611,"e":448.251},{"t":"creating","s":448.251,"e":448.807},{"t":"phantom","s":448.807,"e":449.293},{"t":"regressions","s":449.293,"e":450.058},{"t":"or","s":450.058,"e":450.197},{"t":"false","s":450.197,"e":450.544},{"t":"passes","s":450.544,"e":450.961},{"t":"even","s":450.961,"e":451.239},{"t":"though","s":451.239,"e":451.656},{"t":"your","s":451.656,"e":451.935},{"t":"application","s":451.935,"e":452.699},{"t":"didn't","s":452.699,"e":453.047},{"t":"change.","s":453.047,"e":453.568}]},{"id":"s3-5-s1","start":453.708,"end":466.423,"words":[{"t":"Prevent","s":453.708,"e":454.217},{"t":"drift","s":454.217,"e":454.58},{"t":"by","s":454.58,"e":454.726},{"t":"pinning","s":454.726,"e":455.235},{"t":"exact","s":455.235,"e":455.598},{"t":"judge","s":455.598,"e":455.962},{"t":"model","s":455.962,"e":456.325},{"t":"versions","s":456.325,"e":456.907},{"t":"in","s":456.907,"e":457.052},{"t":"CI,","s":457.052,"e":457.357},{"t":"re-running","s":457.357,"e":458.012},{"t":"your","s":458.012,"e":458.303},{"t":"fixed","s":458.303,"e":458.666},{"t":"human","s":458.666,"e":459.03},{"t":"calibration","s":459.03,"e":459.829},{"t":"set","s":459.829,"e":460.047},{"t":"before","s":460.047,"e":460.484},{"t":"adopting","s":460.484,"e":461.065},{"t":"any","s":461.065,"e":461.283},{"t":"new","s":461.283,"e":461.501},{"t":"judge","s":461.501,"e":461.865},{"t":"model,","s":461.865,"e":462.388},{"t":"and","s":462.388,"e":462.606},{"t":"auditing","s":462.606,"e":463.188},{"t":"periodic","s":463.188,"e":463.769},{"t":"human","s":463.769,"e":464.133},{"t":"spot","s":464.133,"e":464.424},{"t":"checks","s":464.424,"e":464.86},{"t":"against","s":464.86,"e":465.369},{"t":"judge","s":465.369,"e":465.732},{"t":"verdicts.","s":465.732,"e":466.423}]}]},{"id":"s3-6","section":"Calibrating LLM Judges, Rubrics, Bias Mitigation, and Drift","start":466.783,"end":488.353,"sentences":[{"id":"s3-6-s0","start":466.783,"end":471.049,"words":[{"t":"This","s":466.783,"e":467.075},{"t":"Python","s":467.075,"e":467.512},{"t":"pattern","s":467.512,"e":468.023},{"t":"eliminates","s":468.023,"e":468.752},{"t":"pairwise","s":468.752,"e":469.335},{"t":"position","s":469.335,"e":469.919},{"t":"bias","s":469.919,"e":470.21},{"t":"in","s":470.21,"e":470.356},{"t":"two","s":470.356,"e":470.575},{"t":"calls.","s":470.575,"e":471.049}]},{"id":"s3-6-s1","start":471.189,"end":479.488,"words":[{"t":"It","s":471.189,"e":471.329},{"t":"runs","s":471.329,"e":471.608},{"t":"the","s":471.608,"e":471.818},{"t":"judge","s":471.818,"e":472.168},{"t":"with","s":472.168,"e":472.447},{"t":"adaptive","s":472.447,"e":473.007},{"t":"thinking","s":473.007,"e":473.566},{"t":"enabled,","s":473.566,"e":474.209},{"t":"first","s":474.209,"e":474.559},{"t":"with","s":474.559,"e":474.839},{"t":"candidate","s":474.839,"e":475.468},{"t":"A","s":475.468,"e":475.573},{"t":"in","s":475.573,"e":475.713},{"t":"position","s":475.713,"e":476.272},{"t":"one","s":476.272,"e":476.482},{"t":"and","s":476.482,"e":476.691},{"t":"then","s":476.691,"e":476.971},{"t":"swapped","s":476.971,"e":477.46},{"t":"with","s":477.46,"e":477.74},{"t":"candidate","s":477.74,"e":478.369},{"t":"B","s":478.369,"e":478.474},{"t":"in","s":478.474,"e":478.614},{"t":"position","s":478.614,"e":479.173},{"t":"one.","s":479.173,"e":479.488}]},{"id":"s3-6-s2","start":479.628,"end":488.353,"words":[{"t":"A","s":479.628,"e":479.739},{"t":"candidate","s":479.739,"e":480.405},{"t":"only","s":480.405,"e":480.701},{"t":"wins","s":480.701,"e":480.997},{"t":"if","s":480.997,"e":481.145},{"t":"it","s":481.145,"e":481.293},{"t":"is","s":481.293,"e":481.441},{"t":"selected","s":481.441,"e":482.033},{"t":"in","s":482.033,"e":482.181},{"t":"both","s":482.181,"e":482.477},{"t":"orders;","s":482.477,"e":483.084},{"t":"if","s":483.084,"e":483.232},{"t":"the","s":483.232,"e":483.454},{"t":"verdicts","s":483.454,"e":484.046},{"t":"flip,","s":484.046,"e":484.505},{"t":"the","s":484.505,"e":484.727},{"t":"pair","s":484.727,"e":485.023},{"t":"is","s":485.023,"e":485.171},{"t":"flagged","s":485.171,"e":485.689},{"t":"as","s":485.689,"e":485.837},{"t":"a","s":485.837,"e":485.948},{"t":"tie","s":485.948,"e":486.17},{"t":"or","s":486.17,"e":486.318},{"t":"position-inconsistent","s":486.318,"e":487.798},{"t":"result.","s":487.798,"e":488.353}]}]},{"id":"s4-1","section":"Live-Traffic Sampling, A/B Testing, Feedback Loops, and Task Metrics","start":489.053,"end":515.939,"sentences":[{"id":"s4-1-s0","start":489.053,"end":496.115,"words":[{"t":"Think","s":489.053,"e":489.386},{"t":"of","s":489.386,"e":489.52},{"t":"production","s":489.52,"e":490.187},{"t":"quality","s":490.187,"e":490.653},{"t":"assurance","s":490.653,"e":491.254},{"t":"as","s":491.254,"e":491.387},{"t":"the","s":491.387,"e":491.587},{"t":"Swiss","s":491.587,"e":491.92},{"t":"Cheese","s":491.92,"e":492.321},{"t":"Model:","s":492.321,"e":492.801},{"t":"no","s":492.801,"e":492.934},{"t":"single","s":492.934,"e":493.334},{"t":"layer","s":493.334,"e":493.668},{"t":"catches","s":493.668,"e":494.134},{"t":"every","s":494.134,"e":494.468},{"t":"bug,","s":494.468,"e":494.815},{"t":"so","s":494.815,"e":494.948},{"t":"you","s":494.948,"e":495.148},{"t":"stack","s":495.148,"e":495.481},{"t":"defenses.","s":495.481,"e":496.115}]},{"id":"s4-1-s1","start":496.255,"end":500.201,"words":[{"t":"Automated","s":496.255,"e":497.071},{"t":"offline","s":497.071,"e":497.706},{"t":"evals","s":497.706,"e":498.16},{"t":"guard","s":498.16,"e":498.614},{"t":"CI/CD","s":498.614,"e":498.976},{"t":"before","s":498.976,"e":499.521},{"t":"launch.","s":499.521,"e":500.201}]},{"id":"s4-1-s2","start":500.341,"end":503.989,"words":[{"t":"Production","s":500.341,"e":501.01},{"t":"monitoring","s":501.01,"e":501.68},{"t":"catches","s":501.68,"e":502.148},{"t":"real-world","s":502.148,"e":502.751},{"t":"distribution","s":502.751,"e":503.554},{"t":"drift.","s":503.554,"e":503.989}]},{"id":"s4-1-s3","start":504.129,"end":508.887,"words":[{"t":"Shadow","s":504.129,"e":504.653},{"t":"evaluations","s":504.653,"e":505.613},{"t":"and","s":505.613,"e":505.875},{"t":"A/B","s":505.875,"e":506.05},{"t":"tests","s":506.05,"e":506.486},{"t":"validate","s":506.486,"e":507.185},{"t":"major","s":507.185,"e":507.621},{"t":"changes","s":507.621,"e":508.232},{"t":"safely.","s":508.232,"e":508.887}]},{"id":"s4-1-s4","start":509.027,"end":515.939,"words":[{"t":"Weekly","s":509.027,"e":509.455},{"t":"transcript","s":509.455,"e":510.168},{"t":"reviews,","s":510.168,"e":510.825},{"t":"user","s":510.825,"e":511.11},{"t":"feedback","s":511.11,"e":511.681},{"t":"triage,","s":511.681,"e":512.265},{"t":"and","s":512.265,"e":512.479},{"t":"periodic","s":512.479,"e":513.05},{"t":"human","s":513.05,"e":513.407},{"t":"studies","s":513.407,"e":513.906},{"t":"close","s":513.906,"e":514.263},{"t":"the","s":514.263,"e":514.477},{"t":"remaining","s":514.477,"e":515.119},{"t":"blind","s":515.119,"e":515.475},{"t":"spots.","s":515.475,"e":515.939}]}]},{"id":"s4-2","section":"Live-Traffic Sampling, A/B Testing, Feedback Loops, and Task Metrics","start":516.299,"end":544.269,"sentences":[{"id":"s4-2-s0","start":516.299,"end":519.755,"words":[{"t":"Online","s":516.299,"e":516.736},{"t":"evaluation","s":516.736,"e":517.463},{"t":"brings","s":517.463,"e":517.9},{"t":"your","s":517.9,"e":518.191},{"t":"graders","s":518.191,"e":518.7},{"t":"to","s":518.7,"e":518.846},{"t":"real","s":518.846,"e":519.137},{"t":"traffic.","s":519.137,"e":519.755}]},{"id":"s4-2-s1","start":519.895,"end":530.241,"words":[{"t":"Use","s":519.895,"e":520.109},{"t":"stratified","s":520.109,"e":520.824},{"t":"live-traffic","s":520.824,"e":521.611},{"t":"sampling","s":521.611,"e":522.183},{"t":"to","s":522.183,"e":522.326},{"t":"run","s":522.326,"e":522.54},{"t":"calibrated","s":522.54,"e":523.255},{"t":"judges","s":523.255,"e":523.684},{"t":"asynchronously","s":523.684,"e":524.685},{"t":"across","s":524.685,"e":525.114},{"t":"representative","s":525.114,"e":526.115},{"t":"requests,","s":526.115,"e":526.845},{"t":"oversampling","s":526.845,"e":527.703},{"t":"high-risk","s":527.703,"e":528.275},{"t":"cohorts","s":528.275,"e":528.775},{"t":"and","s":528.775,"e":528.99},{"t":"long-turn","s":528.99,"e":529.562},{"t":"sessions.","s":529.562,"e":530.241}]},{"id":"s4-2-s2","start":530.381,"end":544.269,"words":[{"t":"Before","s":530.381,"e":530.832},{"t":"exposing","s":530.832,"e":531.434},{"t":"users","s":531.434,"e":531.81},{"t":"to","s":531.81,"e":531.961},{"t":"a","s":531.961,"e":532.074},{"t":"new","s":532.074,"e":532.299},{"t":"model","s":532.299,"e":532.676},{"t":"or","s":532.676,"e":532.826},{"t":"prompt,","s":532.826,"e":533.443},{"t":"run","s":533.443,"e":533.669},{"t":"shadow","s":533.669,"e":534.12},{"t":"evaluations","s":534.12,"e":534.948},{"t":"that","s":534.948,"e":535.249},{"t":"replay","s":535.249,"e":535.7},{"t":"real","s":535.7,"e":536.001},{"t":"inputs","s":536.001,"e":536.452},{"t":"in","s":536.452,"e":536.603},{"t":"the","s":536.603,"e":536.828},{"t":"background","s":536.828,"e":537.581},{"t":"so","s":537.581,"e":537.731},{"t":"you","s":537.731,"e":537.957},{"t":"can","s":537.957,"e":538.183},{"t":"measure","s":538.183,"e":538.709},{"t":"latency,","s":538.709,"e":539.401},{"t":"cost,","s":539.401,"e":539.868},{"t":"and","s":539.868,"e":540.094},{"t":"quality","s":540.094,"e":540.62},{"t":"on","s":540.62,"e":540.771},{"t":"true","s":540.771,"e":541.072},{"t":"production","s":541.072,"e":541.824},{"t":"distributions","s":541.824,"e":542.802},{"t":"with","s":542.802,"e":543.103},{"t":"zero","s":543.103,"e":543.404},{"t":"user","s":543.404,"e":543.705},{"t":"impact.","s":543.705,"e":544.269}]}]},{"id":"s4-3","section":"Live-Traffic Sampling, A/B Testing, Feedback Loops, and Task Metrics","start":544.629,"end":572.28,"sentences":[{"id":"s4-3-s0","start":544.629,"end":548.149,"words":[{"t":"Know","s":544.629,"e":544.932},{"t":"the","s":544.932,"e":545.159},{"t":"trade-offs","s":545.159,"e":545.84},{"t":"between","s":545.84,"e":546.37},{"t":"A/B","s":546.37,"e":546.521},{"t":"tests","s":546.521,"e":546.9},{"t":"and","s":546.9,"e":547.127},{"t":"user","s":547.127,"e":547.43},{"t":"feedback.","s":547.43,"e":548.149}]},{"id":"s4-3-s1","start":548.289,"end":562.305,"words":[{"t":"A/B","s":548.289,"e":548.443},{"t":"tests","s":548.443,"e":548.827},{"t":"control","s":548.827,"e":549.366},{"t":"for","s":549.366,"e":549.597},{"t":"confounds","s":549.597,"e":550.289},{"t":"and","s":550.289,"e":550.52},{"t":"measure","s":550.52,"e":551.058},{"t":"real","s":551.058,"e":551.366},{"t":"user","s":551.366,"e":551.674},{"t":"outcomes","s":551.674,"e":552.289},{"t":"like","s":552.289,"e":552.597},{"t":"task","s":552.597,"e":552.905},{"t":"completion","s":552.905,"e":553.674},{"t":"and","s":553.674,"e":553.905},{"t":"retention,","s":553.905,"e":554.766},{"t":"but","s":554.766,"e":554.997},{"t":"they","s":554.997,"e":555.305},{"t":"take","s":555.305,"e":555.612},{"t":"days","s":555.612,"e":555.92},{"t":"or","s":555.92,"e":556.074},{"t":"weeks","s":556.074,"e":556.459},{"t":"to","s":556.459,"e":556.612},{"t":"reach","s":556.612,"e":556.997},{"t":"significance","s":556.997,"e":557.92},{"t":"and","s":557.92,"e":558.151},{"t":"don't","s":558.151,"e":558.459},{"t":"tell","s":558.459,"e":558.766},{"t":"you","s":558.766,"e":558.997},{"t":"why","s":558.997,"e":559.228},{"t":"a","s":559.228,"e":559.343},{"t":"metric","s":559.343,"e":559.805},{"t":"moved","s":559.805,"e":560.19},{"t":"until","s":560.19,"e":560.574},{"t":"you","s":560.574,"e":560.805},{"t":"read","s":560.805,"e":561.113},{"t":"the","s":561.113,"e":561.343},{"t":"transcripts.","s":561.343,"e":562.305}]},{"id":"s4-3-s2","start":562.445,"end":572.28,"words":[{"t":"Explicit","s":562.445,"e":563.037},{"t":"thumbs-down","s":563.037,"e":563.777},{"t":"feedback","s":563.777,"e":564.369},{"t":"surfaces","s":564.369,"e":564.961},{"t":"real","s":564.961,"e":565.257},{"t":"edge","s":565.257,"e":565.553},{"t":"cases,","s":565.553,"e":566.086},{"t":"yet","s":566.086,"e":566.308},{"t":"it","s":566.308,"e":566.456},{"t":"is","s":566.456,"e":566.604},{"t":"sparse","s":566.604,"e":567.048},{"t":"and","s":567.048,"e":567.27},{"t":"self-selected,","s":567.27,"e":568.321},{"t":"so","s":568.321,"e":568.469},{"t":"pair","s":568.469,"e":568.765},{"t":"it","s":568.765,"e":568.913},{"t":"with","s":568.913,"e":569.209},{"t":"implicit","s":569.209,"e":569.801},{"t":"signals","s":569.801,"e":570.319},{"t":"like","s":570.319,"e":570.615},{"t":"retries","s":570.615,"e":571.133},{"t":"and","s":571.133,"e":571.355},{"t":"escalations.","s":571.355,"e":572.28}]}]},{"id":"s4-4","section":"Live-Traffic Sampling, A/B Testing, Feedback Loops, and Task Metrics","start":572.64,"end":602.363,"sentences":[{"id":"s4-4-s0","start":572.64,"end":575.776,"words":[{"t":"On","s":572.64,"e":572.769},{"t":"the","s":572.769,"e":572.962},{"t":"exam,","s":572.962,"e":573.361},{"t":"match","s":573.361,"e":573.683},{"t":"your","s":573.683,"e":573.941},{"t":"metrics","s":573.941,"e":574.392},{"t":"tightly","s":574.392,"e":574.842},{"t":"to","s":574.842,"e":574.971},{"t":"the","s":574.971,"e":575.164},{"t":"task","s":575.164,"e":575.422},{"t":"type.","s":575.422,"e":575.776}]},{"id":"s4-4-s1","start":575.916,"end":581.079,"words":[{"t":"For","s":575.916,"e":576.131},{"t":"extraction","s":576.131,"e":576.847},{"t":"and","s":576.847,"e":577.062},{"t":"classification,","s":577.062,"e":578.222},{"t":"use","s":578.222,"e":578.437},{"t":"exact","s":578.437,"e":578.795},{"t":"match,","s":578.795,"e":579.31},{"t":"F1,","s":579.31,"e":579.611},{"t":"and","s":579.611,"e":579.826},{"t":"schema","s":579.826,"e":580.255},{"t":"compliance.","s":580.255,"e":581.079}]},{"id":"s4-4-s2","start":581.219,"end":586.445,"words":[{"t":"For","s":581.219,"e":581.435},{"t":"open-ended","s":581.435,"e":582.082},{"t":"generation,","s":582.082,"e":582.959},{"t":"use","s":582.959,"e":583.174},{"t":"calibrated","s":583.174,"e":583.893},{"t":"rubric","s":583.893,"e":584.324},{"t":"scores","s":584.324,"e":584.756},{"t":"and","s":584.756,"e":584.971},{"t":"user","s":584.971,"e":585.259},{"t":"acceptance","s":585.259,"e":585.978},{"t":"rates.","s":585.978,"e":586.445}]},{"id":"s4-4-s3","start":586.585,"end":594.735,"words":[{"t":"For","s":586.585,"e":586.817},{"t":"agentic","s":586.817,"e":587.357},{"t":"workflows,","s":587.357,"e":588.221},{"t":"prioritize","s":588.221,"e":588.993},{"t":"verified","s":588.993,"e":589.61},{"t":"end-state","s":589.61,"e":590.228},{"t":"outcomes,","s":590.228,"e":591.015},{"t":"pass","s":591.015,"e":591.324},{"t":"to","s":591.324,"e":591.478},{"t":"the","s":591.478,"e":591.71},{"t":"k","s":591.71,"e":591.825},{"t":"consistency,","s":591.825,"e":592.844},{"t":"and","s":592.844,"e":593.076},{"t":"turn","s":593.076,"e":593.384},{"t":"or","s":593.384,"e":593.539},{"t":"cost","s":593.539,"e":593.847},{"t":"efficiency.","s":593.847,"e":594.735}]},{"id":"s4-4-s4","start":594.875,"end":602.363,"words":[{"t":"For","s":594.875,"e":595.072},{"t":"retrieval-grounded","s":595.072,"e":596.185},{"t":"systems,","s":596.185,"e":596.788},{"t":"measure","s":596.788,"e":597.247},{"t":"retrieval","s":597.247,"e":597.836},{"t":"precision,","s":597.836,"e":598.57},{"t":"claim","s":598.57,"e":598.897},{"t":"groundedness,","s":598.897,"e":599.828},{"t":"citation","s":599.828,"e":600.352},{"t":"accuracy,","s":600.352,"e":601.02},{"t":"and","s":601.02,"e":601.217},{"t":"proper","s":601.217,"e":601.61},{"t":"abstention.","s":601.61,"e":602.363}]}]},{"id":"s4-5","section":"Live-Traffic Sampling, A/B Testing, Feedback Loops, and Task Metrics","start":602.723,"end":623.717,"sentences":[{"id":"s4-5-s0","start":602.723,"end":605.603,"words":[{"t":"Finally,","s":602.723,"e":603.278},{"t":"close","s":603.278,"e":603.58},{"t":"the","s":603.58,"e":603.761},{"t":"loop","s":603.761,"e":604.003},{"t":"with","s":604.003,"e":604.245},{"t":"eval-driven","s":604.245,"e":604.848},{"t":"development.","s":604.848,"e":605.603}]},{"id":"s4-5-s1","start":605.743,"end":619.567,"words":[{"t":"Every","s":605.743,"e":606.11},{"t":"time","s":606.11,"e":606.404},{"t":"live-traffic","s":606.404,"e":607.213},{"t":"sampling,","s":607.213,"e":607.962},{"t":"a","s":607.962,"e":608.073},{"t":"thumbs-down","s":608.073,"e":608.808},{"t":"report,","s":608.808,"e":609.41},{"t":"or","s":609.41,"e":609.557},{"t":"a","s":609.557,"e":609.668},{"t":"weekly","s":609.668,"e":610.108},{"t":"transcript","s":610.108,"e":610.843},{"t":"review","s":610.843,"e":611.284},{"t":"reveals","s":611.284,"e":611.799},{"t":"a","s":611.799,"e":611.909},{"t":"new","s":611.909,"e":612.13},{"t":"failure","s":612.13,"e":612.644},{"t":"mode,","s":612.644,"e":613.1},{"t":"convert","s":613.1,"e":613.614},{"t":"that","s":613.614,"e":613.908},{"t":"redacted","s":613.908,"e":614.496},{"t":"example","s":614.496,"e":615.01},{"t":"into","s":615.01,"e":615.304},{"t":"an","s":615.304,"e":615.451},{"t":"unambiguous","s":615.451,"e":616.26},{"t":"offline","s":616.26,"e":616.774},{"t":"regression","s":616.774,"e":617.509},{"t":"test","s":617.509,"e":617.803},{"t":"with","s":617.803,"e":618.097},{"t":"a","s":618.097,"e":618.207},{"t":"reference","s":618.207,"e":618.869},{"t":"solution.","s":618.869,"e":619.567}]},{"id":"s4-5-s2","start":619.707,"end":623.717,"words":[{"t":"That","s":619.707,"e":619.951},{"t":"way,","s":619.951,"e":620.269},{"t":"every","s":620.269,"e":620.574},{"t":"production","s":620.574,"e":621.184},{"t":"incident","s":621.184,"e":621.672},{"t":"strengthens","s":621.672,"e":622.344},{"t":"your","s":622.344,"e":622.588},{"t":"CI","s":622.588,"e":622.71},{"t":"gate","s":622.71,"e":622.954},{"t":"permanently.","s":622.954,"e":623.717}]}]}]};
+
+(function() {
+  const audio = document.getElementById('voiceAudio');
+  const playBtn = document.getElementById('playBtn');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const scrub = document.getElementById('scrub');
+  const speedBtn = document.getElementById('speedBtn');
+  const autoScrollBtn = document.getElementById('autoScrollBtn');
+  const themeBtn = document.getElementById('themeBtn');
+  const nowLabel = document.getElementById('nowLabel');
+  const timeLabel = document.getElementById('timeLabel');
+  const progressFill = document.getElementById('progressFill');
+
+  const speeds = [0.85, 1.0, 1.15, 1.25, 1.5, 1.75, 2.0];
+  let speedIdx = 1;
+  let autoScroll = true;
+  let activeSegId = null;
+  let activeSentId = null;
+  let activeWordEl = null;
+  let rafId = null;
+
+  const segMap = new Map();
+  const flatSents = [];
+  TIMELINE.segments.forEach((seg, segIdx) => {
+    segMap.set(seg.id, { ...seg, idx: segIdx });
+    (seg.sentences || []).forEach(sent => {
+      flatSents.push({ ...sent, segId: seg.id, segIdx, section: seg.section });
+    });
+  });
+
+  function fmt(sec) {
+    if (!isFinite(sec) || sec < 0) sec = 0;
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  }
+
+  function setPlayUI(playing) {
+    playBtn.innerHTML = playing ? '&#10074;&#10074; Pause' : '&#9654; Play';
+  }
+
+  function findSentenceAt(t) {
+    // Binary search for fast 60fps lookup
+    let lo = 0, hi = flatSents.length - 1, best = null;
+    while (lo <= hi) {
+      const mid = (lo + hi) >> 1;
+      const s = flatSents[mid];
+      if (t >= s.start && t <= s.end) return s;
+      if (t < s.start) hi = mid - 1;
+      else { best = s; lo = mid + 1; }
+    }
+    return best || flatSents[0] || null;
+  }
+
+  function updateHighlights(t) {
+    const sent = findSentenceAt(t);
+    if (!sent) return;
+
+    // 1. Highlight parent block
+    if (activeSegId !== sent.segId) {
+      document.querySelectorAll('.is-speaking').forEach(el => el.classList.remove('is-speaking'));
+      const segEl = document.querySelector(`[data-seg-id="${sent.segId}"]`);
+      if (segEl) segEl.classList.add('is-speaking');
+      activeSegId = sent.segId;
+      nowLabel.textContent = `${sent.section} (${sent.segIdx + 1}/${TIMELINE.segments.length})`;
+
+      const secEl = segEl ? segEl.closest('.section-block') : null;
+      document.querySelectorAll('.toc-list a').forEach(a => a.classList.remove('active'));
+      if (secEl) {
+        const link = document.querySelector(`.toc-list a[href="#${secEl.id}"]`);
+        if (link) link.classList.add('active');
+      } else {
+        const first = document.querySelector('.toc-list a[href="#top"]');
+        if (first) first.classList.add('active');
+      }
+    }
+
+    // 2. Highlight active sentence
+    if (activeSentId !== sent.id) {
+      document.querySelectorAll('.sent.active-sent').forEach(el => {
+        el.classList.remove('active-sent');
+        el.querySelectorAll('.w').forEach(w => w.classList.remove('w-past', 'w-now', 'w-future'));
+      });
+      const sentEl = document.querySelector(`[data-sent-id="${sent.id}"]`);
+      if (sentEl) {
+        sentEl.classList.add('active-sent');
+        if (autoScroll && !audio.paused) {
+          sentEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+      activeSentId = sent.id;
+      activeWordEl = null;
+    }
+
+    // 3. Karaoke word-by-word highlighting inside active sentence
+    const sentEl = document.querySelector(`[data-sent-id="${sent.id}"]`);
+    if (sentEl) {
+      const wordSpans = sentEl.querySelectorAll('.w');
+      const words = sent.words || [];
+      for (let i = 0; i < words.length && i < wordSpans.length; i++) {
+        const w = words[i];
+        const sp = wordSpans[i];
+        if (t >= w.s && t <= w.e) {
+          if (activeWordEl !== sp) {
+            sp.classList.remove('w-past', 'w-future');
+            sp.classList.add('w-now');
+            activeWordEl = sp;
+          }
+        } else if (t > w.e) {
+          sp.classList.remove('w-now', 'w-future');
+          sp.classList.add('w-past');
+        } else {
+          sp.classList.remove('w-now', 'w-past');
+          sp.classList.add('w-future');
+        }
+      }
+    }
+  }
+
+  function syncUI() {
+    const t = audio.currentTime || 0;
+    const dur = audio.duration || TIMELINE.duration || 1;
+    scrub.max = dur;
+    scrub.value = t;
+    timeLabel.textContent = `${fmt(t)} / ${fmt(dur)}`;
+    progressFill.style.width = `${Math.min(100, (t / dur) * 100)}%`;
+    updateHighlights(t);
+  }
+
+  function tick() {
+    syncUI();
+    if (!audio.paused && !audio.ended) {
+      rafId = requestAnimationFrame(tick);
+    }
+  }
+
+  function jumpToTime(t, autoPlay = true) {
+    audio.currentTime = Math.max(0, t + 0.005);
+    syncUI();
+    if (autoPlay) audio.play().catch(() => {});
+  }
+
+  // Click any sentence to jump directly to that exact sentence!
+  document.querySelectorAll('.sent[data-start]').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      jumpToTime(parseFloat(el.dataset.start), true);
+    });
+  });
+
+  // Click block Play button to jump to start of block
+  document.querySelectorAll('.seg-play-btn[data-jump-seg]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const seg = segMap.get(btn.dataset.jumpSeg);
+      if (seg) jumpToTime(seg.start, true);
+    });
+  });
+
+  playBtn.addEventListener('click', () => {
+    if (audio.paused) audio.play().catch(() => {});
+    else audio.pause();
+  });
+
+  prevBtn.addEventListener('click', () => {
+    const cur = findSentenceAt(audio.currentTime || 0);
+    const segIdx = cur ? Math.max(0, cur.segIdx - 1) : 0;
+    jumpToTime(TIMELINE.segments[segIdx].start, !audio.paused);
+  });
+
+  nextBtn.addEventListener('click', () => {
+    const cur = findSentenceAt(audio.currentTime || 0);
+    const segIdx = cur ? Math.min(TIMELINE.segments.length - 1, cur.segIdx + 1) : 0;
+    jumpToTime(TIMELINE.segments[segIdx].start, !audio.paused);
+  });
+
+  scrub.addEventListener('input', () => {
+    audio.currentTime = parseFloat(scrub.value);
+    syncUI();
+  });
+
+  function applySpeed(idx) {
+    speedIdx = ((idx % speeds.length) + speeds.length) % speeds.length;
+    const rate = speeds[speedIdx];
+    audio.preservesPitch = true;
+    audio.webkitPreservesPitch = true;
+    audio.defaultPlaybackRate = rate;
+    audio.playbackRate = rate;
+    speedBtn.textContent = `${rate}x`;
+    try { localStorage.setItem('ccdvp-speed', String(speedIdx)); } catch {}
+    syncUI();
+  }
+
+  speedBtn.addEventListener('click', () => applySpeed(speedIdx + 1));
+  try {
+    const savedSpeed = parseInt(localStorage.getItem('ccdvp-speed'), 10);
+    if (!isNaN(savedSpeed) && savedSpeed >= 0 && savedSpeed < speeds.length) {
+      applySpeed(savedSpeed);
+    } else {
+      applySpeed(1);
+    }
+  } catch { applySpeed(1); }
+
+  autoScrollBtn.addEventListener('click', () => {
+    autoScroll = !autoScroll;
+    autoScrollBtn.classList.toggle('active', autoScroll);
+    autoScrollBtn.textContent = autoScroll ? 'Auto-Scroll: ON' : 'Auto-Scroll: OFF';
+  });
+
+  themeBtn.addEventListener('click', () => {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    themeBtn.textContent = isDark ? 'Dark' : 'Light';
+    try { localStorage.setItem('ccdvp-theme', isDark ? 'light' : 'dark'); } catch {}
+  });
+  try {
+    if (localStorage.getItem('ccdvp-theme') === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      themeBtn.textContent = 'Light';
+    }
+  } catch {}
+
+  audio.addEventListener('play', () => { setPlayUI(true); tick(); });
+  audio.addEventListener('pause', () => { setPlayUI(false); if (rafId) cancelAnimationFrame(rafId); });
+  audio.addEventListener('ended', () => { setPlayUI(false); if (rafId) cancelAnimationFrame(rafId); });
+  audio.addEventListener('timeupdate', syncUI);
+  audio.addEventListener('seeked', syncUI);
+  audio.addEventListener('ratechange', syncUI);
+  audio.addEventListener('loadedmetadata', () => {
+    audio.playbackRate = speeds[speedIdx];
+    syncUI();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    if (e.code === 'Space') { e.preventDefault(); playBtn.click(); }
+    else if (e.code === 'ArrowRight') { e.preventDefault(); nextBtn.click(); }
+    else if (e.code === 'ArrowLeft') { e.preventDefault(); prevBtn.click(); }
+  });
+
+  document.querySelectorAll('.scenario-card').forEach(card => {
+    const correct = card.dataset.correct;
+    const rat = card.querySelector('.rationale');
+    card.querySelectorAll('.opt-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        card.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('correct', 'wrong'));
+        if (btn.dataset.key === correct) {
+          btn.classList.add('correct');
+        } else {
+          btn.classList.add('wrong');
+          const rightBtn = card.querySelector(`.opt-btn[data-key="${correct}"]`);
+          if (rightBtn) rightBtn.classList.add('correct');
+        }
+        rat.classList.add('show');
+      });
+    });
+  });
+
+  syncUI();
+})();
+
+</script>
+</body>
+</html>
